@@ -1,0 +1,26 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// Shulker Palette — mark shulker boxes as palettes for random placement
+// with 3D open-lid rendering and representative item overlay.
+// Depends on MenuKit (button attachments) and Inventory Plus (peek).
+// ═══════════════════════════════════════════════════════════════════════════
+
+base.archivesName = 'shulker-palette'
+
+// No runClient — use dev:runClient for the full dev environment
+loom {
+    runs {
+        client { ideConfigGenerated = false }
+        server { ideConfigGenerated = false }
+    }
+}
+
+dependencies {
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.property('fabric_version')}"
+    modImplementation "dev.isxander:yet-another-config-lib:${rootProject.property('yacl_version')}"
+
+    // MenuKit — button attachments, MKInventory
+    implementation project(path: ':menukit', configuration: 'namedElements')
+
+    // Inventory Plus — ContainerPeekClient for the peek toggle button
+    implementation project(path: ':inventory-plus', configuration: 'namedElements')
+}

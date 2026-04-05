@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "shulker-palette",
+  "version": "1.0.0",
+  "name": "Shulker Palette",
+  "description": "Mark shulker boxes as palettes — right-click places a random block from inside with 3D open-lid rendering.",
+  "authors": ["trevorschoeny"],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.trevorschoeny.shulkerpalette.ShulkerPaletteMod"],
+    "client": ["com.trevorschoeny.shulkerpalette.ShulkerPaletteClient"]
+  },
+  "mixins": ["shulker-palette.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21",
+    "menukit": ">=0.1.0",
+    "inventory-plus": ">=0.1.0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.trevorschoeny.shulkerpalette.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "ShulkerPaletteBlockEntityMixin",
+    "ShulkerPaletteMenuMixin",
+    "ShulkerPalettePacketMixin",
+    "ShulkerPalettePlayerMixin",
+    "ShulkerPaletteServerMixin"
+  ],
+  "client": [
+    "ShulkerBoxSpecialRendererAccessor",
+    "ShulkerPaletteClientMixin",
+    "ShulkerPaletteGuiMixin",
+    "ItemStackRenderStateAccessor",
+    "LayerRenderStateAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
