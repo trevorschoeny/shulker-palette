@@ -3,6 +3,7 @@
   "id": "shulker-palette",
   "version": "1.0.0",
   "name": "Shulker Palette",
+  "icon": "icon.png",
   "description": "Mark shulker boxes as palettes — right-click places a random block from inside with 3D open-lid rendering.",
   "authors": ["trevorschoeny"],
   "license": "MIT",
