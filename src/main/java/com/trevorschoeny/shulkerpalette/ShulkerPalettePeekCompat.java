@@ -61,7 +61,8 @@ final class ShulkerPalettePeekCompat {
                     if (mc.player == null || !ContainerPeekClient.isPeeking()) return Component.literal("Palette: Off");
                     ItemStack stack = MKInventory.getPlayerItem(mc.player, ContainerPeekClient.getPeekedSlot());
                     return Component.literal(ShulkerPalette.isShulkerPalette(stack) ? "Palette: On" : "Palette: Off");
-                }
+                },
+                null
         ), "palette_toggle:peek");
     }
 }

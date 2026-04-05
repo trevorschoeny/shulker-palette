@@ -168,7 +168,8 @@ public class ShulkerPalette {
                     var slot = accessor.trevorMod$getPaletteSlot();
                     boolean on = slot != null && slot.get() != 0;
                     return Component.literal(on ? "Palette: On" : "Palette: Off");
-                }
+                },
+                null
         ), "palette_toggle:screen");
     }
 
