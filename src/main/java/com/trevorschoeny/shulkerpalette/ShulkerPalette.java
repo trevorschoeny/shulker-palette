@@ -1,13 +1,12 @@
 package com.trevorschoeny.shulkerpalette;
 
-import com.trevorschoeny.inventoryplus.ContainerPeekClient;
-import com.trevorschoeny.inventoryplus.network.PeekS2CPayload;
 import com.trevorschoeny.menukit.MKButton;
 import com.trevorschoeny.menukit.MKButtonDef;
 import com.trevorschoeny.menukit.MKContainerType;
 import com.trevorschoeny.menukit.MKGroupChild;
 import com.trevorschoeny.menukit.MKInventory;
 import com.trevorschoeny.menukit.MenuKit;
+import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -38,9 +37,10 @@ public class ShulkerPalette {
     public static final String PALETTE_TAG = "trevormod_palette";
 
     // ── Sprite identifiers for the toggle button ────────────────────────────
-    private static final Identifier ICON_OFF =
+    // Package-private so ShulkerPalettePeekCompat can reuse them.
+    static final Identifier ICON_OFF =
             Identifier.fromNamespaceAndPath(ShulkerPaletteMod.MOD_ID, "palette_off");
-    private static final Identifier ICON_ON =
+    static final Identifier ICON_ON =
             Identifier.fromNamespaceAndPath(ShulkerPaletteMod.MOD_ID, "palette_on");
 
     /**
@@ -89,12 +89,16 @@ public class ShulkerPalette {
         );
     }
 
+    /** True if Inventory Plus is installed (checked once at startup). */
+    private static final boolean HAS_INVENTORY_PLUS =
+            FabricLoader.getInstance().isModLoaded("inventory-plus");
+
     /**
      * Initialises the client side. Called from ShulkerPaletteClient.onInitializeClient().
      *
      * Registers the palette toggle button attachment — shows on:
      *   - ShulkerBoxScreen (placed shulker, region "mk:shulker")
-     *   - Peek container (item shulker, region "peek_shulker")
+     *   - Peek container (item shulker, region "peek_shulker") — only when Inventory Plus is installed
      */
     public static void initClient(net.minecraft.client.KeyMapping.Category category) {
         MenuKit.buttonAttachment("palette_toggle")
@@ -105,9 +109,9 @@ public class ShulkerPalette {
                 .buttons(regionName -> {
                     Minecraft mc = Minecraft.getInstance();
 
-                    // ── Peek shulker: always show ────────────────────────
-                    if ("peek_shulker".equals(regionName)) {
-                        return List.of(peekPaletteButton());
+                    // ── Peek shulker: only when Inventory Plus is installed ──
+                    if (HAS_INVENTORY_PLUS && "peek_shulker".equals(regionName)) {
+                        return List.of(ShulkerPalettePeekCompat.peekPaletteButton());
                     }
 
                     // ── ShulkerBoxScreen: show on the shulker region only ─
@@ -123,49 +127,7 @@ public class ShulkerPalette {
     }
 
     // ── Button Factories ────────────────────────────────────────────────────
-
-    /**
-     * Creates the palette toggle button for the peek context.
-     * Reads palette state from the peeked item's CUSTOM_DATA.
-     * Sends toggle packet with the peeked inventory position.
-     */
-    private static MKGroupChild peekPaletteButton() {
-        return new MKGroupChild.Button(new MKButtonDef(
-                0, 0, 9, 9,
-                ICON_OFF,                               // icon (off state)
-                ICON_ON,                                 // toggledIcon (on state)
-                9,                                       // iconSize
-                Component.empty(),                       // label (none — icon only)
-                true,                                    // toggleMode
-                false,                                   // initialPressed
-                null,                                    // groupName
-                btn -> {                                 // onClick: send toggle packet
-                    int pos = ContainerPeekClient.getPeekedSlot();
-                    if (pos >= 0) {
-                        ClientPlayNetworking.send(new ShulkerPaletteTogglePayload(pos));
-                    }
-                },
-                null,                                    // onToggle
-                null,                                    // tooltip (set via pressedWhen-aware supplier below)
-                null, null, null,                        // opensScreenName, opensScreenFactory, togglesPanelName
-                MKButton.ButtonStyle.NONE,               // buttonStyle
-                false,                                   // disabled
-                null,                                    // disabledWhen
-                () -> {                                  // pressedWhen: read item palette state
-                    Minecraft mc = Minecraft.getInstance();
-                    if (mc.player == null || !ContainerPeekClient.isPeeking()) return false;
-                    if (ContainerPeekClient.getSourceType() != PeekS2CPayload.SOURCE_ITEM_CONTAINER) return false;
-                    ItemStack stack = MKInventory.getPlayerItem(mc.player, ContainerPeekClient.getPeekedSlot());
-                    return isShulkerPalette(stack);
-                },
-                () -> {                                  // tooltipSupplier: dynamic "Palette: On/Off"
-                    Minecraft mc = Minecraft.getInstance();
-                    if (mc.player == null || !ContainerPeekClient.isPeeking()) return Component.literal("Palette: Off");
-                    ItemStack stack = MKInventory.getPlayerItem(mc.player, ContainerPeekClient.getPeekedSlot());
-                    return Component.literal(isShulkerPalette(stack) ? "Palette: On" : "Palette: Off");
-                }
-        ), "palette_toggle:peek");
-    }
+    // Peek button is in ShulkerPalettePeekCompat (loaded only when IP is present).
 
     /**
      * Creates the palette toggle button for the ShulkerBoxScreen context.

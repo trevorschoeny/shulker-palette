@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════════════════
 // Shulker Palette — mark shulker boxes as palettes for random placement
 // with 3D open-lid rendering and representative item overlay.
-// Depends on MenuKit (button attachments) and Inventory Plus (peek).
+// Depends on MenuKit (button attachments). Optional: Inventory Plus (peek).
 // ═══════════════════════════════════════════════════════════════════════════
 
 base.archivesName = 'shulker-palette'
@@ -21,6 +21,7 @@ dependencies {
     // MenuKit — button attachments, MKInventory
     implementation project(path: ':menukit', configuration: 'namedElements')
 
-    // Inventory Plus — ContainerPeekClient for the peek toggle button
-    implementation project(path: ':inventory-plus', configuration: 'namedElements')
+    // Inventory Plus — optional: peek toggle button for shulker palettes.
+    // Only loaded at runtime via ShulkerPalettePeekCompat when IP is installed.
+    compileOnly project(path: ':inventory-plus', configuration: 'namedElements')
 }
