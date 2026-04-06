@@ -41,7 +41,7 @@ public final class ShulkerPaletteState {
 
     // ── Rendering (render thread only) ──────────────────────────────────────
     /** Openness level for GUI rendering. */
-    public static final float RENDER_OPENNESS_GUI = 2.0f;
+    public static final float RENDER_OPENNESS_GUI = 5.0f;
     /** Openness level for in-game rendering. */
     public static final float RENDER_OPENNESS_INGAME = 1.75f;
     /** Scale for the representative items in GUI (inventory/hotbar). */

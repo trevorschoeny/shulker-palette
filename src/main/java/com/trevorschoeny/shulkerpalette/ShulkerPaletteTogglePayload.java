@@ -10,10 +10,10 @@ import net.minecraft.resources.Identifier;
  * C2S packet: tells the server to toggle the Shulker Palette flag.
  *
  * Two modes:
- *   - unifiedPos = -1 → toggle via the open ShulkerBoxMenu (placed block)
- *   - unifiedPos >= 0 → toggle the item's CUSTOM_DATA at that inventory slot (peek)
+ *   - menuSlotIndex = -1 → toggle via the open ShulkerBoxMenu (placed block)
+ *   - menuSlotIndex >= 0 → toggle the item's CUSTOM_DATA at that menu slot (peek)
  */
-public record ShulkerPaletteTogglePayload(int unifiedPos) implements CustomPacketPayload {
+public record ShulkerPaletteTogglePayload(int menuSlotIndex) implements CustomPacketPayload {
 
     /** Convenience: toggle the currently open ShulkerBoxMenu (placed block). */
     public ShulkerPaletteTogglePayload() {
@@ -25,7 +25,7 @@ public record ShulkerPaletteTogglePayload(int unifiedPos) implements CustomPacke
 
     public static final StreamCodec<FriendlyByteBuf, ShulkerPaletteTogglePayload> CODEC =
             StreamCodec.composite(
-                    ByteBufCodecs.VAR_INT, ShulkerPaletteTogglePayload::unifiedPos,
+                    ByteBufCodecs.VAR_INT, ShulkerPaletteTogglePayload::menuSlotIndex,
                     ShulkerPaletteTogglePayload::new);
 
     @Override

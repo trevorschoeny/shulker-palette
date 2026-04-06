@@ -4,7 +4,7 @@ import com.trevorschoeny.menukit.MKButton;
 import com.trevorschoeny.menukit.MKButtonDef;
 import com.trevorschoeny.menukit.MKContainerType;
 import com.trevorschoeny.menukit.MKGroupChild;
-import com.trevorschoeny.menukit.MKInventory;
+
 import com.trevorschoeny.menukit.MenuKit;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -61,18 +61,21 @@ public class ShulkerPalette {
                     context.server().execute(() -> {
                         var player = context.player();
 
-                        if (payload.unifiedPos() >= 0) {
+                        if (payload.menuSlotIndex() >= 0) {
                             // ── Item toggle (peek path) ─────────────────────
                             // Toggle the palette flag directly on the item's
-                            // CUSTOM_DATA component at the given inventory position.
-                            ItemStack stack = MKInventory.getPlayerItem(player, payload.unifiedPos());
+                            // CUSTOM_DATA component at the given menu slot.
+                            int idx = payload.menuSlotIndex();
+                            if (player.containerMenu == null
+                                    || idx >= player.containerMenu.slots.size()) return;
+                            ItemStack stack = player.containerMenu.slots.get(idx).getItem();
                             if (!isShulkerBox(stack)) return;
 
                             boolean wasPalette = isShulkerPalette(stack);
                             toggleItemPalette(stack, !wasPalette);
-                            player.inventoryMenu.broadcastChanges();
-                            ShulkerPaletteMod.LOGGER.debug("[ShulkerPalette] Toggled item palette at pos {}: {}",
-                                    payload.unifiedPos(), !wasPalette);
+                            player.containerMenu.broadcastChanges();
+                            ShulkerPaletteMod.LOGGER.debug("[ShulkerPalette] Toggled item palette at slot {}: {}",
+                                    idx, !wasPalette);
                         } else {
                             // ── Block entity toggle (ShulkerBoxMenu path) ───
                             if (!(player.containerMenu instanceof ShulkerBoxMenu menu)) return;

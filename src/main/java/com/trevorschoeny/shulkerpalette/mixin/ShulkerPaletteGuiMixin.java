@@ -43,12 +43,18 @@ public class ShulkerPaletteGuiMixin {
         if (!ShulkerPalette.isEnabled()) return;
         if (!ShulkerPalette.isShulkerPalette(itemStack)) return;
 
-        // Give palette shulkers a distinct model identity so the GUI atlas cache
-        // renders them separately from non-palette shulkers (which render closed).
-        renderState.appendModelIdentityElement("shulker_palette_open");
-
         // Find the top 3 most common blocks inside the shulker.
         java.util.List<ItemStack> topItems = ShulkerPaletteRoll.topNItems(itemStack, 3);
+
+        // Give palette shulkers a distinct model identity so the GUI atlas cache
+        // renders them separately from non-palette shulkers (which render closed).
+        // Include the actual item IDs so shulkers with different contents get
+        // different cache entries — otherwise they all show the same items.
+        renderState.appendModelIdentityElement("shulker_palette_open");
+        for (ItemStack rep : topItems) {
+            renderState.appendModelIdentityElement(
+                    net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(rep.getItem()).toString());
+        }
 
         // Walk the layers and find the ShulkerBoxSpecialRenderer.
         ItemStackRenderStateAccessor stateAccessor = (ItemStackRenderStateAccessor) (Object) renderState;
