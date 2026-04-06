@@ -69,11 +69,11 @@ public class ShulkerPaletteClientMixin {
         // the rest of useItemOn(). Client-side prediction renders the correct block.
         ShulkerPaletteState.clientOverride = overrideStack;
 
-        // Signal the server: item to place + shulker location for decrement.
+        // Enqueue the roll for the server: item to place + shulker location for decrement.
+        // Each placement gets its own queued entry, so rapid clicks never overwrite each other.
         int shulkerSlot = player.getInventory().getSelectedSlot();
-        ShulkerPaletteState.pendingOverrideItemId = roll.itemId();
-        ShulkerPaletteState.pendingShulkerInvSlot = shulkerSlot;
-        ShulkerPaletteState.pendingInternalSlot   = roll.internalSlot();
+        ShulkerPaletteState.pendingRolls.add(
+                new ShulkerPaletteState.PendingRoll(roll.itemId(), shulkerSlot, roll.internalSlot()));
 
         trevorMod$spActive = true;
     }

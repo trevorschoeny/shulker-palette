@@ -2,6 +2,8 @@ package com.trevorschoeny.shulkerpalette;
 
 import net.minecraft.world.item.ItemStack;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * Static signal fields for Shulker Palette placement interception.
  *
@@ -10,31 +12,32 @@ import net.minecraft.world.item.ItemStack;
  * is holding the palette block rather than the shulker box. No hotbar mutation.
  *
  * ── Signal flow ───────────────────────────────────────────────────────────────
- *   1. Client HEAD:  roll a block from the shulker, set clientOverride + pending* fields.
+ *   1. Client HEAD:  roll a block from the shulker, enqueue a PendingRoll + set clientOverride.
  *   2. Client getItemInHand():  returns clientOverride (for client-side prediction).
- *   3. Server handleUseItemOn HEAD:  transfer pending* → server* fields.
+ *   3. Server handleUseItemOn HEAD:  dequeue one PendingRoll → set server* fields.
  *   4. Server getItemInHand():  returns serverOverride (for authoritative placement).
  *   5. Server useItemOn RETURN:  clear serverOverride, decrement shulker contents.
  *   6. Client useItemOn RETURN:  clear clientOverride.
  *
- * pending* fields cross the client→server thread boundary (volatile).
+ * The pending queue crosses the client→server thread boundary (ConcurrentLinkedQueue).
+ * Each client roll enqueues its own record, so rapid clicks never overwrite each other.
  * client* and server* fields are single-thread only.
  */
 public final class ShulkerPaletteState {
 
     private ShulkerPaletteState() {}
 
+    // ── Pending roll record (one per client placement attempt) ────────────────
+    /** Bundles the three fields needed to reconstruct a roll on the server side. */
+    public record PendingRoll(String overrideItemId, int shulkerInvSlot, int internalSlot) {}
+
     // ── Client-side override (render thread only) ─────────────────────────────
     /** The rolled item to return from client Player.getItemInHand(). Null = no override. */
     public static ItemStack clientOverride = null;
 
-    // ── Client → Server signal (cross-thread, volatile) ───────────────────────
-    /** Item ID to construct the override on the server side. Null = nothing pending. */
-    public static volatile String pendingOverrideItemId = null;
-    /** Player inventory slot holding the shulker box. */
-    public static volatile int pendingShulkerInvSlot = -1;
-    /** Slot index (0–26) inside the shulker whose item was rolled. */
-    public static volatile int pendingInternalSlot = -1;
+    // ── Client → Server signal (thread-safe FIFO queue) ──────────────────────
+    /** Queue of pending rolls — one entry per client useItemOn, consumed in order by server. */
+    public static final ConcurrentLinkedQueue<PendingRoll> pendingRolls = new ConcurrentLinkedQueue<>();
 
     // ── Rendering (render thread only) ──────────────────────────────────────
     /** Openness level for GUI rendering. */

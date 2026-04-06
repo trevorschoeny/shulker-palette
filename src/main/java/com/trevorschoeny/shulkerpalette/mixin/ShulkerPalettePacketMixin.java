@@ -31,22 +31,14 @@ public class ShulkerPalettePacketMixin {
         MinecraftServer server = this.player.level().getServer();
         if (server == null || !server.isSameThread()) return;
 
-        // Read pending fields atomically (all three set together by client HEAD).
-        String itemId     = ShulkerPaletteState.pendingOverrideItemId;
-        int shulkerSlot   = ShulkerPaletteState.pendingShulkerInvSlot;
-        int internalSlot  = ShulkerPaletteState.pendingInternalSlot;
-
-        // Nothing pending = not a shulker palette placement.
-        if (itemId == null || itemId.isEmpty()) return;
-
-        // Consume pending fields immediately.
-        ShulkerPaletteState.pendingOverrideItemId = null;
-        ShulkerPaletteState.pendingShulkerInvSlot = -1;
-        ShulkerPaletteState.pendingInternalSlot   = -1;
+        // Dequeue the next pending roll. Each client useItemOn enqueued exactly one,
+        // and packets arrive in order, so this always pairs with the correct placement.
+        ShulkerPaletteState.PendingRoll roll = ShulkerPaletteState.pendingRolls.poll();
+        if (roll == null) return; // Not a shulker palette placement.
 
         // Build the server override stack and publish.
-        ShulkerPaletteState.serverOverride      = ShulkerPaletteRoll.stackForId(itemId);
-        ShulkerPaletteState.serverShulkerInvSlot = shulkerSlot;
-        ShulkerPaletteState.serverInternalSlot   = internalSlot;
+        ShulkerPaletteState.serverOverride      = ShulkerPaletteRoll.stackForId(roll.overrideItemId());
+        ShulkerPaletteState.serverShulkerInvSlot = roll.shulkerInvSlot();
+        ShulkerPaletteState.serverInternalSlot   = roll.internalSlot();
     }
 }
