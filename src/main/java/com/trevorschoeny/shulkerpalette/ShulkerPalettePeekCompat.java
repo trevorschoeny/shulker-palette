@@ -2,9 +2,9 @@ package com.trevorschoeny.shulkerpalette;
 
 import com.trevorschoeny.inventoryplus.ContainerPeekClient;
 import com.trevorschoeny.inventoryplus.network.PeekS2CPayload;
-import com.trevorschoeny.menukit.MKButton;
-import com.trevorschoeny.menukit.MKButtonDef;
-import com.trevorschoeny.menukit.MKGroupChild;
+import com.trevorschoeny.menukit.widget.MKButton;
+import com.trevorschoeny.menukit.widget.MKButtonDef;
+import com.trevorschoeny.menukit.panel.MKGroupChild;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;

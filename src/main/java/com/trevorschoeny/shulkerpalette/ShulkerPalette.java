@@ -1,9 +1,9 @@
 package com.trevorschoeny.shulkerpalette;
 
-import com.trevorschoeny.menukit.MKButton;
-import com.trevorschoeny.menukit.MKButtonDef;
-import com.trevorschoeny.menukit.MKContainerType;
-import com.trevorschoeny.menukit.MKGroupChild;
+import com.trevorschoeny.menukit.widget.MKButton;
+import com.trevorschoeny.menukit.widget.MKButtonDef;
+import com.trevorschoeny.menukit.container.MKContainerType;
+import com.trevorschoeny.menukit.panel.MKGroupChild;
 
 import com.trevorschoeny.menukit.MenuKit;
 import net.fabricmc.loader.api.FabricLoader;
