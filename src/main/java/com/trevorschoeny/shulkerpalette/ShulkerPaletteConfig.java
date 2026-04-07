@@ -19,18 +19,6 @@ public class ShulkerPaletteConfig {
     /** Global enable/disable for all shulker palettes. */
     public boolean enabled = true;
 
-    /**
-     * What shift+right-click does when holding a shulker palette.
-     *   PLACE_SHULKER  — bypasses palette and places the shulker box normally.
-     *   STILL_PALETTE  — shift+click still uses the palette (no way to place without toggling off).
-     */
-    public ShiftBehavior shiftBehavior = ShiftBehavior.PLACE_SHULKER;
-
-    public enum ShiftBehavior {
-        PLACE_SHULKER,
-        STILL_PALETTE
-    }
-
     private static ShulkerPaletteConfig instance;
 
     public static ShulkerPaletteConfig get() {

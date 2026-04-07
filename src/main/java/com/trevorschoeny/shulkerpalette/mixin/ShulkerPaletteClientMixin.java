@@ -1,7 +1,6 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
-import com.trevorschoeny.shulkerpalette.ShulkerPaletteConfig;
 import com.trevorschoeny.shulkerpalette.ShulkerPaletteRoll;
 import com.trevorschoeny.shulkerpalette.ShulkerPaletteState;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
@@ -10,7 +9,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -44,13 +42,6 @@ public class ShulkerPaletteClientMixin {
 
         ItemStack held = player.getItemInHand(hand);
         if (!ShulkerPalette.isShulkerPalette(held)) return;
-
-        // Shift-click check: if configured to place the shulker box normally on shift,
-        // and shift is held, bail out so vanilla handles the placement.
-        if (trevorMod$isShiftHeld()
-                && ShulkerPalette.getShiftBehavior() == ShulkerPaletteConfig.ShiftBehavior.PLACE_SHULKER) {
-            return;
-        }
 
         // Roll a random placeable block from the shulker's contents.
         ShulkerPaletteRoll.Result roll = ShulkerPaletteRoll.roll(held);
@@ -91,10 +82,4 @@ public class ShulkerPaletteClientMixin {
         ShulkerPaletteState.clientOverride = null;
     }
 
-    @Unique
-    private static boolean trevorMod$isShiftHeld() {
-        long window = GLFW.glfwGetCurrentContext();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
-    }
 }

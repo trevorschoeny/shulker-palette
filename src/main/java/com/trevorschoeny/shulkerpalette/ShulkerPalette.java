@@ -222,8 +222,4 @@ public class ShulkerPalette {
         return ShulkerPaletteConfig.get().enabled;
     }
 
-    /** Returns the configured shift-click behavior. */
-    public static ShulkerPaletteConfig.ShiftBehavior getShiftBehavior() {
-        return ShulkerPaletteConfig.get().shiftBehavior;
-    }
 }
