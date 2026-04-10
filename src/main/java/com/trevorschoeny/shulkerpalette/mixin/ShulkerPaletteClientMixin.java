@@ -60,10 +60,10 @@ public class ShulkerPaletteClientMixin {
         // the rest of useItemOn(). Client-side prediction renders the correct block.
         ShulkerPaletteState.clientOverride = overrideStack;
 
-        // Enqueue the roll for the server: item to place + shulker location for decrement.
-        // Each placement gets its own queued entry, so rapid clicks never overwrite each other.
+        // Store the roll for the server: item to place + shulker location for decrement.
+        // Overwrites any previous unconsumed roll — see ShulkerPaletteState docs for why.
         int shulkerSlot = player.getInventory().getSelectedSlot();
-        ShulkerPaletteState.pendingRolls.add(
+        ShulkerPaletteState.pendingRoll.set(
                 new ShulkerPaletteState.PendingRoll(roll.itemId(), shulkerSlot, roll.internalSlot()));
 
         trevorMod$spActive = true;
@@ -80,6 +80,14 @@ public class ShulkerPaletteClientMixin {
         // vanilla serialisation — our getItemInHand override served its purpose
         // for client-side prediction.
         ShulkerPaletteState.clientOverride = null;
+
+        // If the useItemOn didn't consume the action (e.g. another mod cancelled
+        // it), the packet may not have been sent and the server won't consume our
+        // pendingRoll. Clear it here so it doesn't leak into the next placement.
+        InteractionResult result = cir.getReturnValue();
+        if (result == null || !result.consumesAction()) {
+            ShulkerPaletteState.pendingRoll.set(null);
+        }
     }
 
 }

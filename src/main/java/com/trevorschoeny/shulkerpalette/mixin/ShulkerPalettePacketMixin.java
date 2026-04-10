@@ -31,9 +31,10 @@ public class ShulkerPalettePacketMixin {
         MinecraftServer server = this.player.level().getServer();
         if (server == null || !server.isSameThread()) return;
 
-        // Dequeue the next pending roll. Each client useItemOn enqueued exactly one,
-        // and packets arrive in order, so this always pairs with the correct placement.
-        ShulkerPaletteState.PendingRoll roll = ShulkerPaletteState.pendingRolls.poll();
+        // Get-and-clear the pending roll. Single-slot atomic reference: if there's
+        // a roll, it was set by the most recent client useItemOn. If not, this is
+        // a regular placement with no override.
+        ShulkerPaletteState.PendingRoll roll = ShulkerPaletteState.pendingRoll.getAndSet(null);
         if (roll == null) return; // Not a shulker palette placement.
 
         // Build the server override stack and publish.
