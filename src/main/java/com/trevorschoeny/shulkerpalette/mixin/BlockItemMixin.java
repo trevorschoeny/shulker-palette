@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
- * A palette shulker places its next block, never itself. Shulker items are plain block
- * items, so this is the one place a right-click on a block reaches them. Anything that
- * isn't a palette-on shulker falls through to vanilla untouched.
+ * A palette shulker places its next block. Shulker items are plain block items, so this is
+ * the one place a right-click on a block reaches them. Sneaking, or anything that isn't a
+ * palette-on shulker, falls through to vanilla, which places the box itself.
  */
 @Mixin(BlockItem.class)
 abstract class BlockItemMixin {
@@ -21,6 +21,9 @@ abstract class BlockItemMixin {
     private void shulkerpalette$placeFromPalette(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         Palette palette = Palette.activeOn(context.getItemInHand());
         if (palette == null) return;
+        // ponytail: sneak + right-click places the box itself, as a stopgap (Trev, 2026-10-15).
+        // It costs sneak-placing palette blocks at an edge; a better gesture is an open question.
+        if (context.isSecondaryUseActive()) return;
         cir.setReturnValue(Placement.place(context, ((UseOnContextAccessor) context).shulkerpalette$hitResult(),
                 context.getItemInHand(), palette));
     }
