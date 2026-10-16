@@ -1,25 +1,40 @@
 {
   "schemaVersion": 1,
-  "id": "shulker-palette",
-  "version": "1.0.0",
+  "id": "shulkerpalette",
+  "version": "${version}",
   "name": "Shulker Palette",
-  "icon": "icon.png",
-  "description": "Mark shulker boxes as palettes — right-click places a random block from inside with 3D open-lid rendering.",
-  "authors": ["trevorschoeny"],
-  "license": "MIT",
-  "environment": "*",
-  "entrypoints": {
-    "main": ["com.trevorschoeny.shulkerpalette.ShulkerPaletteMod"],
-    "client": ["com.trevorschoeny.shulkerpalette.ShulkerPaletteClient"]
+  "description": "Hold a shulker box and build straight out of it: random blocks, a picked block, or a gradient row by row.",
+  "authors": [
+    "trevorschoeny"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/shulker-palette",
+    "sources": "https://github.com/trevorschoeny/shulker-palette"
   },
-  "mixins": ["shulker-palette.mixins.json"],
+  "license": "MIT",
+  "icon": "assets/shulkerpalette/icon.png",
+  "environment": "*",
+  "mixins": [
+    "shulkerpalette.mixins.json"
+  ],
+  "entrypoints": {
+    "main": [
+      "com.trevorschoeny.shulkerpalette.ShulkerPalette"
+    ],
+    "client": [
+      "com.trevorschoeny.shulkerpalette.ShulkerPaletteClient"
+    ]
+  },
   "depends": {
     "fabricloader": ">=0.15.0",
     "fabric-api": "*",
-    "minecraft": "~1.21",
-    "menukit": ">=1.0.0"
+    "minecraft": "~26.3",
+    "menukit": ">=7.1.0 <8.0.0",
+    "slotkit": ">=1.1.0 <2.0.0"
   },
-  "suggests": {
-    "inventory-plus": ">=1.0.0"
+  "custom": {
+    "slotkit": {
+      "bothSides": "required"
+    }
   }
 }
