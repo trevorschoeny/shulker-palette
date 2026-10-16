@@ -20,15 +20,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Swaps what a palette shulker draws as, where it shows the next block:
- * <ul>
- *   <li>In a hand: the next block itself.</li>
- *   <li>In the inventory (GUI): the shulker with its lid lifted out of the icon and the next
- *       block small inside ({@link OpenIcon}).</li>
- * </ul>
- * The modes that draw at random (random, equal random, gradient) also get the rainbow outline
- * ({@link HeldLook}); pick, which places one chosen block, does not. A palette with no next
- * block (empty) draws as the plain shulker.
+ * In a hand and in the inventory, a palette shulker draws as an open box with its lid gone
+ * and the next block small inside ({@link OpenIcon}); an empty palette is the open, empty
+ * box. The modes that draw at random (random, equal random, gradient) also get the rainbow
+ * outline ({@link HeldLook}); pick, which places one chosen block, does not.
  */
 @Mixin(ItemModelResolver.class)
 abstract class ItemModelResolverMixin {
@@ -46,24 +41,21 @@ abstract class ItemModelResolverMixin {
         boolean icon = displayContext == ItemDisplayContext.GUI;
         if (shulkerpalette$inner || !(hand || icon)) return;
         Palette palette = Palette.activeOn(item);
-        if (palette == null || palette.next().isEmpty()) return;
-        ItemStack next = palette.next().map(ItemStackTemplate::create).orElseThrow();
+        if (palette == null) return;
         ci.cancel();
 
-        if (icon) {
-            // The shulker first, drawn the normal way, then opened; then the block inside it.
-            shulkerpalette$inner = true;
-            try {
-                appendItemLayers(output, item, displayContext, level, owner, seed);
-            } finally {
-                shulkerpalette$inner = false;
-            }
-            int shulkerLayers = OpenIcon.openLid(output);
-            appendItemLayers(output, next, displayContext, level, owner, seed);
-            OpenIcon.shrinkInside(output, shulkerLayers);
-        } else {
-            appendItemLayers(output, next, displayContext, level, owner, seed);
+        // The shulker first, drawn the normal way, then opened; then the next block inside it.
+        // An empty palette is just the open, empty box.
+        shulkerpalette$inner = true;
+        try {
+            appendItemLayers(output, item, displayContext, level, owner, seed);
+        } finally {
+            shulkerpalette$inner = false;
         }
+        int shulkerLayers = OpenIcon.openLid(output, hand);
+        if (palette.next().isEmpty()) return;
+        appendItemLayers(output, palette.next().map(ItemStackTemplate::create).orElseThrow(), displayContext, level, owner, seed);
+        OpenIcon.shrinkInside(output, shulkerLayers);
         if (palette.mode() != Mode.PICK) {
             output.setData(HeldLook.RAINBOW, true);
             output.setAnimated(); // the rainbow cycles, so the icon is redrawn every frame
