@@ -17,6 +17,8 @@ public final class PanelActions {
     public static final int POWER = 0;
     public static final int MODE = 1;
     public static final int REPAINT = 2;
+    /** Save: answered with the box's palette for the clipboard ({@link Clipboard}), changes nothing. */
+    public static final int SAVE = 3;
 
     /** The palette after button {@code id}, or the same palette if the press isn't allowed. */
     public static Palette apply(Palette palette, int id, Player player) {

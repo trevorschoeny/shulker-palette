@@ -1,9 +1,11 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.palette.Clipboard;
 import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
 import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -49,6 +51,11 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     }
 
     @Override
+    public @Nullable PaletteHolder shulkerpalette$holder() {
+        return shulkerpalette$holder;
+    }
+
+    @Override
     public int shulkerpalette$packedPalette() {
         return shulkerpalette$state.get();
     }
@@ -56,6 +63,10 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     @Override
     public boolean clickMenuButton(Player player, int buttonId) {
         if (shulkerpalette$holder == null) return super.clickMenuButton(player, buttonId);
+        if (buttonId == PanelActions.SAVE) {
+            if (player instanceof ServerPlayer server) Clipboard.save(server, shulkerpalette$holder);
+            return true;
+        }
         shulkerpalette$holder.shulkerpalette$setPalette(
                 PanelActions.apply(shulkerpalette$holder.shulkerpalette$palette(), buttonId, player));
         return true;

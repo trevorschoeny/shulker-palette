@@ -22,8 +22,8 @@ import net.minecraft.resources.Identifier;
  * It holds no state. Every button reads the palette the server last synced into the menu
  * and asks the server to change it; the new state comes back the same way.
  *
- * <p>Palette off shows only the power button, so the screen looks like vanilla's. Rows and
- * save/load join the column in later phases (design.md).
+ * <p>Palette off shows only the power button, so the screen looks like vanilla's. The rows
+ * buttons join the column with the extra-rows grid (design.md).
  */
 public final class ControlPanel {
     private ControlPanel() {}
@@ -56,6 +56,21 @@ public final class ControlPanel {
                                 .onClick(() -> press(PanelActions.REPAINT))
                                 .tooltip(() -> Component.translatable(palette().map(Palette::repaint).orElse(false)
                                         ? "shulkerpalette.panel.repaint.on" : "shulkerpalette.panel.repaint.off"))
+                                .visibleWhen(() -> on() && creative())
+                                .build())
+                        .add(Button.builder()
+                                .icon(() -> sprite("save"))
+                                .size(SIZE, SIZE)
+                                .onClick(() -> press(PanelActions.SAVE))
+                                .tooltip(Component.translatable("shulkerpalette.panel.save"))
+                                .visibleWhen(ControlPanel::on)
+                                .build())
+                        .add(Button.builder()
+                                .icon(() -> sprite("load"))
+                                .size(SIZE, SIZE)
+                                .onClick(ClipboardClient::load)
+                                .tooltip(Component.translatable("shulkerpalette.panel.load"))
+                                // ponytail: creative only until survival loading (the cheat sheet) is built
                                 .visibleWhen(() -> on() && creative())
                                 .build())
                         .build())
