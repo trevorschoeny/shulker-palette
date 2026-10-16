@@ -7,7 +7,9 @@
     "BlockItemMixin",
     "UseOnContextAccessor"
   ],
-  "client": [],
+  "client": [
+    "MouseHandlerMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

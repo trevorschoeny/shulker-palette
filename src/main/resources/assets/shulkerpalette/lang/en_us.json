@@ -1,1 +1,4 @@
-{}
+{
+  "shulkerpalette.scroll.pick": "%s ×%s",
+  "shulkerpalette.scroll.row": "Row %s of %s"
+}

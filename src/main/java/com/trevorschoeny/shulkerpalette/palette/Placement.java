@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.palette;
 
+import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import java.util.Optional;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
@@ -42,7 +43,9 @@ public final class Placement {
 
         // Vanilla's own placement, run as if the chosen block were in hand. It does the
         // survival checks, the orientation, the sound and the block entity data. It also
-        // "consumes" one from `next`, which is our throwaway copy.
+        // "consumes" one from `next`, emptying our throwaway copy, so what to take out of
+        // the box is remembered first.
+        ItemStack placed = next.copy();
         InteractionResult result = block.place(new BlockPlaceContext(level, player, context.getHand(), next, hit));
         if (!result.consumesAction() || level.isClientSide()) {
             // A placement that didn't happen uses nothing up and keeps the same next block.
@@ -51,10 +54,12 @@ public final class Placement {
 
         ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
         if (player == null || !player.hasInfiniteMaterials()) {
-            Optional<ItemContainerContents> taken = Draw.removeOne(palette, contents, next.copyWithCount(1));
+            Optional<ItemContainerContents> taken = Draw.removeOne(palette, contents, placed);
             if (taken.isEmpty()) {
-                // ponytail: the box no longer holds what was shown (a desync); the block is
-                // already down, so just choose again rather than undo it.
+                // The box no longer holds what was shown (a desync). The block is already
+                // down, so choose again rather than undo it, but say so: silence here once
+                // hid a bug that stopped every box from counting down.
+                ShulkerPalette.LOGGER.warn("Palette placed {} but the box holds none; choosing again", placed);
                 rollNext(shulker, palette, contents, level);
                 return result;
             }
