@@ -55,7 +55,7 @@ abstract class ItemModelResolverMixin {
         int shulkerLayers = OpenIcon.openLid(output, hand);
         if (palette.next().isEmpty()) return;
         appendItemLayers(output, palette.next().map(ItemStackTemplate::create).orElseThrow(), displayContext, level, owner, seed);
-        OpenIcon.shrinkInside(output, shulkerLayers);
+        OpenIcon.shrinkInside(output, shulkerLayers, hand);
         if (palette.mode() != Mode.PICK) {
             output.setData(HeldLook.RAINBOW, true);
             output.setAnimated(); // the rainbow cycles, so the icon is redrawn every frame

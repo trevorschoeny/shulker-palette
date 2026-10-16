@@ -32,6 +32,11 @@ public final class OpenIcon {
     private static final Matrix4f INSIDE = new Matrix4f()
             .translate(0.5f - INNER_SCALE / 2, INNER_FLOOR, 0.5f - INNER_SCALE / 2)
             .scale(INNER_SCALE);
+    /** In a hand the whole open box is drawn this much bigger than a held block (Trev, 2026-10-15). */
+    private static final float HAND_SCALE = 1.3f;
+    private static final Matrix4f HAND_GROW = new Matrix4f()
+            .translate(0.5f, 0.5f, 0.5f).scale(HAND_SCALE).translate(-0.5f, -0.5f, -0.5f);
+    private static final Matrix4f HAND_INSIDE = new Matrix4f(HAND_GROW).mul(INSIDE);
 
     /** An opened copy of each shulker renderer, made once per box colour and per place. */
     private static final Map<ShulkerBoxSpecialRenderer, ShulkerBoxSpecialRenderer> ICON_OPENED = new IdentityHashMap<>();
@@ -50,6 +55,7 @@ public final class OpenIcon {
                 layer.setupSpecialModel(hand
                         ? HAND_OPENED.computeIfAbsent(closed, c -> opened(c, HAND_OPENNESS))
                         : ICON_OPENED.computeIfAbsent(closed, c -> opened(c, ICON_OPENNESS)), null);
+                if (hand) layer.setLocalTransform(HAND_GROW);
             }
         }
         output.appendModelIdentityElement(OPEN);
@@ -57,10 +63,10 @@ public final class OpenIcon {
     }
 
     /** Shrinks every layer from {@code from} on (the inner block's) and sets it inside the box. */
-    public static void shrinkInside(ItemStackRenderState output, int from) {
+    public static void shrinkInside(ItemStackRenderState output, int from, boolean hand) {
         ItemStackRenderStateAccessor state = (ItemStackRenderStateAccessor) output;
         for (int i = from; i < state.shulkerpalette$activeLayerCount(); i++) {
-            state.shulkerpalette$layers()[i].setLocalTransform(INSIDE);
+            state.shulkerpalette$layers()[i].setLocalTransform(hand ? HAND_INSIDE : INSIDE);
         }
     }
 
