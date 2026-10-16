@@ -16,8 +16,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Sneak + scroll moves a held palette's selection: the picked block type in pick mode, the
- * row in gradient mode. The client only reports the scroll; the server moves the selection
+ * Sneak + scroll moves a held palette's selection: the picked slot in pick mode, the row in
+ * gradient mode. The client only reports the scroll; the server moves the selection
  * on the shulker in hand, chooses the next block, and says what is selected.
  */
 public final class Scroll {
@@ -41,13 +41,30 @@ public final class Scroll {
     }
 
     /**
-     * The selection after scrolling {@code steps}, wrapping round at both ends: over the box's
-     * block types in pick mode, its rows in gradient mode. -1 when there is nothing to choose.
-     * The client runs this too, to slide the strip before the server's answer arrives.
+     * The selection after scrolling {@code steps}, wrapping round at both ends: from block
+     * slot to block slot in pick mode (empty and non-block slots are skipped), from row to
+     * row in gradient mode. -1 when there is nothing to choose. The client runs this too, to
+     * move the popup before the server's answer arrives.
      */
     public static int moved(Palette palette, ItemContainerContents contents, int steps) {
-        int choices = palette.mode() == Mode.PICK ? Draw.types(Draw.slots(contents)).size() : palette.rows();
-        return choices == 0 ? -1 : Math.floorMod(palette.selection() + steps, choices);
+        if (palette.mode() == Mode.GRADIENT) return Math.floorMod(Draw.currentRow(palette) + steps, palette.rows());
+        List<ItemStack> slots = Draw.slots(contents);
+        int at = Draw.pickSlot(palette, slots);
+        if (at < 0) return -1;
+        int size = Math.max(slots.size(), palette.rows() * Palette.ROW_WIDTH);
+        int direction = Integer.signum(steps);
+        for (int moves = Math.abs(steps); moves > 0; moves--) {
+            do at = Math.floorMod(at + direction, size);
+            while (at >= slots.size() || !Draw.eligible(slots.get(at)));
+        }
+        return at;
+    }
+
+    /** "Stone ×192": the picked block and how many of it the whole box holds. */
+    private static Component pickName(ItemStack picked, List<Draw.Entry> types) {
+        int total = types.stream().filter(e -> ItemStack.isSameItemSameComponents(e.type(), picked))
+                .mapToInt(Draw.Entry::total).sum();
+        return Component.translatable("shulkerpalette.scroll.pick", picked.getHoverName(), total);
     }
 
     public static void register() {
@@ -73,7 +90,7 @@ public final class Scroll {
         // The strip by the hotbar shows the choices; the action bar names the one chosen,
         // the way vanilla names a newly held item.
         Component said = palette.mode() == Mode.PICK
-                ? Component.translatable("shulkerpalette.scroll.pick", types.get(selection).type().getHoverName(), types.get(selection).total())
+                ? pickName(Draw.slots(contents).get(selection), types)
                 : Component.translatable("shulkerpalette.scroll.row", selection + 1, palette.rows());
         player.sendOverlayMessage(said);
     }

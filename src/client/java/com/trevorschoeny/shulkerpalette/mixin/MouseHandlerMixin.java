@@ -3,7 +3,7 @@ package com.trevorschoeny.shulkerpalette.mixin;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
-import com.trevorschoeny.shulkerpalette.strip.PaletteStrip;
+import com.trevorschoeny.shulkerpalette.popup.PalettePopup;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
@@ -33,7 +33,7 @@ abstract class MouseHandlerMixin {
         if (palette == null || !Scroll.scrolls(palette)) return;
         // Vanilla moves the hotbar against the wheel (up is left); the selection follows suit.
         ClientPlayNetworking.send(new Scroll.Payload(-wheel));
-        PaletteStrip.scrolled(-wheel);
+        PalettePopup.scrolled(-wheel);
         ci.cancel();
     }
 }

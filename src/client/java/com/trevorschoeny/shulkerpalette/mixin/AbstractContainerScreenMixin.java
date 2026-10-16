@@ -30,7 +30,7 @@ abstract class AbstractContainerScreenMixin {
     @Shadow @Final protected AbstractContainerMenu menu;
 
     /** Grey over the slot and its item, the way a disabled control greys. */
-    private static final int GREY = 0xB0606060;
+    private static final int GREY = 0x80606060;
 
     @Inject(method = "extractSlot", at = @At("TAIL"))
     private void shulkerpalette$greyOpenShulker(GuiGraphicsExtractor graphics, Slot slot, int mouseX, int mouseY, CallbackInfo ci) {

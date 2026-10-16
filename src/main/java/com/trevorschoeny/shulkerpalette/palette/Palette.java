@@ -30,7 +30,7 @@ import org.jspecify.annotations.Nullable;
  * @param mode        how the next block is chosen
  * @param repaint     right-click replaces the targeted block instead of placing (creative, phase 6)
  * @param rows        rows the box has, 3 to 16 (extra rows are creative, phase 5)
- * @param selection   the picked block type (pick) or the current row (gradient); unused otherwise
+ * @param selection   the picked slot (pick) or the current row (gradient); unused otherwise
  * @param next        the block the next click places, chosen in advance so it can be shown
  * @param fingerprint the contents {@link #next} was chosen from; a mismatch means the box
  *                    changed since, so the next block is chosen again
