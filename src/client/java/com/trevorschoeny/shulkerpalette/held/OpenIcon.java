@@ -55,7 +55,12 @@ public final class OpenIcon {
                 layer.setupSpecialModel(hand
                         ? HAND_OPENED.computeIfAbsent(closed, c -> opened(c, HAND_OPENNESS))
                         : ICON_OPENED.computeIfAbsent(closed, c -> opened(c, ICON_OPENNESS)), null);
-                if (hand) layer.setLocalTransform(HAND_GROW);
+                // Grow on top of the transform the shulker's item model already carries (it
+                // places the block-entity model); replacing it turns the box upside down.
+                if (hand) {
+                    Matrix4f own = ((LayerRenderStateAccessor) layer).shulkerpalette$localTransform();
+                    layer.setLocalTransform(new Matrix4f(HAND_GROW).mul(own));
+                }
             }
         }
         output.appendModelIdentityElement(OPEN);
@@ -66,7 +71,9 @@ public final class OpenIcon {
     public static void shrinkInside(ItemStackRenderState output, int from, boolean hand) {
         ItemStackRenderStateAccessor state = (ItemStackRenderStateAccessor) output;
         for (int i = from; i < state.shulkerpalette$activeLayerCount(); i++) {
-            state.shulkerpalette$layers()[i].setLocalTransform(hand ? HAND_INSIDE : INSIDE);
+            ItemStackRenderState.LayerRenderState layer = state.shulkerpalette$layers()[i];
+            Matrix4f own = ((LayerRenderStateAccessor) layer).shulkerpalette$localTransform();
+            layer.setLocalTransform(new Matrix4f(hand ? HAND_INSIDE : INSIDE).mul(own));
         }
     }
 
