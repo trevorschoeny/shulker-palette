@@ -44,8 +44,8 @@ public final class Scroll {
      * The selection after scrolling {@code steps}, wrapping round at both ends: from block
      * slot to block slot in pick mode (empty and non-block slots are skipped), from row to
      * row in gradient mode (rows holding no blocks skipped). -1 when there is nothing to
-     * choose. The client runs this too, to
-     * move the popup before the server's answer arrives.
+     * choose. The client runs this too, to move the popup before the server's answer
+     * arrives.
      */
     public static int moved(Palette palette, ItemContainerContents contents, int steps) {
         List<ItemStack> slots = Draw.slots(contents);
