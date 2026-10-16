@@ -2,6 +2,7 @@ package com.trevorschoeny.shulkerpalette.mixin;
 
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Placement;
+import com.trevorschoeny.shulkerpalette.palette.Repaint;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.UseOnContext;
@@ -24,7 +25,9 @@ abstract class BlockItemMixin {
         // ponytail: sneak + right-click places the box itself, as a stopgap (Trev, 2026-10-15).
         // It costs sneak-placing palette blocks at an edge; a better gesture is an open question.
         if (context.isSecondaryUseActive()) return;
-        cir.setReturnValue(Placement.place(context, ((UseOnContextAccessor) context).shulkerpalette$hitResult(),
-                context.getItemInHand(), palette));
+        var hit = ((UseOnContextAccessor) context).shulkerpalette$hitResult();
+        cir.setReturnValue(context.getPlayer() != null && Repaint.active(palette, context.getPlayer())
+                ? Repaint.repaint(context, hit, context.getItemInHand(), palette)
+                : Placement.place(context, hit, context.getItemInHand(), palette));
     }
 }
