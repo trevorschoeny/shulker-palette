@@ -30,7 +30,8 @@ public final class HeldShulker extends SimpleContainer implements PaletteHolder 
     private final ItemStack stack;
 
     private HeldShulker(ItemStack stack) {
-        super(Palette.VANILLA_ROWS * Palette.ROW_WIDTH);
+        // Room for every row, so extra rows (creative) open from the hand too.
+        super(Palette.MAX_ROWS * Palette.ROW_WIDTH);
         this.stack = stack;
         stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(getItems());
     }
@@ -64,6 +65,16 @@ public final class HeldShulker extends SimpleContainer implements PaletteHolder 
                 // the inventory this menu shows (its last slots are the viewer's own), not another player's
                 && menu.slots.get(menu.slots.size() - 1).container == inventory
                 && index == inventory.getSelectedSlot();
+    }
+
+    /**
+     * The rows the palette has, like a placed box: the room is there for every row, but
+     * vanilla's shulker menu reads this to tell box slots from inventory slots on a
+     * shift-click, so it must match the slots the screen shows.
+     */
+    @Override
+    public int getContainerSize() {
+        return shulkerpalette$palette().rows() * Palette.ROW_WIDTH;
     }
 
     @Override
