@@ -71,15 +71,17 @@ public final class Clipboard {
         SavedPalette saved = payload.palette();
         Palette current = holder.shulkerpalette$palette();
 
+        // Both modes keep the box's own rows: the menu has slots only for those, so loading
+        // more rows would hide items where nobody can reach them. Slots past them are left out.
+        holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), current.rows(), 0, Optional.empty(), 0));
+        int room = current.rows() * Palette.ROW_WIDTH;
+        List<SavedPalette.Entry> fitting = saved.slots().stream().filter(e -> e.slot() < room).toList();
         if (player.isCreative()) {
-            holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), saved.rows(), 0, Optional.empty(), 0));
             for (int i = 0; i < box.getContainerSize(); i++) box.setItem(i, ItemStack.EMPTY);
-            for (SavedPalette.Entry entry : saved.slots()) box.setItem(entry.slot(), entry.item().create());
+            for (SavedPalette.Entry entry : fitting) box.setItem(entry.slot(), entry.item().create());
             holder.shulkerpalette$setCheatSheet(List.of());
         } else {
-            holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), current.rows(), 0, Optional.empty(), 0));
-            int room = current.rows() * Palette.ROW_WIDTH;
-            holder.shulkerpalette$setCheatSheet(saved.slots().stream().filter(e -> e.slot() < room).toList());
+            holder.shulkerpalette$setCheatSheet(fitting);
         }
         box.setChanged();
         CheatSheet.send(player, payload.containerId(), holder);

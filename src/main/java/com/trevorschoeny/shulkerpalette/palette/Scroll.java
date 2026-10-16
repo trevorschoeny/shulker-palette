@@ -81,6 +81,9 @@ public final class Scroll {
     }
 
     private static void apply(ServerPlayer player, int steps) {
+        // The client sends any int; more steps than a box has slots only loops round, and an
+        // unbounded count would keep the server thread busy for minutes.
+        steps = Math.clamp(steps, -Palette.MAX_ROWS * Palette.ROW_WIDTH, Palette.MAX_ROWS * Palette.ROW_WIDTH);
         ItemStack shulker = player.getMainHandItem();
         Palette palette = Palette.activeOn(shulker);
         if (palette == null || !scrolls(palette)) return; // the hand changed since the client scrolled

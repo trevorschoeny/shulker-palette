@@ -87,6 +87,10 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
         Set<Integer> seen = new HashSet<>();
         for (Entry entry : slots) {
             if (entry.slot() < 0 || entry.slot() >= rows * Palette.ROW_WIDTH || !seen.add(entry.slot())) return false;
+            // The network form skips the checks the saved form makes: a count the box can't
+            // save, or a shulker inside a shulker, would break the box it lands in.
+            ItemStack stack = entry.item().create();
+            if (stack.getCount() < 1 || stack.getCount() > stack.getMaxStackSize() || !stack.getItem().canFitInsideContainerItems()) return false;
         }
         return true;
     }

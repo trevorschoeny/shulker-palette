@@ -32,11 +32,13 @@ import net.minecraft.world.item.ItemStack;
 public final class Keys {
     private Keys() {}
 
-    /**
-     * Players holding the modifier right now. Shared by both sides in one JVM: the client
-     * marks its own player as it sends, so the client half of a click agrees with the server.
-     */
+    /** Players holding the modifier, as their clients last reported. Written only by the packet handler. */
     private static final Set<UUID> HOLDING = ConcurrentHashMap.newKeySet();
+    /**
+     * This client's own modifier, for the client half of a click. Kept apart from the server's
+     * set, which in singleplayer lives in the same JVM and must follow packet order.
+     */
+    private static volatile boolean clientHeld;
 
     /** Client to server: the modifier went down (true) or up (false). */
     public record Modifier(boolean held) implements CustomPacketPayload {
@@ -64,11 +66,15 @@ public final class Keys {
 
     /** Is this player holding the palette modifier? */
     public static boolean modifierHeld(Player player) {
-        return HOLDING.contains(player.getUUID());
+        return player.level().isClientSide() ? clientHeld : HOLDING.contains(player.getUUID());
     }
 
-    /** Records the modifier for a player; the client calls this for itself as it reports. */
-    public static void setModifier(UUID player, boolean held) {
+    /** The client records its own modifier as it reports it. */
+    public static void setClientModifier(boolean held) {
+        clientHeld = held;
+    }
+
+    private static void setModifier(UUID player, boolean held) {
         if (held) HOLDING.add(player);
         else HOLDING.remove(player);
     }
@@ -76,8 +82,8 @@ public final class Keys {
     public static void register() {
         PayloadTypeRegistry.serverboundPlay().register(Modifier.TYPE, Modifier.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay().register(Toggle.TYPE, Toggle.STREAM_CODEC);
-        // Applied on the network thread, not queued: a click right behind it is handled on the
-        // server thread, and must already see the modifier.
+        // Fabric runs play payloads on the server thread, in order with vanilla's packets, so
+        // a click sent after the modifier is judged with it.
         ServerPlayNetworking.registerGlobalReceiver(Modifier.TYPE,
                 (payload, context) -> setModifier(context.player().getUUID(), payload.held()));
         ServerPlayNetworking.registerGlobalReceiver(Toggle.TYPE,

@@ -50,7 +50,7 @@ public final class KeysClient {
             boolean held = modifierDown();
             if (held != reported) {
                 reported = held;
-                Keys.setModifier(mc.player.getUUID(), held);
+                Keys.setClientModifier(held);
                 ClientPlayNetworking.send(new Keys.Modifier(held));
             }
         });
@@ -59,7 +59,10 @@ public final class KeysClient {
             while (REPAINT.consumeClick()) toggle(mc, PanelActions.REPAINT);
         });
         // A new connection starts with the server thinking the modifier is up.
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, mc) -> reported = false);
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, mc) -> {
+            reported = false;
+            Keys.setClientModifier(false);
+        });
     }
 
     /** Asks the server to press a panel button for the shulker in hand; it checks the rules. */

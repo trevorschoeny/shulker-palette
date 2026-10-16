@@ -1,6 +1,5 @@
 package com.trevorschoeny.shulkerpalette.palette;
 
-import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import java.util.Optional;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
@@ -41,28 +40,29 @@ public final class Placement {
             return InteractionResult.FAIL;
         }
 
+        // The server takes the block out of the box before placing it, so a next block the box
+        // no longer holds (emptied this tick, swapped for a look-alike with other components,
+        // or a hand-made palette) places nothing instead of a free block.
+        ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+        Optional<ItemContainerContents> taken = Optional.empty();
+        if (!level.isClientSide() && (player == null || !player.hasInfiniteMaterials())) {
+            taken = Draw.removeOne(palette, contents, next);
+            if (taken.isEmpty()) {
+                rollNext(shulker, palette, contents, level);
+                level.playSound(null, context.getClickedPos(), SoundEvents.DISPENSER_FAIL, SoundSource.BLOCKS, 0.6F, 1.2F);
+                return InteractionResult.FAIL;
+            }
+        }
+
         // Vanilla's own placement, run as if the chosen block were in hand. It does the
         // survival checks, the orientation, the sound and the block entity data. It also
-        // "consumes" one from `next`, emptying our throwaway copy, so what to take out of
-        // the box is remembered first.
-        ItemStack placed = next.copy();
+        // "consumes" one from `next`, which is a throwaway copy.
         InteractionResult result = block.place(new BlockPlaceContext(level, player, context.getHand(), next, hit));
         if (!result.consumesAction() || level.isClientSide()) {
             // A placement that didn't happen uses nothing up and keeps the same next block.
             return result;
         }
-
-        ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
-        if (player == null || !player.hasInfiniteMaterials()) {
-            Optional<ItemContainerContents> taken = Draw.removeOne(palette, contents, placed);
-            if (taken.isEmpty()) {
-                // The box no longer holds what was shown (a desync). The block is already
-                // down, so choose again rather than undo it, but say so: silence here once
-                // hid a bug that stopped every box from counting down.
-                ShulkerPalette.LOGGER.warn("Palette placed {} but the box holds none; choosing again", placed);
-                rollNext(shulker, palette, contents, level);
-                return result;
-            }
+        if (taken.isPresent()) {
             contents = taken.get();
             shulker.set(DataComponents.CONTAINER, contents);
         }

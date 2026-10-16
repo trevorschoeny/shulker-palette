@@ -11,14 +11,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.ShulkerBoxBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.core.NonNullList;
-import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
@@ -39,13 +37,19 @@ abstract class ShulkerBoxBlockEntityMixin extends BlockEntity implements Palette
         super(type, pos, state);
     }
 
-    @Shadow protected abstract void setItems(NonNullList<ItemStack> items);
-
     private static final int SHULKERPALETTE$CAPACITY = Palette.MAX_ROWS * Palette.ROW_WIDTH;
 
-    @Inject(method = "<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V", at = @At("TAIL"))
-    private void shulkerpalette$roomForRows(BlockPos pos, BlockState state, CallbackInfo ci) {
-        setItems(NonNullList.withSize(SHULKERPALETTE$CAPACITY, ItemStack.EMPTY));
+    /**
+     * Both constructors (the coloured one is what placing a box uses) size the item list at
+     * 27; every box gets the full room instead, or a placed box would cut its item's extra
+     * rows off.
+     */
+    @ModifyConstant(method = {
+            "<init>(Lnet/minecraft/world/item/DyeColor;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V",
+            "<init>(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;)V"
+    }, constant = @Constant(intValue = 27), require = 2)
+    private int shulkerpalette$roomForRows(int vanilla) {
+        return SHULKERPALETTE$CAPACITY;
     }
 
     /** Loading rebuilds the list at the reported size; keep the full room instead. */

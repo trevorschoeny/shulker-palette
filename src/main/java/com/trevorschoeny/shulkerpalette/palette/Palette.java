@@ -61,7 +61,8 @@ public record Palette(boolean on, Mode mode, boolean repaint, int rows, int sele
             ByteBufCodecs.BOOL, Palette::on,
             Mode.STREAM_CODEC, Palette::mode,
             ByteBufCodecs.BOOL, Palette::repaint,
-            ByteBufCodecs.VAR_INT, Palette::rows,
+            // Rows come from clients too (creative slots), so they are held to the same range as the saved form.
+            ByteBufCodecs.VAR_INT.map(rows -> Math.clamp(rows, VANILLA_ROWS, MAX_ROWS), rows -> rows), Palette::rows,
             ByteBufCodecs.VAR_INT, Palette::selection,
             ByteBufCodecs.optional(ItemStackTemplate.STREAM_CODEC), Palette::next,
             ByteBufCodecs.VAR_INT, Palette::fingerprint,
