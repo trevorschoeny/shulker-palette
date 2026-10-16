@@ -15,7 +15,9 @@
     "AbstractContainerScreenMixin",
     "ItemModelResolverMixin",
     "ItemStackRenderStateMixin",
-    "LayerRenderStateAccessor"
+    "LayerRenderStateAccessor",
+    "ItemStackRenderStateAccessor",
+    "ShulkerBoxSpecialRendererAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
