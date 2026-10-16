@@ -12,7 +12,10 @@
   ],
   "client": [
     "MouseHandlerMixin",
-    "AbstractContainerScreenMixin"
+    "AbstractContainerScreenMixin",
+    "ItemModelResolverMixin",
+    "ItemStackRenderStateMixin",
+    "LayerRenderStateAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
