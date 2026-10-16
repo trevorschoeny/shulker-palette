@@ -8,5 +8,9 @@
   "shulkerpalette.panel.mode.pick": "Pick one block (sneak + scroll). Click for the next mode.",
   "shulkerpalette.panel.mode.gradient": "Gradient: random from one row (sneak + scroll). Click for the next mode.",
   "shulkerpalette.panel.repaint.on": "Repaint on: right-click replaces the block you look at.",
-  "shulkerpalette.panel.repaint.off": "Repaint off. Click to replace blocks instead of placing."
+  "shulkerpalette.panel.repaint.off": "Repaint off. Click to replace blocks instead of placing.",
+  "shulkerpalette.popup.random": "Random",
+  "shulkerpalette.popup.equal": "Equal random",
+  "shulkerpalette.popup.pick": "Item",
+  "shulkerpalette.popup.gradient": "Gradient level %s"
 }

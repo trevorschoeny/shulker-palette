@@ -3,6 +3,9 @@ package com.trevorschoeny.shulkerpalette.popup;
 import com.trevlar.menukit.api.hud.HudPanel;
 import com.trevlar.menukit.api.panel.OutsideRegion;
 import com.trevlar.menukit.api.panel.PanelStyle;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.palette.Draw;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
@@ -16,13 +19,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Sneak + scroll with a pick or gradient palette in hand opens a small copy of the box's
- * screen right above its hotbar slot: every slot and item, at three quarters size, with the
- * selection lit (one slot in pick mode, a whole row in gradient mode). Further scrolls move
- * the light. Letting go of sneak closes it.
+ * Sneak + scroll with a palette in hand opens a small view of the box right above its hotbar
+ * slot: each row drawn as a three-quarter-size hotbar, every item shown, and a title saying
+ * what the box does. In pick mode the picked slot wears the hotbar's selection frame, in
+ * gradient mode the whole row does, and further scrolls move it. In the random modes the
+ * popup only shows the contents. Letting go of sneak closes it.
  *
- * <p>A MenuKit HUD panel above the hotbar; the grid itself is drawn by hand, in vanilla's
- * container colours, because it has to sit over one particular hotbar slot.
+ * <p>A MenuKit HUD panel above the hotbar; the grid itself is drawn by hand, from vanilla's
+ * hotbar sprites, because it has to sit over one particular hotbar slot.
  *
  * <p>The server owns the selection. Between a scroll and the server's answer the popup shows
  * the selection it expects, so the light moves at once.
@@ -30,20 +34,17 @@ import net.minecraft.world.item.component.ItemContainerContents;
 public final class PalettePopup {
     private PalettePopup() {}
 
-    // The grid is drawn at vanilla's own sizes, then scaled down as a whole.
+    // Each row of the box is drawn as vanilla's hotbar sprite (translucent, as the hotbar is),
+    // at the hotbar's own size, and the whole grid is then scaled down.
     private static final float SCALE = 0.75f;
-    private static final int SLOT = 18;
-    private static final int PAD = 7;
-    private static final int WIDTH = PAD * 2 + SLOT * Palette.ROW_WIDTH;
+    private static final Identifier ROW = Identifier.withDefaultNamespace("hud/hotbar");
+    private static final Identifier SELECTION = Identifier.withDefaultNamespace("hud/hotbar_selection");
+    private static final int ROW_W = 182;
+    private static final int ROW_H = 22;
+    private static final int SLOT_PITCH = 20;
+    private static final int TITLE_H = 11;
+    private static final int TITLE_COLOR = 0xFFFFFFFF;
     private static final int HOTBAR_WIDTH = 182;
-
-    // Vanilla's container colours: the light grey panel, its bevel, the dark slot well.
-    private static final int PANEL = 0xFFC6C6C6;
-    private static final int BEVEL_LIGHT = 0xFFFFFFFF;
-    private static final int BEVEL_DARK = 0xFF555555;
-    private static final int WELL = 0xFF8B8B8B;
-    private static final int LIGHT = 0x80FFFFFF;
-    private static final int LIGHT_EDGE = 0xFFFFFFFF;
 
     /** How long to trust our own guess before going back to what the server says. */
     private static final long EXPECT_MILLIS = 1000;
@@ -74,6 +75,7 @@ public final class PalettePopup {
         Palette palette = Palette.activeOn(held);
         if (palette == null) return;
         open = true;
+        if (!Scroll.scrolls(palette)) return; // random modes: the popup just shows the box
         expected = Scroll.moved(withSelection(palette, selection(palette)), contents(held), steps);
         expectedAt = System.currentTimeMillis();
     }
@@ -82,8 +84,7 @@ public final class PalettePopup {
         Minecraft mc = Minecraft.getInstance();
         if (!mc.options.keyShift.isDown()) open = false;
         if (!open || mc.player == null || mc.gui.screen() != null) return false;
-        Palette palette = Palette.activeOn(mc.player.getMainHandItem());
-        return palette != null && Scroll.scrolls(palette);
+        return Palette.activeOn(mc.player.getMainHandItem()) != null;
     }
 
     /** The server's selection, unless we scrolled a moment ago and it hasn't caught up yet. */
@@ -102,45 +103,48 @@ public final class PalettePopup {
         palette = withSelection(palette, selection(palette));
         List<ItemStack> slots = Draw.slots(contents(held));
         int rows = palette.rows();
-        int height = PAD * 2 + SLOT * rows;
+        int height = TITLE_H + ROW_H * rows;
 
         // Centred over the held hotbar slot (vanilla's slot i is centred 11 + 20i in from the
         // hotbar's left), kept on screen, bottom resting just above the hotbar.
         int slotCentre = originX + 11 + 20 * mc.player.getInventory().getSelectedSlot();
-        float left = slotCentre - WIDTH * SCALE / 2;
-        left = Math.clamp(left, 0, g.guiWidth() - WIDTH * SCALE);
+        float left = Math.clamp(slotCentre - ROW_W * SCALE / 2, 0, g.guiWidth() - ROW_W * SCALE);
         float top = originY + 1 - height * SCALE;
 
         g.pose().pushMatrix();
         g.pose().translate(left, top);
         g.pose().scale(SCALE, SCALE);
 
-        // The panel, with vanilla's bevel.
-        g.fill(0, 0, WIDTH, height, PANEL);
-        g.fill(0, 0, WIDTH - 1, 1, BEVEL_LIGHT);
-        g.fill(0, 0, 1, height - 1, BEVEL_LIGHT);
-        g.fill(1, height - 1, WIDTH, height, BEVEL_DARK);
-        g.fill(WIDTH - 1, 1, WIDTH, height, BEVEL_DARK);
+        // What the box does, centred above the grid.
+        Component title = title(palette);
+        g.text(mc.font, title.getVisualOrderText(), (ROW_W - mc.font.width(title)) / 2, 1, TITLE_COLOR, true);
 
         int picked = palette.mode() == Mode.PICK ? Draw.pickSlot(palette, slots) : -1;
-        int row = palette.mode() == Mode.GRADIENT ? Draw.currentRow(palette) : -1;
-        for (int i = 0; i < rows * Palette.ROW_WIDTH; i++) {
-            int x = PAD + SLOT * (i % Palette.ROW_WIDTH);
-            int y = PAD + SLOT * (i / Palette.ROW_WIDTH);
-            g.fill(x, y, x + SLOT - 1, y + SLOT - 1, WELL);
-            if (i < slots.size() && !slots.get(i).isEmpty()) {
-                g.item(slots.get(i), x + 1, y + 1);
-                g.itemDecorations(mc.font, slots.get(i), x + 1, y + 1);
+        int lit = palette.mode() == Mode.GRADIENT ? Draw.currentRow(palette) : -1;
+        for (int row = 0; row < rows; row++) {
+            int y = TITLE_H + ROW_H * row;
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, 0, y, ROW_W, ROW_H);
+            for (int col = 0; col < Palette.ROW_WIDTH; col++) {
+                int i = row * Palette.ROW_WIDTH + col;
+                int x = SLOT_PITCH * col;
+                if (i < slots.size() && !slots.get(i).isEmpty()) {
+                    g.item(slots.get(i), x + 3, y + 3);
+                    g.itemDecorations(mc.font, slots.get(i), x + 3, y + 3);
+                }
+                // The hotbar's own selection frame: on the picked slot, or on every slot of the gradient row.
+                if (i == picked || row == lit) g.blitSprite(RenderPipelines.GUI_TEXTURED, SELECTION, x - 1, y - 1, 24, 23);
             }
-            if (i == picked || i / Palette.ROW_WIDTH == row) g.fill(x, y, x + SLOT - 1, y + SLOT - 1, LIGHT);
-        }
-        // An edge round what is lit, so it reads at a glance.
-        if (picked >= 0) {
-            g.outline(PAD + SLOT * (picked % Palette.ROW_WIDTH) - 1, PAD + SLOT * (picked / Palette.ROW_WIDTH) - 1, SLOT + 1, SLOT + 1, LIGHT_EDGE);
-        } else if (row >= 0) {
-            g.outline(PAD - 1, PAD + SLOT * row - 1, SLOT * Palette.ROW_WIDTH + 1, SLOT + 1, LIGHT_EDGE);
         }
         g.pose().popMatrix();
+    }
+
+    private static Component title(Palette palette) {
+        return switch (palette.mode()) {
+            case RANDOM -> Component.translatable("shulkerpalette.popup.random");
+            case EQUAL -> Component.translatable("shulkerpalette.popup.equal");
+            case PICK -> Component.translatable("shulkerpalette.popup.pick");
+            case GRADIENT -> Component.translatable("shulkerpalette.popup.gradient", Draw.currentRow(palette) + 1);
+        };
     }
 
     private static Palette withSelection(Palette p, int selection) {
