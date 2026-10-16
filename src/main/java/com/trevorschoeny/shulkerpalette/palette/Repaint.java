@@ -33,7 +33,7 @@ public final class Repaint {
     /**
      * Can this block be repainted? Full, solid-shaped blocks only for now, and never a block
      * with a block entity: replacing a chest would delete what is in it.
-     * ponytail: stairs, slabs and keeping orientation are a later question (design.md).
+     * Stairs, slabs and keeping orientation are not handled yet.
      */
     public static boolean canRepaint(BlockGetter level, BlockPos pos, BlockState state) {
         return !state.isAir() && !state.hasBlockEntity() && state.isCollisionShapeFullBlock(level, pos);

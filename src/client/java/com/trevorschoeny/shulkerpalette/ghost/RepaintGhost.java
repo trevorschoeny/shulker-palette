@@ -53,7 +53,7 @@ public final class RepaintGhost {
             ItemStack next = palette.next().map(ItemStackTemplate::create).orElse(ItemStack.EMPTY);
             if (!(next.getItem() instanceof BlockItem block)) return;
 
-            // ponytail: shows the block's default state, so a log or stairs may face another
+            // Shows the block's default state, so a log or stairs may face another
             // way than the click will place them; tinted blocks (grass, leaves) show untinted.
             BlockState state = block.getBlock().defaultBlockState();
             List<BlockStateModelPart> parts = new ArrayList<>();

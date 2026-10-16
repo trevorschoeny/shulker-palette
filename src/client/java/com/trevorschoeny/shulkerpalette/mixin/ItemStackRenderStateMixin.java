@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * Draws the rainbow hull under an item marked by {@link HeldLook#RAINBOW}: each quad layer's
  * hull, in that layer's own transform, before vanilla draws the item itself.
- * ponytail: layers drawn by a special renderer (a chest, a skull) have no quads and get no
+ * Layers drawn by a special renderer (a chest, a skull) have no quads and get no
  * outline; add one per special renderer if a block like that ever looks bare.
  */
 @Mixin(ItemStackRenderState.class)

@@ -2,7 +2,6 @@
 // at random, picked by hand, or row by row as a gradient. Universal jar, required on both
 // sides: the server takes the blocks out of the shulker, the client draws the control panel,
 // the held block and the HUD. Built on SlotKit (extra rows, cheat sheet) and MenuKit (panel, HUD).
-// Design: Other Mods drive, mods/shulker-palette/design.md.
 //
 // Included from the root settings.gradle as `:shulker-palette`. Build with
 // `./gradlew :shulker-palette:build` from the workspace root.

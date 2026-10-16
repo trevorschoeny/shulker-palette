@@ -23,8 +23,8 @@ abstract class BlockItemMixin {
     private void shulkerpalette$placeFromPalette(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         Palette palette = Palette.activeOn(context.getItemInHand());
         if (palette == null) return;
-        // Modifier + right-click places the box itself (Trev, 2026-10-15; was sneak, which
-        // cost sneak-placing at edges). Sneak now places palette blocks like any block.
+        // Modifier + right-click places the box itself. Sneak places palette blocks like any
+        // block, so sneak-placing at an edge still works.
         if (context.getPlayer() != null && Keys.modifierHeld(context.getPlayer())) return;
         var hit = ((UseOnContextAccessor) context).shulkerpalette$hitResult();
         cir.setReturnValue(context.getPlayer() != null && Repaint.active(palette, context.getPlayer())

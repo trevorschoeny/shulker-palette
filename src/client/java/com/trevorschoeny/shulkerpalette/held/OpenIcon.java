@@ -21,7 +21,7 @@ public final class OpenIcon {
      * Lid lift: the lid rises 8 px per unit of openness. In the inventory 4 puts it two
      * blocks up, out of the icon's cell. In a hand nothing clips it, so it goes so far up
      * it is past the far plane.
-     * ponytail: the lid is sent away rather than left out; a lidless model would be cleaner
+     * The lid is sent away rather than left out; a lidless model would be cleaner
      * if the shulker model ever exposes one.
      */
     private static final float ICON_OPENNESS = 4f;

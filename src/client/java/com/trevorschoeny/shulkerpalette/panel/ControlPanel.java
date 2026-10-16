@@ -24,7 +24,7 @@ import net.minecraft.resources.Identifier;
  * and asks the server to change it; the new state comes back the same way.
  *
  * <p>Palette off shows only the power button, so the screen looks like vanilla's. The rows
- * buttons join the column with the extra-rows grid (design.md).
+ * buttons will join the column with the extra-rows grid.
  */
 public final class ControlPanel {
     private ControlPanel() {}

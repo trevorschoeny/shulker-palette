@@ -21,7 +21,7 @@ import net.minecraft.world.item.ItemStack;
  * The server's half of the palette keys.
  *
  * <p>The palette modifier (Option by default, rebindable) replaced sneak for every palette
- * gesture, since builders sneak all the time (Trev, 2026-10-15): modifier + scroll moves the
+ * gesture, since builders sneak all the time: modifier + scroll moves the
  * selection, modifier + right-click on a block places the box itself, modifier + right-click
  * into the air opens it. The server can't see a key, so the client reports the modifier
  * whenever it goes down or up, before any click it applies to (one connection keeps order).

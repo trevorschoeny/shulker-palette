@@ -143,7 +143,7 @@ public final class Draw {
      * A hash of the contents that stays the same across restarts (item ids and counts per
      * slot), unlike {@code ItemContainerContents.hashCode()}, which can lean on identity
      * hashes. A palette stores it next to its next block; a mismatch means the box changed.
-     * ponytail: ignores components, so renaming a block inside the box doesn't count as a change.
+     * Ignores components, so renaming a block inside the box doesn't count as a change.
      */
     public static int fingerprint(ItemContainerContents contents) {
         int hash = 1;

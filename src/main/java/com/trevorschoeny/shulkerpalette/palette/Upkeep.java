@@ -20,7 +20,7 @@ public final class Upkeep {
     private Upkeep() {}
 
     public static void register() {
-        // ponytail: scans every inventory every tick; reading one component per slot is cheap.
+        // Scans every inventory every tick; reading one component per slot is cheap.
         // Move to a change hook if a profile ever shows it.
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) refresh(player);
