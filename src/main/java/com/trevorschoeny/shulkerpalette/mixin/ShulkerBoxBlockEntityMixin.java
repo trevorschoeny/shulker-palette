@@ -1,6 +1,9 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
+import com.trevorschoeny.shulkerpalette.palette.SavedPalette;
+import java.util.List;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponentMap;
@@ -66,6 +69,17 @@ abstract class ShulkerBoxBlockEntityMixin extends BlockEntity implements Palette
     @Override
     public void shulkerpalette$setPalette(Palette palette) {
         setComponents(DataComponentMap.builder().addAll(components()).set(Palette.COMPONENT, palette).build());
+        setChanged();
+    }
+
+    @Override
+    public List<SavedPalette.Entry> shulkerpalette$cheatSheet() {
+        return components().getOrDefault(CheatSheet.COMPONENT, List.of());
+    }
+
+    @Override
+    public void shulkerpalette$setCheatSheet(List<SavedPalette.Entry> entries) {
+        setComponents(DataComponentMap.builder().addAll(components()).set(CheatSheet.COMPONENT, entries.isEmpty() ? null : entries).build());
         setChanged();
     }
 }

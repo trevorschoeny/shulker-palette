@@ -2,7 +2,9 @@ package com.trevorschoeny.shulkerpalette.palette;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +50,10 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
 
     /** One filled slot. */
     public record Entry(int slot, ItemStackTemplate item) {
+        static final Codec<Entry> CODEC = RecordCodecBuilder.create(i -> i.group(
+                Codec.intRange(0, CAPACITY - 1).fieldOf("slot").forGetter(Entry::slot),
+                ItemStackTemplate.CODEC.fieldOf("item").forGetter(Entry::item)
+        ).apply(i, Entry::new));
         static final StreamCodec<RegistryFriendlyByteBuf, Entry> STREAM_CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, Entry::slot, ItemStackTemplate.STREAM_CODEC, Entry::item, Entry::new);
     }

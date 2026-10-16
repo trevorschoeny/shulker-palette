@@ -98,4 +98,15 @@ public final class HeldShulker extends SimpleContainer implements PaletteHolder 
     public void shulkerpalette$setPalette(Palette palette) {
         stack.set(Palette.COMPONENT, palette);
     }
+
+    @Override
+    public java.util.List<SavedPalette.Entry> shulkerpalette$cheatSheet() {
+        return stack.getOrDefault(CheatSheet.COMPONENT, java.util.List.of());
+    }
+
+    @Override
+    public void shulkerpalette$setCheatSheet(java.util.List<SavedPalette.Entry> entries) {
+        if (entries.isEmpty()) stack.remove(CheatSheet.COMPONENT);
+        else stack.set(CheatSheet.COMPONENT, entries);
+    }
 }

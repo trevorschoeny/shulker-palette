@@ -14,7 +14,8 @@
   "shulkerpalette.popup.pick": "Item",
   "shulkerpalette.popup.gradient": "Gradient level %s",
   "shulkerpalette.panel.save": "Save: copy this palette to the clipboard as text you can edit.",
-  "shulkerpalette.panel.load": "Load: fill this box from a palette on the clipboard.",
+  "shulkerpalette.panel.load": "Load a palette from the clipboard. Creative fills the box; survival shows what goes where.",
   "shulkerpalette.clipboard.saved": "Palette copied to the clipboard",
-  "shulkerpalette.clipboard.loaded": "Palette loaded"
+  "shulkerpalette.clipboard.loaded": "Palette loaded",
+  "shulkerpalette.panel.clear": "Clear the cheat sheet."
 }

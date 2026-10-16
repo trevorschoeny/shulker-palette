@@ -70,8 +70,14 @@ public final class ControlPanel {
                                 .size(SIZE, SIZE)
                                 .onClick(ClipboardClient::load)
                                 .tooltip(() -> answerOr(ClipboardClient.Button.LOAD, "shulkerpalette.panel.load"))
-                                // ponytail: creative only until survival loading (the cheat sheet) is built
-                                .visibleWhen(() -> on() && creative())
+                                .visibleWhen(ControlPanel::on)
+                                .build())
+                        .add(Button.builder()
+                                .icon(() -> sprite("clear"))
+                                .size(SIZE, SIZE)
+                                .onClick(() -> press(PanelActions.CLEAR))
+                                .tooltip(Component.translatable("shulkerpalette.panel.clear"))
+                                .visibleWhen(() -> on() && openMenuId() >= 0 && CheatSheetClient.has(openMenuId()))
                                 .build())
                         .build())
                 .build()
@@ -94,6 +100,10 @@ public final class ControlPanel {
 
     private static Mode mode() {
         return palette().map(Palette::mode).orElse(Mode.RANDOM);
+    }
+
+    private static int openMenuId() {
+        return Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen ? screen.getMenu().containerId : -1;
     }
 
     private static boolean creative() {

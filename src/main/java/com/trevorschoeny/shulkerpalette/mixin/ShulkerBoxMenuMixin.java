@@ -1,6 +1,8 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.Clipboard;
+import java.util.List;
 import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
 import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
@@ -39,6 +41,11 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     private void shulkerpalette$syncPalette(int containerId, Inventory inventory, Container container, CallbackInfo ci) {
         if (container instanceof PaletteHolder holder) {
             shulkerpalette$holder = holder;
+            // The client can't read a placed box's components; send it the cheat sheet. (This
+            // arrives before the screen opens; the client keeps it by container id.)
+            if (inventory.player instanceof ServerPlayer server && !holder.shulkerpalette$cheatSheet().isEmpty()) {
+                CheatSheet.send(server, containerId, holder);
+            }
             shulkerpalette$state = addDataSlot(new DataSlot() {
                 @Override public int get() { return PanelActions.pack(holder.shulkerpalette$palette(), holder instanceof HeldShulker); }
                 @Override public void set(int value) {}
@@ -65,6 +72,11 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
         if (shulkerpalette$holder == null) return super.clickMenuButton(player, buttonId);
         if (buttonId == PanelActions.SAVE) {
             if (player instanceof ServerPlayer server) Clipboard.save(server, shulkerpalette$holder);
+            return true;
+        }
+        if (buttonId == PanelActions.CLEAR) {
+            shulkerpalette$holder.shulkerpalette$setCheatSheet(List.of());
+            if (player instanceof ServerPlayer server) CheatSheet.send(server, containerId, shulkerpalette$holder);
             return true;
         }
         shulkerpalette$holder.shulkerpalette$setPalette(

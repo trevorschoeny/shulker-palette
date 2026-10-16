@@ -2,6 +2,7 @@ package com.trevorschoeny.shulkerpalette;
 
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Upkeep;
+import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.Clipboard;
 import com.trevorschoeny.shulkerpalette.palette.Drops;
 import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
@@ -22,6 +23,7 @@ public final class ShulkerPalette implements ModInitializer {
     @Override
     public void onInitialize() {
         Palette.register();
+        CheatSheet.register();
         Upkeep.register();
         Scroll.register();
         Drops.register();

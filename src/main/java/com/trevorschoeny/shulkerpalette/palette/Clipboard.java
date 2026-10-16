@@ -10,6 +10,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -56,23 +58,31 @@ public final class Clipboard {
     }
 
     /**
-     * Load, in creative: the box takes the saved rows, mode and items, replacing what it held
-     * (creative items are free). Survival loading becomes a cheat sheet (not built yet), so
-     * it is refused for now.
+     * Load. In creative the box takes the saved rows, mode and items, replacing what it held
+     * (creative items are free). In survival it takes the mode and a cheat sheet: ghosts of
+     * the saved items in the empty slots, for the player to fill from real blocks. Survival
+     * keeps the box's own rows, so slots past them are left off the sheet.
      */
     private static void load(ServerPlayer player, Load payload) {
-        if (!payload.palette().valid() || !player.isCreative()) return;
+        if (!payload.palette().valid()) return;
         if (player.containerMenu.containerId != payload.containerId()) return; // the screen changed since
         if (!(player.containerMenu instanceof PaletteMenu menu) || !(menu.shulkerpalette$holder() instanceof Container box)) return;
         PaletteHolder holder = menu.shulkerpalette$holder();
-
         SavedPalette saved = payload.palette();
         Palette current = holder.shulkerpalette$palette();
-        holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), saved.rows(),
-                0, java.util.Optional.empty(), 0));
-        for (int i = 0; i < box.getContainerSize(); i++) box.setItem(i, ItemStack.EMPTY);
-        for (SavedPalette.Entry entry : saved.slots()) box.setItem(entry.slot(), entry.item().create());
+
+        if (player.isCreative()) {
+            holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), saved.rows(), 0, Optional.empty(), 0));
+            for (int i = 0; i < box.getContainerSize(); i++) box.setItem(i, ItemStack.EMPTY);
+            for (SavedPalette.Entry entry : saved.slots()) box.setItem(entry.slot(), entry.item().create());
+            holder.shulkerpalette$setCheatSheet(List.of());
+        } else {
+            holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), current.rows(), 0, Optional.empty(), 0));
+            int room = current.rows() * Palette.ROW_WIDTH;
+            holder.shulkerpalette$setCheatSheet(saved.slots().stream().filter(e -> e.slot() < room).toList());
+        }
         box.setChanged();
+        CheatSheet.send(player, payload.containerId(), holder);
         player.containerMenu.broadcastChanges();
     }
 }
