@@ -59,7 +59,7 @@ public final class Draw {
 
     /**
      * Every block type in the box, each once, in order of first appearance, with its total.
-     * Equal random's set of types, and the totals the action bar names in pick mode.
+     * Pick mode's list and equal random's set of types; the popup shows these totals.
      */
     public static List<Entry> types(List<ItemStack> slots) {
         List<Entry> entries = new ArrayList<>();
@@ -76,17 +76,12 @@ public final class Draw {
     }
 
     /**
-     * The slot pick mode places from: the selected slot, or if it holds no block (it ran
-     * out, or was emptied) the next slot after it that does, wrapping round. -1 when no slot
-     * holds a block. So a slot running dry moves the pick on without rewriting the selection.
+     * The block type pick mode places, as an index into {@link #types}: the selection, kept
+     * inside the list. When the picked type runs out the list closes up, so the same index
+     * moves on to the next type without rewriting the selection.
      */
-    public static int pickSlot(Palette palette, List<ItemStack> slots) {
-        int size = Math.max(slots.size(), palette.rows() * Palette.ROW_WIDTH);
-        for (int step = 0; step < size; step++) {
-            int slot = Math.floorMod(palette.selection() + step, size);
-            if (slot < slots.size() && eligible(slots.get(slot))) return slot;
-        }
-        return -1;
+    public static int currentPick(Palette palette, List<Entry> types) {
+        return types.isEmpty() ? -1 : Math.clamp(palette.selection(), 0, types.size() - 1);
     }
 
     /** Chooses the next block for this palette from these contents. Empty when nothing is eligible. */
@@ -99,8 +94,9 @@ public final class Draw {
                 yield types.isEmpty() ? ItemStack.EMPTY : types.get(random.nextInt(types.size())).type();
             }
             case PICK -> {
-                int slot = pickSlot(palette, slots);
-                yield slot < 0 ? ItemStack.EMPTY : slots.get(slot);
+                List<Entry> types = types(slots);
+                int pick = currentPick(palette, types);
+                yield pick < 0 ? ItemStack.EMPTY : types.get(pick).type();
             }
         };
         return chosen.isEmpty() ? Optional.empty() : Optional.of(ItemStackTemplate.fromNonEmptyStack(chosen, 1));
@@ -127,13 +123,6 @@ public final class Draw {
     public static Optional<ItemContainerContents> removeOne(Palette palette, ItemContainerContents contents, ItemStack placed) {
         List<ItemStack> slots = new ArrayList<>(slots(contents));
         List<Integer> candidates = palette.mode() == Mode.GRADIENT ? scope(palette, slots) : allIndices(slots.size());
-        // Pick mode takes from the picked slot first, so the slot you chose is the one that empties.
-        int picked = palette.mode() == Mode.PICK ? pickSlot(palette, slots) : -1;
-        if (picked >= 0) {
-            candidates = new ArrayList<>(candidates);
-            candidates.remove(Integer.valueOf(picked));
-            candidates.addFirst(picked);
-        }
         for (int i : candidates) {
             ItemStack stack = slots.get(i);
             if (ItemStack.isSameItemSameComponents(stack, placed)) {

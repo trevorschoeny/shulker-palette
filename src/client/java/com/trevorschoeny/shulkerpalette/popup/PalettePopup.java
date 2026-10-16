@@ -13,6 +13,7 @@ import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntPredicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.component.DataComponents;
@@ -21,10 +22,10 @@ import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
  * Sneak + scroll with a palette in hand opens a small view of the box right above its hotbar
- * slot: rows drawn as three-quarter-size hotbars holding only the blocks (no empty slots),
+ * slot: rows drawn as three-quarter-size hotbars, one stack per block type with its total,
  * and a title saying what the box does. The hotbar's selection frame marks what a click can
- * place: the picked slot, the gradient row, or in the random modes every block type (with
- * random's totals, or one of each for equal random). Letting go of sneak closes it.
+ * place: the picked type, the gradient row, or in the random modes every type. Letting go
+ * of sneak closes it.
  *
  * <p>A MenuKit HUD panel above the hotbar; the grid itself is drawn by hand, from vanilla's
  * hotbar sprites, because it has to sit over one particular hotbar slot.
@@ -102,37 +103,43 @@ public final class PalettePopup {
     private record Cell(ItemStack stack, boolean lit) {}
 
     /**
-     * What the popup shows, row by row, empty slots and non-blocks left out:
+     * What the popup shows, row by row: one stack per block type holding its total (equal
+     * random: one item per type), never empty slots or non-blocks. The selection frame marks
+     * what a click can place.
      * <ul>
-     *   <li>Pick and gradient: the box's own rows, each closed up, the picked slot or the
-     *       current row lit.</li>
-     *   <li>Random: one stack per block type holding the box's total of it, all lit (every
-     *       one can be drawn), nine to a row.</li>
-     *   <li>Equal random: one item per block type, all lit (each is as likely).</li>
+     *   <li>Random and equal random: the box's types, nine to a row, all framed.</li>
+     *   <li>Pick: the box's types, nine to a row, the picked one framed.</li>
+     *   <li>Gradient: one row per box row (rows with no blocks left out), its types with the
+     *       row's totals, the current row framed.</li>
      * </ul>
      */
     private static List<List<Cell>> rows(Palette palette, List<ItemStack> slots) {
         List<List<Cell>> rows = new ArrayList<>();
-        if (palette.mode() == Mode.RANDOM || palette.mode() == Mode.EQUAL) {
-            List<Cell> cells = new ArrayList<>();
-            for (Draw.Entry type : Draw.types(slots)) {
-                cells.add(new Cell(type.type().copyWithCount(palette.mode() == Mode.RANDOM ? type.total() : 1), true));
-            }
-            for (int from = 0; from < cells.size(); from += Palette.ROW_WIDTH) {
-                rows.add(cells.subList(from, Math.min(from + Palette.ROW_WIDTH, cells.size())));
+        if (palette.mode() == Mode.GRADIENT) {
+            int lit = Draw.currentRow(palette);
+            for (int row = 0; row < palette.rows(); row++) {
+                int from = Math.min(row * Palette.ROW_WIDTH, slots.size());
+                boolean current = row == lit;
+                List<Cell> cells = cells(Draw.types(slots.subList(from, Math.min(from + Palette.ROW_WIDTH, slots.size()))), false, i -> current);
+                if (!cells.isEmpty()) rows.add(cells);
             }
             return rows;
         }
-        int picked = palette.mode() == Mode.PICK ? Draw.pickSlot(palette, slots) : -1;
-        int lit = palette.mode() == Mode.GRADIENT ? Draw.currentRow(palette) : -1;
-        for (int row = 0; row < palette.rows(); row++) {
-            List<Cell> cells = new ArrayList<>();
-            for (int i = row * Palette.ROW_WIDTH; i < Math.min((row + 1) * Palette.ROW_WIDTH, slots.size()); i++) {
-                if (Draw.eligible(slots.get(i))) cells.add(new Cell(slots.get(i), i == picked || row == lit));
-            }
-            if (!cells.isEmpty()) rows.add(cells);
+        List<Draw.Entry> types = Draw.types(slots);
+        int picked = palette.mode() == Mode.PICK ? Draw.currentPick(palette, types) : -1;
+        List<Cell> cells = cells(types, palette.mode() == Mode.EQUAL, i -> picked < 0 || i == picked);
+        for (int from = 0; from < cells.size(); from += Palette.ROW_WIDTH) {
+            rows.add(cells.subList(from, Math.min(from + Palette.ROW_WIDTH, cells.size())));
         }
         return rows;
+    }
+
+    private static List<Cell> cells(List<Draw.Entry> types, boolean oneEach, IntPredicate lit) {
+        List<Cell> cells = new ArrayList<>();
+        for (int i = 0; i < types.size(); i++) {
+            cells.add(new Cell(types.get(i).type().copyWithCount(oneEach ? 1 : types.get(i).total()), lit.test(i)));
+        }
+        return cells;
     }
 
     private static void draw(GuiGraphicsExtractor g, int originX, int originY) {
