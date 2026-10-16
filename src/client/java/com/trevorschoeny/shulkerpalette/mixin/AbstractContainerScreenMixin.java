@@ -5,7 +5,11 @@ import com.trevorschoeny.shulkerpalette.panel.CheatSheetClient;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.item.ItemStack;
+import java.util.List;
+import java.util.Optional;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -32,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = AbstractContainerScreen.class, priority = 500)
 abstract class AbstractContainerScreenMixin {
     @Shadow @Final protected AbstractContainerMenu menu;
+    @Shadow protected @Nullable Slot hoveredSlot;
 
     /** Grey over the slot and its item, the way a disabled control greys. */
     private static final int GREY = 0x80606060;
@@ -50,6 +55,15 @@ abstract class AbstractContainerScreenMixin {
             if (!ghost.isEmpty()) {
                 graphics.item(ghost, slot.x, slot.y);
                 graphics.fill(slot.x, slot.y, slot.x + 16, slot.y + 16, GHOST);
+                // The count over the fade, so it reads clearly: how many go here.
+                graphics.itemDecorations(Minecraft.getInstance().font, ghost, slot.x, slot.y);
+                // Hovering a ghost says what to put there and how many.
+                if (slot == hoveredSlot) {
+                    graphics.setTooltipForNextFrame(Minecraft.getInstance().font, List.of(
+                            ghost.getHoverName(),
+                            Component.translatable("shulkerpalette.ghost.place", ghost.getCount()).withStyle(ChatFormatting.GRAY)),
+                            Optional.empty(), mouseX, mouseY);
+                }
             }
         }
     }

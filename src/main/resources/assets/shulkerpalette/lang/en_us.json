@@ -17,5 +17,6 @@
   "shulkerpalette.panel.load": "Load a palette from the clipboard. Creative fills the box; survival shows what goes where.",
   "shulkerpalette.clipboard.saved": "Palette copied to the clipboard",
   "shulkerpalette.clipboard.loaded": "Palette loaded",
-  "shulkerpalette.panel.clear": "Clear the cheat sheet."
+  "shulkerpalette.panel.clear": "Clear the cheat sheet.",
+  "shulkerpalette.ghost.place": "Place %s here"
 }
