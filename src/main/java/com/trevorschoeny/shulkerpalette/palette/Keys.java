@@ -26,7 +26,8 @@ import net.minecraft.world.item.ItemStack;
  * into the air opens it. The server can't see a key, so the client reports the modifier
  * whenever it goes down or up, before any click it applies to (one connection keeps order).
  *
- * <p>The repaint key flips repaint on the palette in hand, as the panel's button does.
+ * <p>The power and repaint keys flip the palette in hand on or off, and repaint, as the
+ * panel's buttons do.
  */
 public final class Keys {
     private Keys() {}
@@ -49,10 +50,11 @@ public final class Keys {
         }
     }
 
-    /** Client to server: flip repaint on the palette in the main hand. */
-    public record ToggleRepaint() implements CustomPacketPayload {
-        public static final Type<ToggleRepaint> TYPE = new Type<>(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "toggle_repaint"));
-        public static final StreamCodec<RegistryFriendlyByteBuf, ToggleRepaint> STREAM_CODEC = StreamCodec.unit(new ToggleRepaint());
+    /** Client to server: press panel button {@code action} (power or repaint) for the shulker in the main hand. */
+    public record Toggle(int action) implements CustomPacketPayload {
+        public static final Type<Toggle> TYPE = new Type<>(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "toggle"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, Toggle> STREAM_CODEC =
+                StreamCodec.composite(ByteBufCodecs.VAR_INT, Toggle::action, Toggle::new);
 
         @Override
         public Type<? extends CustomPacketPayload> type() {
@@ -73,25 +75,31 @@ public final class Keys {
 
     public static void register() {
         PayloadTypeRegistry.serverboundPlay().register(Modifier.TYPE, Modifier.STREAM_CODEC);
-        PayloadTypeRegistry.serverboundPlay().register(ToggleRepaint.TYPE, ToggleRepaint.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(Toggle.TYPE, Toggle.STREAM_CODEC);
         // Applied on the network thread, not queued: a click right behind it is handled on the
         // server thread, and must already see the modifier.
         ServerPlayNetworking.registerGlobalReceiver(Modifier.TYPE,
                 (payload, context) -> setModifier(context.player().getUUID(), payload.held()));
-        ServerPlayNetworking.registerGlobalReceiver(ToggleRepaint.TYPE,
-                (payload, context) -> context.server().execute(() -> toggleRepaint(context.player())));
+        ServerPlayNetworking.registerGlobalReceiver(Toggle.TYPE,
+                (payload, context) -> context.server().execute(() -> toggle(context.player(), payload.action())));
         // A player who leaves with the key down never sends the release.
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> setModifier(handler.player.getUUID(), false));
     }
 
-    private static void toggleRepaint(ServerPlayer player) {
+    private static void toggle(ServerPlayer player, int action) {
+        // Only the two buttons that have keys; anything else from the wire is ignored.
+        if (action != PanelActions.POWER && action != PanelActions.REPAINT) return;
         ItemStack shulker = player.getMainHandItem();
-        Palette palette = Palette.activeOn(shulker);
-        if (palette == null) return; // the hand changed since the key was pressed
-        // The same rule as the panel's button: palette on, creative only in v1.
-        Palette changed = PanelActions.apply(palette, PanelActions.REPAINT, player);
+        if (!Palette.isShulker(shulker)) return; // the hand changed since the key was pressed
+        // Any shulker can be switched on, so an off box (no palette yet) counts as OFF.
+        Palette palette = shulker.getOrDefault(Palette.COMPONENT, Palette.OFF);
+        // The same rules as the panel's buttons (repaint: palette on, creative only in v1).
+        Palette changed = PanelActions.apply(palette, action, player);
         if (changed == palette) return;
         shulker.set(Palette.COMPONENT, changed);
-        player.sendOverlayMessage(Component.translatable(changed.repaint() ? "shulkerpalette.key.repaint.on" : "shulkerpalette.key.repaint.off"));
+        String said = action == PanelActions.POWER
+                ? (changed.on() ? "shulkerpalette.key.power.on" : "shulkerpalette.key.power.off")
+                : (changed.repaint() ? "shulkerpalette.key.repaint.on" : "shulkerpalette.key.repaint.off");
+        player.sendOverlayMessage(Component.translatable(said));
     }
 }

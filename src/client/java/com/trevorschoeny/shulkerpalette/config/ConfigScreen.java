@@ -33,6 +33,9 @@ public final class ConfigScreen {
             keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.MODIFIER,
                     Component.translatable("key.shulkerpalette.modifier"),
                     OptionDescription.of(Component.translatable("shulkerpalette.config.modifier.description"))));
+            keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.POWER,
+                    Component.translatable("key.shulkerpalette.power"),
+                    OptionDescription.of(Component.translatable("shulkerpalette.config.power.description"))));
             keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.REPAINT,
                     Component.translatable("key.shulkerpalette.repaint"),
                     OptionDescription.of(Component.translatable("shulkerpalette.config.repaint.description"))));
