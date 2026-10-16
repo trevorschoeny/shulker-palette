@@ -43,12 +43,25 @@ public final class Scroll {
     /**
      * The selection after scrolling {@code steps}, wrapping round at both ends: from block
      * slot to block slot in pick mode (empty and non-block slots are skipped), from row to
-     * row in gradient mode. -1 when there is nothing to choose. The client runs this too, to
+     * row in gradient mode (rows holding no blocks skipped). -1 when there is nothing to
+     * choose. The client runs this too, to
      * move the popup before the server's answer arrives.
      */
     public static int moved(Palette palette, ItemContainerContents contents, int steps) {
-        if (palette.mode() == Mode.GRADIENT) return Math.floorMod(Draw.currentRow(palette) + steps, palette.rows());
         List<ItemStack> slots = Draw.slots(contents);
+        if (palette.mode() == Mode.GRADIENT) {
+            // Row to row, skipping rows that hold no blocks (the popup leaves them out too).
+            int row = Draw.currentRow(palette);
+            int direction = Integer.signum(steps);
+            boolean any = false;
+            for (int r = 0; r < palette.rows(); r++) any |= rowHasBlocks(slots, r);
+            if (!any) return -1;
+            for (int moves = Math.abs(steps); moves > 0; moves--) {
+                do row = Math.floorMod(row + direction, palette.rows());
+                while (!rowHasBlocks(slots, row));
+            }
+            return row;
+        }
         int at = Draw.pickSlot(palette, slots);
         if (at < 0) return -1;
         int size = Math.max(slots.size(), palette.rows() * Palette.ROW_WIDTH);
@@ -58,6 +71,13 @@ public final class Scroll {
             while (at >= slots.size() || !Draw.eligible(slots.get(at)));
         }
         return at;
+    }
+
+    private static boolean rowHasBlocks(List<ItemStack> slots, int row) {
+        for (int i = row * Palette.ROW_WIDTH; i < Math.min((row + 1) * Palette.ROW_WIDTH, slots.size()); i++) {
+            if (Draw.eligible(slots.get(i))) return true;
+        }
+        return false;
     }
 
     /** "Stone ×192": the picked block and how many of it the whole box holds. */

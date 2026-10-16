@@ -11,6 +11,7 @@ import com.trevorschoeny.shulkerpalette.palette.Draw;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -20,10 +21,10 @@ import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
  * Sneak + scroll with a palette in hand opens a small view of the box right above its hotbar
- * slot: each row drawn as a three-quarter-size hotbar, every item shown, and a title saying
- * what the box does. In pick mode the picked slot wears the hotbar's selection frame, in
- * gradient mode the whole row does, and further scrolls move it. In the random modes the
- * popup only shows the contents. Letting go of sneak closes it.
+ * slot: rows drawn as three-quarter-size hotbars holding only the blocks (no empty slots),
+ * and a title saying what the box does. The hotbar's selection frame marks what a click can
+ * place: the picked slot, the gradient row, or in the random modes every block type (with
+ * random's totals, or one of each for equal random). Letting go of sneak closes it.
  *
  * <p>A MenuKit HUD panel above the hotbar; the grid itself is drawn by hand, from vanilla's
  * hotbar sprites, because it has to sit over one particular hotbar slot.
@@ -42,6 +43,8 @@ public final class PalettePopup {
     private static final int ROW_W = 182;
     private static final int ROW_H = 22;
     private static final int SLOT_PITCH = 20;
+    /** Rows overlap by one pixel, so neighbouring rows share a border line instead of doubling it. */
+    private static final int ROW_PITCH = 21;
     private static final int TITLE_H = 11;
     private static final int TITLE_COLOR = 0xFFFFFFFF;
     private static final int HOTBAR_WIDTH = 182;
@@ -95,20 +98,59 @@ public final class PalettePopup {
         return palette.selection();
     }
 
+    /** One cell of the popup: the stack drawn, and whether it wears the selection frame. */
+    private record Cell(ItemStack stack, boolean lit) {}
+
+    /**
+     * What the popup shows, row by row, empty slots and non-blocks left out:
+     * <ul>
+     *   <li>Pick and gradient: the box's own rows, each closed up, the picked slot or the
+     *       current row lit.</li>
+     *   <li>Random: one stack per block type holding the box's total of it, all lit (every
+     *       one can be drawn), nine to a row.</li>
+     *   <li>Equal random: one item per block type, all lit (each is as likely).</li>
+     * </ul>
+     */
+    private static List<List<Cell>> rows(Palette palette, List<ItemStack> slots) {
+        List<List<Cell>> rows = new ArrayList<>();
+        if (palette.mode() == Mode.RANDOM || palette.mode() == Mode.EQUAL) {
+            List<Cell> cells = new ArrayList<>();
+            for (Draw.Entry type : Draw.types(slots)) {
+                cells.add(new Cell(type.type().copyWithCount(palette.mode() == Mode.RANDOM ? type.total() : 1), true));
+            }
+            for (int from = 0; from < cells.size(); from += Palette.ROW_WIDTH) {
+                rows.add(cells.subList(from, Math.min(from + Palette.ROW_WIDTH, cells.size())));
+            }
+            return rows;
+        }
+        int picked = palette.mode() == Mode.PICK ? Draw.pickSlot(palette, slots) : -1;
+        int lit = palette.mode() == Mode.GRADIENT ? Draw.currentRow(palette) : -1;
+        for (int row = 0; row < palette.rows(); row++) {
+            List<Cell> cells = new ArrayList<>();
+            for (int i = row * Palette.ROW_WIDTH; i < Math.min((row + 1) * Palette.ROW_WIDTH, slots.size()); i++) {
+                if (Draw.eligible(slots.get(i))) cells.add(new Cell(slots.get(i), i == picked || row == lit));
+            }
+            if (!cells.isEmpty()) rows.add(cells);
+        }
+        return rows;
+    }
+
     private static void draw(GuiGraphicsExtractor g, int originX, int originY) {
         Minecraft mc = Minecraft.getInstance();
         ItemStack held = mc.player.getMainHandItem();
         Palette palette = Palette.activeOn(held);
         if (palette == null) return;
         palette = withSelection(palette, selection(palette));
-        List<ItemStack> slots = Draw.slots(contents(held));
-        int rows = palette.rows();
-        int height = TITLE_H + ROW_H * rows;
+        List<List<Cell>> rows = rows(palette, Draw.slots(contents(held)));
+        int height = TITLE_H + ROW_PITCH * rows.size() + (ROW_H - ROW_PITCH);
 
         // Centred over the held hotbar slot (vanilla's slot i is centred 11 + 20i in from the
         // hotbar's left), kept on screen, bottom resting just above the hotbar.
+        int widest = rows.stream().mapToInt(List::size).max().orElse(0) * SLOT_PITCH + 2;
+        Component title = title(palette);
+        int width = Math.max(widest, mc.font.width(title));
         int slotCentre = originX + 11 + 20 * mc.player.getInventory().getSelectedSlot();
-        float left = Math.clamp(slotCentre - ROW_W * SCALE / 2, 0, g.guiWidth() - ROW_W * SCALE);
+        float left = Math.clamp(slotCentre - width * SCALE / 2, 0, g.guiWidth() - width * SCALE);
         float top = originY + 1 - height * SCALE;
 
         g.pose().pushMatrix();
@@ -116,23 +158,31 @@ public final class PalettePopup {
         g.pose().scale(SCALE, SCALE);
 
         // What the box does, centred above the grid.
-        Component title = title(palette);
-        g.text(mc.font, title.getVisualOrderText(), (ROW_W - mc.font.width(title)) / 2, 1, TITLE_COLOR, true);
+        g.text(mc.font, title.getVisualOrderText(), (width - mc.font.width(title)) / 2, 1, TITLE_COLOR, true);
 
-        int picked = palette.mode() == Mode.PICK ? Draw.pickSlot(palette, slots) : -1;
-        int lit = palette.mode() == Mode.GRADIENT ? Draw.currentRow(palette) : -1;
-        for (int row = 0; row < rows; row++) {
-            int y = TITLE_H + ROW_H * row;
-            g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, 0, y, ROW_W, ROW_H);
-            for (int col = 0; col < Palette.ROW_WIDTH; col++) {
-                int i = row * Palette.ROW_WIDTH + col;
-                int x = SLOT_PITCH * col;
-                if (i < slots.size() && !slots.get(i).isEmpty()) {
-                    g.item(slots.get(i), x + 3, y + 3);
-                    g.itemDecorations(mc.font, slots.get(i), x + 3, y + 3);
+        for (int r = 0; r < rows.size(); r++) {
+            List<Cell> cells = rows.get(r);
+            int rowWidth = cells.size() * SLOT_PITCH + 2;
+            int x0 = (width - rowWidth) / 2;
+            int y = TITLE_H + ROW_PITCH * r;
+            // The hotbar sprite cut to this many slots: its left end and slots, then its right edge.
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, 0, 0, x0, y, rowWidth - 1, ROW_H);
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, ROW_W - 1, 0, x0 + rowWidth - 1, y, 1, ROW_H);
+            for (int c = 0; c < cells.size(); c++) {
+                int x = x0 + SLOT_PITCH * c;
+                ItemStack stack = cells.get(c).stack();
+                g.item(stack, x + 3, y + 3);
+                g.itemDecorations(mc.font, stack, x + 3, y + 3);
+            }
+        }
+        // Frames last, so a frame is never covered by the next row's sprite.
+        for (int r = 0; r < rows.size(); r++) {
+            List<Cell> cells = rows.get(r);
+            int x0 = (width - (cells.size() * SLOT_PITCH + 2)) / 2;
+            for (int c = 0; c < cells.size(); c++) {
+                if (cells.get(c).lit()) {
+                    g.blitSprite(RenderPipelines.GUI_TEXTURED, SELECTION, x0 + SLOT_PITCH * c - 1, TITLE_H + ROW_PITCH * r - 1, 24, 23);
                 }
-                // The hotbar's own selection frame: on the picked slot, or on every slot of the gradient row.
-                if (i == picked || row == lit) g.blitSprite(RenderPipelines.GUI_TEXTURED, SELECTION, x - 1, y - 1, 24, 23);
             }
         }
         g.pose().popMatrix();
