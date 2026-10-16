@@ -1,4 +1,12 @@
 {
   "shulkerpalette.scroll.pick": "%s ×%s",
-  "shulkerpalette.scroll.row": "Row %s of %s"
+  "shulkerpalette.scroll.row": "Row %s of %s",
+  "shulkerpalette.panel.power.on": "Palette on. Click to turn it off and use this box as storage.",
+  "shulkerpalette.panel.power.off": "Palette off. Click to build from this box.",
+  "shulkerpalette.panel.mode.random": "Random, weighted by count. Click for the next mode.",
+  "shulkerpalette.panel.mode.equal": "Random, every block type equally. Click for the next mode.",
+  "shulkerpalette.panel.mode.pick": "Pick one block (sneak + scroll). Click for the next mode.",
+  "shulkerpalette.panel.mode.gradient": "Gradient: random from one row (sneak + scroll). Click for the next mode.",
+  "shulkerpalette.panel.repaint.on": "Repaint on: right-click replaces the block you look at.",
+  "shulkerpalette.panel.repaint.off": "Repaint off. Click to replace blocks instead of placing."
 }

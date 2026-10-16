@@ -1,10 +1,12 @@
 package com.trevorschoeny.shulkerpalette;
 
+import com.trevorschoeny.shulkerpalette.panel.ControlPanel;
 import net.fabricmc.api.ClientModInitializer;
 
 /** Client entry point: the control panel, the held-block render and the HUD strip. */
 public final class ShulkerPaletteClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ControlPanel.register();
     }
 }
