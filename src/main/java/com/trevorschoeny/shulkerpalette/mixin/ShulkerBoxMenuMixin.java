@@ -8,7 +8,6 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
@@ -39,7 +38,7 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
         if (container instanceof PaletteHolder holder) {
             shulkerpalette$holder = holder;
             shulkerpalette$state = addDataSlot(new DataSlot() {
-                @Override public int get() { return PanelActions.pack(holder.shulkerpalette$palette()); }
+                @Override public int get() { return PanelActions.pack(holder.shulkerpalette$palette(), holder instanceof HeldShulker); }
                 @Override public void set(int value) {}
             });
         } else {
@@ -52,20 +51,6 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     @Override
     public int shulkerpalette$packedPalette() {
         return shulkerpalette$state.get();
-    }
-
-    /**
-     * With the screen open over a held shulker, that shulker's own slot is locked: no
-     * click, shift-click, throw or number-key swap moves it out from under its screen.
-     */
-    @Override
-    public void clicked(int slotIndex, int buttonNum, ContainerInput input, Player player) {
-        if (shulkerpalette$holder instanceof HeldShulker held) {
-            boolean onIt = slotIndex >= 0 && slotIndex < slots.size() && held.holds(slots.get(slotIndex).getItem());
-            boolean swapsIt = input == ContainerInput.SWAP && held.holds(player.getInventory().getItem(buttonNum));
-            if (onIt || swapsIt) return;
-        }
-        super.clicked(slotIndex, buttonNum, input, player);
     }
 
     @Override

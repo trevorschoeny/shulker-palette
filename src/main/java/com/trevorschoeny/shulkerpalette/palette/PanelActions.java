@@ -39,11 +39,18 @@ public final class PanelActions {
     }
 
     // The packed form: bit 0 on, bits 1-2 mode, bit 3 repaint, bits 4-8 rows, bit 9 "this menu
-    // has a palette". Menu data travels as a short, so it stays under 15 bits.
+    // has a palette", bit 10 "opened from the hand". Menu data travels as a short, so it stays
+    // under 15 bits.
     private static final int PRESENT = 1 << 9;
+    private static final int HELD = 1 << 10;
 
-    public static int pack(Palette p) {
-        return PRESENT | (p.on() ? 1 : 0) | p.mode().ordinal() << 1 | (p.repaint() ? 1 : 0) << 3 | p.rows() << 4;
+    public static int pack(Palette p, boolean held) {
+        return PRESENT | (held ? HELD : 0) | (p.on() ? 1 : 0) | p.mode().ordinal() << 1 | (p.repaint() ? 1 : 0) << 3 | p.rows() << 4;
+    }
+
+    /** Was the menu with this packed palette opened over the shulker in hand? */
+    public static boolean held(int packed) {
+        return (packed & HELD) != 0;
     }
 
     /** The panel's view of a packed palette; empty when the menu has none (a container another mod made). */
