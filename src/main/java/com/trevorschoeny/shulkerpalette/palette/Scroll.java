@@ -40,6 +40,16 @@ public final class Scroll {
         return palette.mode() == Mode.PICK || palette.mode() == Mode.GRADIENT;
     }
 
+    /**
+     * The selection after scrolling {@code steps}, wrapping round at both ends: over the box's
+     * block types in pick mode, its rows in gradient mode. -1 when there is nothing to choose.
+     * The client runs this too, to slide the strip before the server's answer arrives.
+     */
+    public static int moved(Palette palette, ItemContainerContents contents, int steps) {
+        int choices = palette.mode() == Mode.PICK ? Draw.types(Draw.slots(contents)).size() : palette.rows();
+        return choices == 0 ? -1 : Math.floorMod(palette.selection() + steps, choices);
+    }
+
     public static void register() {
         PayloadTypeRegistry.serverboundPlay().register(Payload.TYPE, Payload.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Payload.TYPE,
@@ -53,16 +63,15 @@ public final class Scroll {
 
         ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
         List<Draw.Entry> types = Draw.types(Draw.slots(contents));
-        // The selection wraps round at both ends.
-        int choices = palette.mode() == Mode.PICK ? types.size() : palette.rows();
-        if (choices == 0) return;
-        int selection = Math.floorMod(palette.selection() + steps, choices);
+        int selection = moved(palette, contents, steps);
+        if (selection < 0) return;
 
         Palette moved = new Palette(palette.on(), palette.mode(), palette.repaint(), palette.rows(), selection,
                 palette.next(), palette.fingerprint());
         Placement.rollNext(shulker, moved, contents, player.level());
 
-        // ponytail: the action bar says what is selected until the HUD strip lands (phase 3).
+        // The strip by the hotbar shows the choices; the action bar names the one chosen,
+        // the way vanilla names a newly held item.
         Component said = palette.mode() == Mode.PICK
                 ? Component.translatable("shulkerpalette.scroll.pick", types.get(selection).type().getHoverName(), types.get(selection).total())
                 : Component.translatable("shulkerpalette.scroll.row", selection + 1, palette.rows());

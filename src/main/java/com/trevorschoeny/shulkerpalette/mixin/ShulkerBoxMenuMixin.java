@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
 import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
@@ -7,6 +8,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
@@ -19,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Wires the shulker screen to the palette behind it. On the server the menu's container is
- * the placed box ({@link PaletteHolder}): its palette is synced to the client as one data
+ * the placed box or the held item ({@link PaletteHolder}): its palette is synced to the client as one data
  * slot, and the panel's buttons arrive as menu-button clicks. On the client the data slot
  * is a plain holder the panel reads.
  */
@@ -50,6 +52,20 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     @Override
     public int shulkerpalette$packedPalette() {
         return shulkerpalette$state.get();
+    }
+
+    /**
+     * With the screen open over a held shulker, that shulker's own slot is locked: no
+     * click, shift-click, throw or number-key swap moves it out from under its screen.
+     */
+    @Override
+    public void clicked(int slotIndex, int buttonNum, ContainerInput input, Player player) {
+        if (shulkerpalette$holder instanceof HeldShulker held) {
+            boolean onIt = slotIndex >= 0 && slotIndex < slots.size() && held.holds(slots.get(slotIndex).getItem());
+            boolean swapsIt = input == ContainerInput.SWAP && held.holds(player.getInventory().getItem(buttonNum));
+            if (onIt || swapsIt) return;
+        }
+        super.clicked(slotIndex, buttonNum, input, player);
     }
 
     @Override
