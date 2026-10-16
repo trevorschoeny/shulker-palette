@@ -1,5 +1,7 @@
 package com.trevorschoeny.shulkerpalette;
 
+import com.trevorschoeny.shulkerpalette.palette.Palette;
+import com.trevorschoeny.shulkerpalette.palette.Upkeep;
 import net.fabricmc.api.ModInitializer;
 
 /**
@@ -12,5 +14,7 @@ public final class ShulkerPalette implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        Palette.register();
+        Upkeep.register();
     }
 }
