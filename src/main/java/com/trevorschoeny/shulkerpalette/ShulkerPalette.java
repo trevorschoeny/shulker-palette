@@ -2,6 +2,7 @@ package com.trevorschoeny.shulkerpalette;
 
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Upkeep;
+import com.trevorschoeny.shulkerpalette.palette.Drops;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -21,5 +22,6 @@ public final class ShulkerPalette implements ModInitializer {
         Palette.register();
         Upkeep.register();
         Scroll.register();
+        Drops.register();
     }
 }
