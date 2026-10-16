@@ -13,8 +13,8 @@
   "shulkerpalette.popup.equal": "Equal random",
   "shulkerpalette.popup.pick": "Item",
   "shulkerpalette.popup.gradient": "Gradient level %s",
-  "shulkerpalette.panel.save": "Save: copy this palette to the clipboard.",
+  "shulkerpalette.panel.save": "Save: copy this palette to the clipboard as text you can edit.",
   "shulkerpalette.panel.load": "Load: fill this box from a palette on the clipboard.",
   "shulkerpalette.clipboard.saved": "Palette copied to the clipboard",
-  "shulkerpalette.clipboard.none": "No palette on the clipboard"
+  "shulkerpalette.clipboard.loaded": "Palette loaded"
 }

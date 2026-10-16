@@ -62,14 +62,14 @@ public final class ControlPanel {
                                 .icon(() -> sprite("save"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.SAVE))
-                                .tooltip(Component.translatable("shulkerpalette.panel.save"))
+                                .tooltip(() -> answerOr(ClipboardClient.Button.SAVE, "shulkerpalette.panel.save"))
                                 .visibleWhen(ControlPanel::on)
                                 .build())
                         .add(Button.builder()
                                 .icon(() -> sprite("load"))
                                 .size(SIZE, SIZE)
                                 .onClick(ClipboardClient::load)
-                                .tooltip(Component.translatable("shulkerpalette.panel.load"))
+                                .tooltip(() -> answerOr(ClipboardClient.Button.LOAD, "shulkerpalette.panel.load"))
                                 // ponytail: creative only until survival loading (the cheat sheet) is built
                                 .visibleWhen(() -> on() && creative())
                                 .build())
@@ -107,6 +107,12 @@ public final class ControlPanel {
         if (mc.gameMode != null && mc.gui.screen() instanceof ShulkerBoxScreen screen) {
             mc.gameMode.handleInventoryButtonClick(screen.getMenu().containerId, button);
         }
+    }
+
+    /** A Save or Load button's tooltip: the answer to the last press while it is fresh, else what it does. */
+    private static Component answerOr(ClipboardClient.Button button, String key) {
+        Component answer = ClipboardClient.answerFor(button);
+        return answer != null ? answer : Component.translatable(key);
     }
 
     private static Identifier sprite(String name) {
