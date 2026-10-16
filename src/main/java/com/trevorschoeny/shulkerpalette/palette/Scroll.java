@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Sneak + scroll moves a held palette's selection: the picked block type in pick mode, the
+ * Palette modifier + scroll moves a held palette's selection: the picked block type in pick mode, the
  * row in gradient mode. The client only reports the scroll; the server moves the selection
  * on the shulker in hand, chooses the next block, and says what is selected.
  */

@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.palette.Keys;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Placement;
 import com.trevorschoeny.shulkerpalette.palette.Repaint;
@@ -13,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * A palette shulker places its next block. Shulker items are plain block items, so this is
- * the one place a right-click on a block reaches them. Sneaking, or anything that isn't a
- * palette-on shulker, falls through to vanilla, which places the box itself.
+ * the one place a right-click on a block reaches them. Holding the palette modifier, or anything
+ * that isn't a palette-on shulker, falls through to vanilla, which places the box itself.
  */
 @Mixin(BlockItem.class)
 abstract class BlockItemMixin {
@@ -22,9 +23,9 @@ abstract class BlockItemMixin {
     private void shulkerpalette$placeFromPalette(UseOnContext context, CallbackInfoReturnable<InteractionResult> cir) {
         Palette palette = Palette.activeOn(context.getItemInHand());
         if (palette == null) return;
-        // ponytail: sneak + right-click places the box itself, as a stopgap (Trev, 2026-10-15).
-        // It costs sneak-placing palette blocks at an edge; a better gesture is an open question.
-        if (context.isSecondaryUseActive()) return;
+        // Modifier + right-click places the box itself (Trev, 2026-10-15; was sneak, which
+        // cost sneak-placing at edges). Sneak now places palette blocks like any block.
+        if (context.getPlayer() != null && Keys.modifierHeld(context.getPlayer())) return;
         var hit = ((UseOnContextAccessor) context).shulkerpalette$hitResult();
         cir.setReturnValue(context.getPlayer() != null && Repaint.active(palette, context.getPlayer())
                 ? Repaint.repaint(context, hit, context.getItemInHand(), palette)

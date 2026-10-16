@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.held.HeldLook;
 import com.trevorschoeny.shulkerpalette.held.OpenIcon;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
@@ -42,7 +43,16 @@ abstract class ItemModelResolverMixin {
         if (shulkerpalette$inner || !(hand || icon)) return;
         Palette palette = Palette.activeOn(item);
         if (palette == null) return;
+        // Settings: the open-box look in hand can be off, leaving the next block alone (an
+        // empty palette then draws as a plain shulker).
+        boolean box = icon || Config.openBoxInHand();
+        if (!box && palette.next().isEmpty()) return;
         ci.cancel();
+        if (!box) {
+            appendItemLayers(output, palette.next().map(ItemStackTemplate::create).orElseThrow(), displayContext, level, owner, seed);
+            shulkerpalette$rainbow(output, palette);
+            return;
+        }
 
         // The shulker first, drawn the normal way, then opened; then the next block inside it.
         // An empty palette is just the open, empty box.
@@ -56,9 +66,14 @@ abstract class ItemModelResolverMixin {
         if (palette.next().isEmpty()) return;
         appendItemLayers(output, palette.next().map(ItemStackTemplate::create).orElseThrow(), displayContext, level, owner, seed);
         OpenIcon.shrinkInside(output, shulkerLayers);
-        if (palette.mode() != Mode.PICK) {
-            output.setData(HeldLook.RAINBOW, true);
-            output.setAnimated(); // the rainbow cycles, so the icon is redrawn every frame
-        }
+        shulkerpalette$rainbow(output, palette);
+    }
+
+    /** The outline marks randomness (not pick), unless the settings turned it off. */
+    @Unique
+    private static void shulkerpalette$rainbow(ItemStackRenderState output, Palette palette) {
+        if (palette.mode() == Mode.PICK || !Config.rainbow()) return;
+        output.setData(HeldLook.RAINBOW, true);
+        output.setAnimated(); // the rainbow cycles, so the icon is redrawn every frame
     }
 }

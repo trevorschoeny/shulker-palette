@@ -1,5 +1,7 @@
 package com.trevorschoeny.shulkerpalette;
 
+import com.trevorschoeny.shulkerpalette.config.Config;
+import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.ghost.RepaintGhost;
 import com.trevorschoeny.shulkerpalette.panel.CheatSheetClient;
 import com.trevorschoeny.shulkerpalette.panel.ClipboardClient;
@@ -11,6 +13,8 @@ import net.fabricmc.api.ClientModInitializer;
 public final class ShulkerPaletteClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        Config.load();
+        KeysClient.register();
         ControlPanel.register();
         ClipboardClient.register();
         CheatSheetClient.register();

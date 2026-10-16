@@ -27,6 +27,10 @@ java {
 
 repositories {
     maven { url 'https://maven.fabricmc.net/' }
+    // ModMenu, from Terraformers' Maven.
+    maven { url 'https://maven.terraformersmc.com/releases/' }
+    // YACL: the 26.x builds are only on this Maven repository.
+    maven { url 'https://api.modrinth.com/maven' }
 }
 
 // MenuKit and SlotKit have separate main and client source sets. A
@@ -43,6 +47,18 @@ dependencies {
 
     implementation project(':menukit')
     implementation project(':slotkit')
+
+    // Settings screen. YACL builds it and is bundled (Jar-in-Jar). Mod Menu and Mod Hub both
+    // open it through the `modmenu` entrypoint, so Mod Menu is a soft dep: compileOnly for the
+    // API, localRuntime for the dev launch.
+    implementation "maven.modrinth:yacl:3.9.7+26.3-fabric"
+    include        "maven.modrinth:yacl:3.9.7+26.3-fabric"
+    compileOnly "com.terraformersmc:modmenu:21.0.0"
+    localRuntime "com.terraformersmc:modmenu:21.0.0"
+    // Keybindery's API for chord rows on the settings screen. Bundled, so the mod runs without
+    // Keybindery: then the screen offers vanilla's key binds instead.
+    implementation project(':keybindery-api')
+    include        project(':keybindery-api')
 }
 
 loom {

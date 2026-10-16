@@ -1,5 +1,7 @@
 package com.trevorschoeny.shulkerpalette.popup;
 
+import com.trevorschoeny.shulkerpalette.config.Config;
+import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevlar.menukit.api.hud.HudPanel;
 import com.trevlar.menukit.api.panel.OutsideRegion;
 import com.trevlar.menukit.api.panel.PanelStyle;
@@ -21,11 +23,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Sneak + scroll with a palette in hand opens a small view of the box right above its hotbar
+ * Palette modifier + scroll with a palette in hand opens a small view of the box right above its hotbar
  * slot: rows drawn as three-quarter-size hotbars, one stack per block type with its total,
  * and a title saying what the box does. The hotbar's selection frame marks what a click can
  * place: the picked type, the gradient row, or in the random modes every type. Letting go
- * of sneak closes it.
+ * of the modifier closes it. The settings can turn it off.
  *
  * <p>A MenuKit HUD panel above the hotbar; the grid itself is drawn by hand, from vanilla's
  * hotbar sprites, because it has to sit over one particular hotbar slot.
@@ -55,7 +57,7 @@ public final class PalettePopup {
     private static int expected = -1;
     private static long expectedAt;
 
-    /** Opened by a sneak + scroll, closed by letting go of sneak. */
+    /** Opened by a modifier + scroll, closed by letting go of the modifier. */
     private static boolean open;
 
     public static void register() {
@@ -71,7 +73,7 @@ public final class PalettePopup {
                 .build();
     }
 
-    /** Called right after a sneak + scroll is sent: open, guess the new selection. */
+    /** Called right after a modifier + scroll is sent: open, guess the new selection. */
     public static void scrolled(int steps) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
@@ -86,8 +88,8 @@ public final class PalettePopup {
 
     private static boolean shown() {
         Minecraft mc = Minecraft.getInstance();
-        if (!mc.options.keyShift.isDown()) open = false;
-        if (!open || mc.player == null || mc.gui.screen() != null) return false;
+        if (!KeysClient.modifierDown()) open = false;
+        if (!open || !Config.popup() || mc.player == null || mc.gui.screen() != null) return false;
         return Palette.activeOn(mc.player.getMainHandItem()) != null;
     }
 

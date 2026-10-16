@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Sneak + right-click into the air opens the shulker in your hand, without placing it: the
+ * Palette modifier + right-click into the air opens the shulker in your hand, without placing it: the
  * ordinary shulker screen, control panel included, over the item itself.
  *
  * <p>The screen's container is a copy of the item's contents that writes every change

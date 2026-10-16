@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.panel;
 
+import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevlar.menukit.api.element.Button;
 import com.trevlar.menukit.api.layout.Column;
 import com.trevlar.menukit.api.panel.OutsideRegion;
@@ -46,7 +47,8 @@ public final class ControlPanel {
                                 .icon(() -> sprite("mode_" + mode().getSerializedName()))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.MODE))
-                                .tooltip(() -> Component.translatable("shulkerpalette.panel.mode." + mode().getSerializedName()))
+                                .tooltip(() -> Component.translatable("shulkerpalette.panel.mode." + mode().getSerializedName(),
+                                        KeysClient.MODIFIER.getTranslatedKeyMessage()))
                                 .visibleWhen(ControlPanel::on)
                                 .build())
                         .add(Button.builder()
