@@ -11,7 +11,8 @@
     "ItemMixin"
   ],
   "client": [
-    "MouseHandlerMixin"
+    "MouseHandlerMixin",
+    "AbstractContainerScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -5,11 +5,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import com.trevlar.slotkit.api.window.SlotOperations;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
@@ -46,14 +48,22 @@ public final class HeldShulker extends SimpleContainer implements PaletteHolder 
      * the menu's synced palette data, so the client refuses the same clicks the server would.
      */
     public static void register() {
-        SlotOperations.veto((ref, operation) ->
-                ref.menu() instanceof ShulkerBoxMenu menu
-                        && menu instanceof PaletteMenu palette
-                        && PanelActions.held(palette.shulkerpalette$packedPalette())
-                        && ref.container() instanceof Inventory inventory
-                        // the inventory this menu shows (its last slots are the viewer's own), not another player's
-                        && menu.slots.get(menu.slots.size() - 1).container == inventory
-                        && ref.containerSlot() == inventory.getSelectedSlot());
+        SlotOperations.veto((ref, operation) -> ref.menu() != null && locks(ref.menu(), ref.container(), ref.containerSlot()));
+    }
+
+    /**
+     * Is this the slot holding a shulker open from the hand: the selected hotbar slot of the
+     * player whose shulker menu was opened that way? Both sides read that from the menu's
+     * synced palette data, so the client refuses (and greys) the same slot the server would.
+     */
+    public static boolean locks(AbstractContainerMenu menu, Container container, int index) {
+        return menu instanceof ShulkerBoxMenu
+                && menu instanceof PaletteMenu palette
+                && PanelActions.held(palette.shulkerpalette$packedPalette())
+                && container instanceof Inventory inventory
+                // the inventory this menu shows (its last slots are the viewer's own), not another player's
+                && menu.slots.get(menu.slots.size() - 1).container == inventory
+                && index == inventory.getSelectedSlot();
     }
 
     @Override
