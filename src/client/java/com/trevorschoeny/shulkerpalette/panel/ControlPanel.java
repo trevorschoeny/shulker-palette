@@ -2,7 +2,7 @@ package com.trevorschoeny.shulkerpalette.panel;
 
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevlar.menukit.api.element.Button;
-import com.trevlar.menukit.api.layout.Column;
+import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.panel.OutsideRegion;
 import com.trevlar.menukit.api.panel.Panel;
 import com.trevlar.menukit.api.panel.PanelPosition;
@@ -12,6 +12,7 @@ import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
+import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
@@ -36,7 +37,9 @@ public final class ControlPanel {
     public static void register() {
         Panel panel = Panel.builder(ShulkerPalette.MOD_ID + ":controls")
                 .position(PanelPosition.region(OutsideRegion.LEFT_ALIGN_TOP))
-                .elements(Column.at(0, 0).spacing(2)
+                // A vertical Flow, not a Column: a hidden button takes no room, so the ones
+                // left close up (palette off in creative: power, then the rows buttons).
+                .elements(List.of(Flow.builder().vertical().gap(0, 2)
                         .add(Button.builder()
                                 .icon(() -> sprite(palette().map(Palette::on).orElse(false) ? "power_on" : "power_off"))
                                 .size(SIZE, SIZE)
@@ -96,7 +99,7 @@ public final class ControlPanel {
                                 .tooltip(Component.translatable("shulkerpalette.panel.clear"))
                                 .visibleWhen(() -> on() && openMenuId() >= 0 && CheatSheetClient.has(openMenuId()))
                                 .build())
-                        .build())
+                        .build()))
                 .build()
                 .visibleWhen(() -> palette().isPresent());
 
