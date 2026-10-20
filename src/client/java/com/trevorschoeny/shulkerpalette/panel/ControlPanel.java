@@ -24,7 +24,7 @@ import net.minecraft.resources.Identifier;
  * and asks the server to change it; the new state comes back the same way.
  *
  * <p>Palette off shows only the power button, so the screen looks like vanilla's. The rows
- * buttons will join the column with the extra-rows grid.
+ * buttons (creative) add or take away the box's last row; a row is only taken away empty.
  */
 public final class ControlPanel {
     private ControlPanel() {}
@@ -58,6 +58,20 @@ public final class ControlPanel {
                                 .onClick(() -> press(PanelActions.REPAINT))
                                 .tooltip(() -> Component.translatable(palette().map(Palette::repaint).orElse(false)
                                         ? "shulkerpalette.panel.repaint.on" : "shulkerpalette.panel.repaint.off"))
+                                .visibleWhen(() -> on() && creative())
+                                .build())
+                        .add(Button.builder()
+                                .label(Component.literal("+"))
+                                .size(SIZE, SIZE)
+                                .onClick(() -> press(PanelActions.ROWS_MORE))
+                                .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", rows(), Palette.MAX_ROWS))
+                                .visibleWhen(() -> on() && creative())
+                                .build())
+                        .add(Button.builder()
+                                .label(Component.literal("−"))
+                                .size(SIZE, SIZE)
+                                .onClick(() -> press(PanelActions.ROWS_LESS))
+                                .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", rows(), Palette.MAX_ROWS))
                                 .visibleWhen(() -> on() && creative())
                                 .build())
                         .add(Button.builder()
@@ -98,6 +112,10 @@ public final class ControlPanel {
 
     private static boolean on() {
         return palette().map(Palette::on).orElse(false);
+    }
+
+    private static int rows() {
+        return palette().map(Palette::rows).orElse(Palette.VANILLA_ROWS);
     }
 
     private static Mode mode() {

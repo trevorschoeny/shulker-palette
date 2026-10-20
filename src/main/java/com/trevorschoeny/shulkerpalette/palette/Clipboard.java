@@ -71,13 +71,15 @@ public final class Clipboard {
         SavedPalette saved = payload.palette();
         Palette current = holder.shulkerpalette$palette();
 
-        // Both modes keep the box's own rows: the menu has slots only for those, so loading
-        // more rows would hide items where nobody can reach them. Slots past them are left out.
-        holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), current.rows(), 0, Optional.empty(), 0));
-        int room = current.rows() * Palette.ROW_WIDTH;
+        // Creative takes the saved rows (extra rows are creative); survival keeps the box's own,
+        // and slots past them are left off the sheet.
+        int rows = player.isCreative() ? saved.rows() : current.rows();
+        holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, Optional.empty(), 0));
+        int room = rows * Palette.ROW_WIDTH;
         List<SavedPalette.Entry> fitting = saved.slots().stream().filter(e -> e.slot() < room).toList();
         if (player.isCreative()) {
-            for (int i = 0; i < box.getContainerSize(); i++) box.setItem(i, ItemStack.EMPTY);
+            // Every slot of the room, not just the rows reported, so no old extra row hides items.
+            for (int i = 0; i < Palette.MAX_ROWS * Palette.ROW_WIDTH; i++) box.setItem(i, ItemStack.EMPTY);
             for (SavedPalette.Entry entry : fitting) box.setItem(entry.slot(), entry.item().create());
             holder.shulkerpalette$setCheatSheet(List.of());
         } else {

@@ -17,7 +17,8 @@
     "ItemStackRenderStateMixin",
     "LayerRenderStateAccessor",
     "ItemStackRenderStateAccessor",
-    "ShulkerBoxSpecialRendererAccessor"
+    "ShulkerBoxSpecialRendererAccessor",
+    "ScreenPosAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

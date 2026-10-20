@@ -69,8 +69,7 @@ public final class HeldShulker extends SimpleContainer implements PaletteHolder 
 
     /**
      * The rows the palette has, like a placed box: the room is there for every row, but
-     * vanilla's shulker menu reads this to tell box slots from inventory slots on a
-     * shift-click, so it must match the slots the screen shows.
+     * anything counting the box's slots sees only the rows it has.
      */
     @Override
     public int getContainerSize() {

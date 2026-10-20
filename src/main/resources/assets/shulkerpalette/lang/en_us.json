@@ -40,5 +40,7 @@
   "key.shulkerpalette.power": "Toggle palette",
   "shulkerpalette.key.power.on": "Palette on",
   "shulkerpalette.key.power.off": "Palette off",
-  "shulkerpalette.config.power.description": "Turns the shulker in your hand into a palette, or back into plain storage, without opening it."
+  "shulkerpalette.config.power.description": "Turns the shulker in your hand into a palette, or back into plain storage, without opening it.",
+  "shulkerpalette.panel.rows.more": "Rows: %s of %s. Click to add a row.",
+  "shulkerpalette.panel.rows.less": "Rows: %s of %s. Click to take away the last row (only when it's empty)."
 }

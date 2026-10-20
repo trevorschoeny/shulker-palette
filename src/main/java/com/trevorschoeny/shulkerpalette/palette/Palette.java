@@ -41,16 +41,10 @@ public record Palette(boolean on, Mode mode, boolean repaint, int rows, int sele
     public static final int VANILLA_ROWS = 3;
     /** Room for rows in the stored data: placed and held boxes keep 16 rows of items. */
     public static final int MAX_ROWS = 16;
-    /**
-     * Rows a box can actually use. The shulker screen has slots for the vanilla three only, so
-     * until the scrolling grid adds slots for more, every palette is held to three: a box
-     * reporting more would hide items where no slot can reach them.
-     */
-    public static final int USABLE_ROWS = VANILLA_ROWS;
     public static final int ROW_WIDTH = 9;
 
     public Palette {
-        rows = Math.clamp(rows, VANILLA_ROWS, USABLE_ROWS);
+        rows = Math.clamp(rows, VANILLA_ROWS, MAX_ROWS);
     }
 
     /** A shulker that has never been a palette reads as this. */

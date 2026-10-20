@@ -21,6 +21,9 @@ public final class PanelActions {
     public static final int SAVE = 3;
     /** Clear: removes the box's cheat sheet. */
     public static final int CLEAR = 4;
+    /** Rows minus and plus (creative): the box loses or gains its last row. */
+    public static final int ROWS_LESS = 5;
+    public static final int ROWS_MORE = 6;
 
     /** The palette after button {@code id}, or the same palette if the press isn't allowed. */
     public static Palette apply(Palette palette, int id, Player player) {
@@ -29,6 +32,11 @@ public final class PanelActions {
             case MODE -> palette.on() ? with(palette, true, palette.mode().next(), palette.repaint()) : palette;
             // Repaint is creative only in v1; the panel hides it in survival, and the server agrees.
             case REPAINT -> palette.on() && player.isCreative() ? with(palette, true, palette.mode(), !palette.repaint()) : palette;
+            // Extra rows are creative only; a row is only taken away empty ({@link #canDropRow}).
+            case ROWS_LESS -> palette.on() && player.isCreative() && palette.rows() > Palette.VANILLA_ROWS
+                    ? withRows(palette, palette.rows() - 1) : palette;
+            case ROWS_MORE -> palette.on() && player.isCreative() && palette.rows() < Palette.MAX_ROWS
+                    ? withRows(palette, palette.rows() + 1) : palette;
             default -> palette;
         };
         return changed;
@@ -40,6 +48,19 @@ public final class PanelActions {
      */
     private static Palette with(Palette p, boolean on, Mode mode, boolean repaint) {
         return new Palette(on, mode, repaint, p.rows(), p.selection(), Optional.empty(), 0);
+    }
+
+    private static Palette withRows(Palette p, int rows) {
+        return new Palette(p.on(), p.mode(), p.repaint(), rows, p.selection(), Optional.empty(), 0);
+    }
+
+    /** Is the palette's last row empty in this box, so the rows minus button may take it away? */
+    public static boolean canDropRow(Palette palette, net.minecraft.world.Container box) {
+        int last = palette.rows() - 1;
+        for (int i = last * Palette.ROW_WIDTH; i < (last + 1) * Palette.ROW_WIDTH; i++) {
+            if (!box.getItem(i).isEmpty()) return false;
+        }
+        return true;
     }
 
     // The packed form: bit 0 on, bits 1-2 mode, bit 3 repaint, bits 4-8 rows, bit 9 "this menu

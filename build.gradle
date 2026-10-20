@@ -85,6 +85,21 @@ loom {
     }
 }
 
+// Self-checks: Fabric client gametests in src/gametest, run with
+// `./gradlew :shulker-palette:runClientGameTest`. Each loads a Test Gallery scene's check
+// world and asserts what a station with a matching "check" id says. The run opens its own
+// window, runs every check, and closes; it never touches run/ or a scene client.
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'shulkerpalette_checks'
+        enableGameTests = false
+        enableClientGameTests = true
+        eula = true
+    }
+}
+apply from: rootProject.file('Trevlar Mods Codebases/test-gallery/kit/checks.gradle')   // SceneWorld
+
 // Client-only dependencies, after loom {} so its client configurations exist.
 dependencies {
     clientImplementation rootProject.project(':menukit').sourceSets.client.output
