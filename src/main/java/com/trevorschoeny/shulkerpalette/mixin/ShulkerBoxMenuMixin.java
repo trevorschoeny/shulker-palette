@@ -116,7 +116,7 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
         } else {
             // Only the rows the box has: merging skips mayPlace, so hidden rows must be left out.
             int liveRows = PanelActions.unpack(shulkerpalette$state.get())
-                    .map(p -> p.on() ? p.rows() - Palette.VANILLA_ROWS : 0).orElse(0);
+                    .map(p -> p.rows() - Palette.VANILLA_ROWS).orElse(0);
             moved = moveItemStackTo(stack, 0, SHULKERPALETTE$BOX, false);
             if (!stack.isEmpty()) {
                 moved |= moveItemStackTo(stack, shulkerpalette$extraStart,

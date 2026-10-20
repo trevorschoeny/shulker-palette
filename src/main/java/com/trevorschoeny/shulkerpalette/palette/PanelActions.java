@@ -32,10 +32,11 @@ public final class PanelActions {
             case MODE -> palette.on() ? with(palette, true, palette.mode().next(), palette.repaint()) : palette;
             // Repaint is creative only in v1; the panel hides it in survival, and the server agrees.
             case REPAINT -> palette.on() && player.isCreative() ? with(palette, true, palette.mode(), !palette.repaint()) : palette;
-            // Extra rows are creative only; a row is only taken away empty ({@link #canDropRow}).
-            case ROWS_LESS -> palette.on() && player.isCreative() && palette.rows() > Palette.VANILLA_ROWS
+            // Extra rows are creative only, palette on or off (they are storage too); a row is
+            // only taken away empty ({@link #canDropRow}).
+            case ROWS_LESS -> player.isCreative() && palette.rows() > Palette.VANILLA_ROWS
                     ? withRows(palette, palette.rows() - 1) : palette;
-            case ROWS_MORE -> palette.on() && player.isCreative() && palette.rows() < Palette.MAX_ROWS
+            case ROWS_MORE -> player.isCreative() && palette.rows() < Palette.MAX_ROWS
                     ? withRows(palette, palette.rows() + 1) : palette;
             default -> palette;
         };

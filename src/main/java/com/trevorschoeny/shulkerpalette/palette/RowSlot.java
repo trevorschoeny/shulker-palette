@@ -8,9 +8,9 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * A slot in one of a palette's extra rows (4 to 16), added to every shulker menu after the
- * player's inventory. It is live only while the palette is on and has that row; otherwise
- * it takes nothing, gives nothing and isn't drawn, so a box without extra rows behaves
- * exactly like vanilla's.
+ * player's inventory. It is live while the box has that row, palette on or off; otherwise it
+ * takes nothing, gives nothing and isn't drawn, so a box without extra rows behaves exactly
+ * like vanilla's.
  */
 public final class RowSlot extends ShulkerBoxSlot {
     private final int row;
@@ -25,7 +25,7 @@ public final class RowSlot extends ShulkerBoxSlot {
 
     @Override
     public boolean isActive() {
-        return PanelActions.unpack(packed.getAsInt()).map(p -> p.on() && row < p.rows()).orElse(false);
+        return PanelActions.unpack(packed.getAsInt()).map(p -> row < p.rows()).orElse(false);
     }
 
     @Override

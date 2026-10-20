@@ -23,8 +23,9 @@ import net.minecraft.resources.Identifier;
  * It holds no state. Every button reads the palette the server last synced into the menu
  * and asks the server to change it; the new state comes back the same way.
  *
- * <p>Palette off shows only the power button, so the screen looks like vanilla's. The rows
- * buttons (creative) add or take away the box's last row; a row is only taken away empty.
+ * <p>Palette off shows only the power button and, in creative, the rows buttons, since extra
+ * rows are storage whether the palette is on or not. The rows buttons add or take away the
+ * box's last row; a row is only taken away empty.
  */
 public final class ControlPanel {
     private ControlPanel() {}
@@ -65,14 +66,14 @@ public final class ControlPanel {
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.ROWS_MORE))
                                 .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", rows(), Palette.MAX_ROWS))
-                                .visibleWhen(() -> on() && creative())
+                                .visibleWhen(() -> creative())
                                 .build())
                         .add(Button.builder()
                                 .label(Component.literal("−"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.ROWS_LESS))
                                 .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", rows(), Palette.MAX_ROWS))
-                                .visibleWhen(() -> on() && creative())
+                                .visibleWhen(() -> creative())
                                 .build())
                         .add(Button.builder()
                                 .icon(() -> sprite("save"))

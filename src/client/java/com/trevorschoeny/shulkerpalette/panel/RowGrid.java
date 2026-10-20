@@ -29,7 +29,7 @@ import net.minecraft.world.inventory.MenuType;
  * rows after the player's inventory) moved into a MenuKit scroll box; a row straddling the
  * edge is cut, a row out of view is parked.
  *
- * <p>Shown only while the palette is on and has more than three rows. Hidden, the 27 slots
+ * <p>Shown whenever the box has more than three rows, palette on or off. Hidden, the 27 slots
  * go back to their vanilla places and the screen is vanilla's.
  */
 public final class RowGrid {
@@ -81,11 +81,11 @@ public final class RowGrid {
         new ScreenPanelAdapter(panel, 0).on(ShulkerBoxScreen.class);
     }
 
-    /** The open shulker screen's live rows: its palette's rows while on, else vanilla's three. */
+    /** The open shulker screen's rows, palette on or off. */
     private static int rows() {
         return Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen
                 && screen.getMenu() instanceof PaletteMenu menu
-                ? PanelActions.unpack(menu.shulkerpalette$packedPalette()).filter(Palette::on).map(Palette::rows).orElse(Palette.VANILLA_ROWS)
+                ? PanelActions.unpack(menu.shulkerpalette$packedPalette()).map(Palette::rows).orElse(Palette.VANILLA_ROWS)
                 : Palette.VANILLA_ROWS;
     }
 
