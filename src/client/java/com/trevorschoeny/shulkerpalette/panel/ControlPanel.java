@@ -31,7 +31,7 @@ import net.minecraft.resources.Identifier;
 public final class ControlPanel {
     private ControlPanel() {}
 
-    private static final int SIZE = 18;
+    private static final int SIZE = 14; // the icons are 10 px, drawn 1:1 inside a 2 px inset
     private static final int TINT_ON = 0x6040C040;
 
     public static void register() {
@@ -65,28 +65,28 @@ public final class ControlPanel {
                                 .visibleWhen(() -> on() && creative())
                                 .build())
                         .add(Button.builder()
-                                .label(Component.literal("+"))
+                                .icon(() -> sprite("rows_more"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.ROWS_MORE))
                                 .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", rows(), Palette.MAX_ROWS))
                                 .visibleWhen(() -> creative())
                                 .build())
                         .add(Button.builder()
-                                .label(Component.literal("−"))
+                                .icon(() -> sprite("rows_less"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.ROWS_LESS))
                                 .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", rows(), Palette.MAX_ROWS))
                                 .visibleWhen(() -> creative())
                                 .build())
                         .add(Button.builder()
-                                .icon(() -> sprite("save"))
+                                .icon(() -> sprite("copy"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.SAVE))
                                 .tooltip(() -> answerOr(ClipboardClient.Button.SAVE, "shulkerpalette.panel.save"))
                                 .visibleWhen(ControlPanel::on)
                                 .build())
                         .add(Button.builder()
-                                .icon(() -> sprite("load"))
+                                .icon(() -> sprite("paste"))
                                 .size(SIZE, SIZE)
                                 .onClick(ClipboardClient::load)
                                 .tooltip(() -> answerOr(ClipboardClient.Button.LOAD, "shulkerpalette.panel.load"))
