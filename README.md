@@ -32,8 +32,8 @@ It's needed on both the client and the server. Singleplayer and LAN worlds work 
 
 ### Save and share palettes as text
 
-- Save copies a palette to your clipboard as plain text you can read, edit, and share.
-- Load reads it back. In creative it fills the box. In survival it shows what goes in each slot, so you can fill the box with real blocks.
+- The copy button puts a palette on your clipboard as plain text you can read, edit, and share.
+- The paste button reads it back. In creative it fills the box. In survival it shows what goes in each slot, so you can fill the box with real blocks.
 
 ### Repaint, in creative
 
@@ -43,8 +43,8 @@ It's needed on both the client and the server. Singleplayer and LAN worlds work 
 ## Requirements
 
 - [Fabric API](https://modrinth.com/mod/fabric-api).
-- [MenuKit](https://modrinth.com/mod/menukit) 7.2.0 or newer, below 8.0.0. It draws the buttons on the shulker box screen and the box view above the hotbar.
-- [SlotKit](https://modrinth.com/mod/slotkit) 1.1.0 or newer, below 2.0.0. It keeps a shulker box from being moved out of your hotbar while you have it open from your hand.
+- [MenuKit](https://modrinth.com/mod/menukit) 7.3.0 or newer, below 8.0.0. It draws the buttons on the shulker box screen and the box view above the hotbar.
+- [SlotKit](https://modrinth.com/mod/slotkit) 2.0.0 or newer, below 3.0.0. It keeps a shulker box from being moved out of your hotbar while you have it open from your hand.
 
 YACL comes bundled, so it doesn't need a separate install.
 
@@ -118,13 +118,13 @@ Holding the palette modifier and scrolling opens a small view of the box above t
 - In Random, Equal random, and Gradient, the next block has a slowly cycling rainbow outline. Pick, which always places the same block, has none. The **Rainbow outline** setting turns it off.
 - With the palette off, the box looks like a normal shulker box.
 
-### Save, Load, and Clear
+### Copy, paste, and clear
 
 These buttons show while the palette is on.
 
-**Save** copies the palette to your clipboard as text, and its tooltip briefly says "Palette copied to the clipboard". The text looks like this:
+The **copy** button (Export to clipboard) copies the palette to your clipboard as text, and its tooltip briefly says "Palette copied to the clipboard". The text looks like this:
 
-```javascript
+```text
 shulker_palette mode=gradient rows=3
 row 1: white_concrete 30, white_wool 4
 row 3: -, -, gray_concrete 30
@@ -135,12 +135,12 @@ row 3: -, -, gray_concrete 30
 - Items use the same syntax as the `/give` command, so items with components can be written too.
 - Empty slots at the end of a row, and empty rows, can be left out. Blank lines and lines starting with `#` are ignored.
 
-**Load** reads a palette from your clipboard and sets the box to its mode.
+The **paste** button (Paste from clipboard) reads a palette from your clipboard and sets the box to its mode.
 
 - In creative, it replaces everything in the box with the saved blocks.
 - In survival, it leaves the box's contents alone and adds a cheat sheet. Each empty slot shows a faded copy of the item that belongs there, with how many go there. Hovering over it says the same. The cheat sheet stays with the box when you place it, break it, or carry it.
 - A shulker box has three rows, so anything listed past row 3 is left out.
-- If the clipboard doesn't hold a palette, or the text has a mistake, the Load button's tooltip says which line is wrong and why.
+- If the clipboard doesn't hold a palette, or the text has a mistake, the paste button's tooltip says which line is wrong and why.
 
 **Clear** appears when the box has a cheat sheet, and removes it.
 
