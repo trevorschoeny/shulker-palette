@@ -139,7 +139,7 @@ The **paste** button (Paste from clipboard) reads a palette from your clipboard 
 
 - In creative, it replaces everything in the box with the saved blocks.
 - In survival, it leaves the box's contents alone and adds a cheat sheet. Each empty slot shows a faded copy of the item that belongs there, with how many go there. Hovering over it says the same. The cheat sheet stays with the box when you place it, break it, or carry it.
-- A shulker box has three rows, so anything listed past row 3 is left out.
+- In creative, the box's row count changes to match the saved palette (up to 16 rows). In survival, the box keeps its own row count, normally three unless it already has more rows added in creative; anything listed past that is left out.
 - If the clipboard doesn't hold a palette, or the text has a mistake, the paste button's tooltip says which line is wrong and why.
 
 **Clear** appears when the box has a cheat sheet, and removes it.
