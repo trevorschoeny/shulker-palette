@@ -10,6 +10,9 @@ import com.trevlar.menukit.api.panel.OutsideRegion;
 import com.trevlar.menukit.api.panel.Panel;
 import com.trevlar.menukit.api.panel.PanelPosition;
 import com.trevlar.menukit.api.panel.PanelStyle;
+import com.trevlar.slotkit.api.group.SlotGroupCategory;
+import com.trevlar.slotkit.api.group.SlotGroupPanelAdapter;
+import com.trevlar.slotkit.api.slot.SlotPlacement;
 import com.trevlar.menukit.api.panel.ScreenPanelAdapter;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
@@ -28,7 +31,7 @@ import net.minecraft.resources.Identifier;
  * It holds no state. Every button reads the palette the server last synced into the menu
  * and asks the server to change it; the new state comes back the same way.
  *
- * <p>Palette off shows only the power button. In creative a bar under the box adds or takes
+ * <p>Palette off shows only the power button. In creative a bar under the box's slots adds or takes
  * away its last row, palette on or off, since extra rows are storage too; a row is only taken
  * away empty.
  */
@@ -37,7 +40,7 @@ public final class ControlPanel {
 
     private static final int SIZE = 14; // the icons are 10 px, drawn 1:1 inside a 2 px inset
     private static final int TINT_ON = 0x6040C040;
-    private static final int FRAME_WIDTH = 176; // vanilla's shulker screen
+    private static final int GRID_WIDTH = 9 * 18; // the box's slot grid
     private static final int ROW_GAP = 2;
     private static final int ROW_BUTTON_HEIGHT = 12;
 
@@ -96,12 +99,15 @@ public final class ControlPanel {
                 .build()
                 .visibleWhen(() -> palette().isPresent());
 
-        // Rows, in creative: a short bar of two buttons under the box's frame, as wide as it,
-        // since rows belong to the box's grid rather than to the palette.
-        int half = (FRAME_WIDTH - ROW_GAP) / 2;
+        // Rows, in creative: a short bar of two buttons under the box's slot group, as wide as
+        // it, since rows belong to the box's grid rather than to the palette. Placed on the
+        // group itself (SlotKit's group placement), not the screen, so it follows the box
+        // wherever its slots are shown: the vanilla screen, or a section of another mod's.
+        int half = (GRID_WIDTH - ROW_GAP) / 2;
         Panel rows = Panel.builder(ShulkerPalette.MOD_ID + ":rows_bar")
                 .style(PanelStyle.NONE)
-                .in(ModeScope.CREATIVE, Placement.screen(PanelPosition.region(OutsideRegion.BOTTOM_CENTER)))
+                .in(ModeScope.CREATIVE, SlotPlacement.group(SlotGroupCategory.SHULKER_STORAGE,
+                        PanelPosition.region(OutsideRegion.BOTTOM_CENTER)))
                 .elements(List.of(Flow.builder().gap(ROW_GAP)
                         .add(Button.builder()
                                 .label(Component.translatable("shulkerpalette.panel.rows.less.label"))
@@ -122,7 +128,7 @@ public final class ControlPanel {
                 .visibleWhen(() -> palette().isPresent());
 
         new ScreenPanelAdapter(panel).on(ShulkerBoxScreen.class);
-        new ScreenPanelAdapter(rows).on(ShulkerBoxScreen.class);
+        new SlotGroupPanelAdapter(rows);
     }
 
     /** The open shulker screen's palette, as last synced; empty on a container with no palette behind it. */
