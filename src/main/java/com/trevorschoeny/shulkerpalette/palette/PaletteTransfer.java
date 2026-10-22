@@ -75,7 +75,7 @@ public final class PaletteTransfer {
         // Creative takes the saved rows (extra rows are creative); survival keeps the box's own,
         // and slots past them are left off the sheet.
         int rows = player.isCreative() ? saved.rows() : current.rows();
-        holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, Optional.empty(), 0));
+        holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, current.shape(), Optional.empty(), 0));
         int room = rows * Palette.ROW_WIDTH;
         List<SavedPalette.Entry> fitting = saved.slots().stream().filter(e -> e.slot() < room).toList();
         if (player.isCreative()) {

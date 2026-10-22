@@ -16,18 +16,24 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Palette modifier + scroll moves a held palette's selection: the picked block type in pick mode, the
- * row in gradient mode. The client only reports the scroll; the server moves the selection
- * on the shulker in hand, chooses the next block, and says what is selected.
+ * Scrolling with a palette in hand moves one of its two axes:
+ * <ul>
+ *   <li><b>Material</b> (palette modifier + scroll): the picked block type in pick mode, the
+ *       row in gradient mode.</li>
+ *   <li><b>Shape</b> (shape modifier + scroll, creative only): full block, stairs, slab and so on,
+ *       through the shapes the box's materials come in.</li>
+ * </ul>
+ * The client only reports the scroll; the server moves the axis on the shulker in hand, chooses
+ * the next block, and says what is selected.
  */
 public final class Scroll {
     private Scroll() {}
 
-    /** Client to server: the player scrolled this many steps (positive is down, onwards). */
-    public record Payload(int steps) implements CustomPacketPayload {
+    /** Client to server: the player scrolled this many steps (positive is down, onwards), on the material axis or the shape axis. */
+    public record Payload(int steps, boolean shape) implements CustomPacketPayload {
         public static final Type<Payload> TYPE = new Type<>(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "scroll"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Payload> STREAM_CODEC =
-                StreamCodec.composite(ByteBufCodecs.VAR_INT, Payload::steps, Payload::new);
+                StreamCodec.composite(ByteBufCodecs.VAR_INT, Payload::steps, ByteBufCodecs.BOOL, Payload::shape, Payload::new);
 
         @Override
         public Type<? extends CustomPacketPayload> type() {
@@ -67,6 +73,17 @@ public final class Scroll {
         return pick < 0 ? -1 : Math.floorMod(pick + steps, types.size());
     }
 
+    /**
+     * The shape after scrolling {@code steps} through the shapes the box offers, wrapping round.
+     * A shape the box no longer offers counts as a full block. The client runs this too.
+     */
+    public static Shape movedShape(Palette palette, ItemContainerContents contents, int steps) {
+        List<Shape> shapes = Shapes.available(Draw.slots(contents));
+        if (shapes.isEmpty()) return palette.shape();
+        int at = Math.max(0, shapes.indexOf(Shapes.effective(palette.shape(), Draw.slots(contents))));
+        return shapes.get(Math.floorMod(at + steps, shapes.size()));
+    }
+
     private static boolean rowHasBlocks(List<ItemStack> slots, int row) {
         for (int i = row * Palette.ROW_WIDTH; i < Math.min((row + 1) * Palette.ROW_WIDTH, slots.size()); i++) {
             if (Draw.eligible(slots.get(i))) return true;
@@ -77,7 +94,10 @@ public final class Scroll {
     public static void register() {
         PayloadTypeRegistry.serverboundPlay().register(Payload.TYPE, Payload.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Payload.TYPE,
-                (payload, context) -> context.server().execute(() -> apply(context.player(), payload.steps())));
+                (payload, context) -> context.server().execute(() -> {
+                    if (payload.shape()) applyShape(context.player(), payload.steps());
+                    else apply(context.player(), payload.steps());
+                }));
     }
 
     private static void apply(ServerPlayer player, int steps) {
@@ -93,9 +113,7 @@ public final class Scroll {
         int selection = moved(palette, contents, steps);
         if (selection < 0) return;
 
-        Palette moved = new Palette(palette.on(), palette.mode(), palette.repaint(), palette.rows(), selection,
-                palette.next(), palette.fingerprint());
-        Placement.rollNext(shulker, moved, contents, player.level());
+        Placement.rollNext(shulker, palette.withSelection(selection), contents, player.level(), Placement.shaped(player));
 
         // The strip by the hotbar shows the choices; the action bar names the one chosen,
         // the way vanilla names a newly held item.
@@ -103,5 +121,17 @@ public final class Scroll {
                 ? Component.translatable("shulkerpalette.scroll.pick", types.get(selection).type().getHoverName(), types.get(selection).total())
                 : Component.translatable("shulkerpalette.scroll.row", selection + 1, palette.rows());
         player.sendOverlayMessage(said);
+    }
+
+    private static void applyShape(ServerPlayer player, int steps) {
+        ItemStack shulker = player.getMainHandItem();
+        Palette palette = Palette.activeOn(shulker);
+        if (palette == null || !Placement.shaped(player)) return; // shapes are creative only
+        steps = Math.clamp(steps, -Shape.values().length, Shape.values().length);
+        ItemContainerContents contents = shulker.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+        Shape shape = movedShape(palette, contents, steps);
+        Placement.rollNext(shulker, palette.withShape(shape), contents, player.level(), true);
+        player.sendOverlayMessage(Component.translatable("shulkerpalette.scroll.shape",
+                Component.translatable("shulkerpalette.shape." + shape.getSerializedName())));
     }
 }

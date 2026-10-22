@@ -1,6 +1,7 @@
 package com.trevorschoeny.shulkerpalette.palette;
 
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -48,7 +49,7 @@ public final class Placement {
         if (!level.isClientSide() && (player == null || !player.hasInfiniteMaterials())) {
             taken = Draw.removeOne(palette, contents, next);
             if (taken.isEmpty()) {
-                rollNext(shulker, palette, contents, level);
+                rollNext(shulker, palette, contents, level, shaped(player));
                 level.playSound(null, context.getClickedPos(), SoundEvents.DISPENSER_FAIL, SoundSource.BLOCKS, 0.6F, 1.2F);
                 return InteractionResult.FAIL;
             }
@@ -66,12 +67,22 @@ public final class Placement {
             contents = taken.get();
             shulker.set(DataComponents.CONTAINER, contents);
         }
-        rollNext(shulker, palette, contents, level);
+        rollNext(shulker, palette, contents, level, shaped(player));
         return result;
     }
 
-    /** Chooses the next block from these contents and stores it, with their fingerprint, on the shulker. */
-    public static void rollNext(ItemStack shulker, Palette palette, ItemContainerContents contents, Level level) {
-        shulker.set(Palette.COMPONENT, palette.withNext(Draw.roll(palette, contents, level.getRandom()), Draw.fingerprint(contents)));
+    /**
+     * Chooses the next block from these contents and stores it, with their fingerprint, on the
+     * shulker. {@code shaped}: whether the palette's shape applies, which is whether its holder
+     * is in creative.
+     */
+    public static void rollNext(ItemStack shulker, Palette palette, ItemContainerContents contents, Level level, boolean shaped) {
+        shulker.set(Palette.COMPONENT, palette.withNext(Draw.roll(palette, contents, level.getRandom(), shaped),
+                Draw.fingerprint(contents, shaped)));
+    }
+
+    /** Do shapes apply for this player? Creative only, in v1. */
+    public static boolean shaped(@Nullable Player player) {
+        return player != null && player.isCreative();
     }
 }

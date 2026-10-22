@@ -3,6 +3,7 @@ package com.trevorschoeny.shulkerpalette.palette;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
@@ -84,22 +85,34 @@ public final class Draw {
         return types.isEmpty() ? -1 : Math.clamp(palette.selection(), 0, types.size() - 1);
     }
 
-    /** Chooses the next block for this palette from these contents. Empty when nothing is eligible. */
-    public static Optional<ItemStackTemplate> roll(Palette palette, ItemContainerContents contents, RandomSource random) {
+    /**
+     * Chooses the next block for this palette from these contents. Empty when nothing is eligible.
+     *
+     * <p>With {@code shaped} (creative), the palette's shape applies: only materials that come in
+     * it take part, keeping their ratios, and the block chosen is that material in that shape. A
+     * shape the box no longer offers falls back to a full block. Without it (survival) the box's
+     * items are placed as they are, since a shape would need items the box doesn't hold.
+     */
+    public static Optional<ItemStackTemplate> roll(Palette palette, ItemContainerContents contents, RandomSource random, boolean shaped) {
         List<ItemStack> slots = slots(contents);
+        Shape shape = shaped ? Shapes.effective(palette.shape(), slots) : null;
+        Predicate<ItemStack> fits = stack -> shape == null || Shapes.variant(stack.getItem(), shape) != null;
         ItemStack chosen = switch (palette.mode()) {
-            case RANDOM, GRADIENT -> byCount(slots, scope(palette, slots), random);
+            case RANDOM, GRADIENT -> byCount(slots, scope(palette, slots).stream().filter(i -> fits.test(slots.get(i))).toList(), random);
             case EQUAL -> {
-                List<Entry> types = types(slots);
+                List<Entry> types = types(slots).stream().filter(e -> fits.test(e.type())).toList();
                 yield types.isEmpty() ? ItemStack.EMPTY : types.get(random.nextInt(types.size())).type();
             }
             case PICK -> {
+                // The picked material, if it comes in the shape; pick mode doesn't move on by itself.
                 List<Entry> types = types(slots);
                 int pick = currentPick(palette, types);
-                yield pick < 0 ? ItemStack.EMPTY : types.get(pick).type();
+                yield pick < 0 || !fits.test(types.get(pick).type()) ? ItemStack.EMPTY : types.get(pick).type();
             }
         };
-        return chosen.isEmpty() ? Optional.empty() : Optional.of(ItemStackTemplate.fromNonEmptyStack(chosen, 1));
+        if (chosen.isEmpty()) return Optional.empty();
+        if (shape == null) return Optional.of(ItemStackTemplate.fromNonEmptyStack(chosen, 1));
+        return Optional.of(ItemStackTemplate.fromNonEmptyStack(new ItemStack(Shapes.variant(chosen.getItem(), shape)), 1));
     }
 
     /** One item, uniformly, from every item in the given slots: each item is one ticket. */
@@ -142,11 +155,13 @@ public final class Draw {
     /**
      * A hash of the contents that stays the same across restarts (item ids and counts per
      * slot), unlike {@code ItemContainerContents.hashCode()}, which can lean on identity
-     * hashes. A palette stores it next to its next block; a mismatch means the box changed.
+     * hashes. A palette stores it next to its next block; a mismatch means the box changed, or
+     * whether shapes apply did.
      * Ignores components, so renaming a block inside the box doesn't count as a change.
      */
-    public static int fingerprint(ItemContainerContents contents) {
-        int hash = 1;
+    public static int fingerprint(ItemContainerContents contents, boolean shaped) {
+        // Shapes apply in creative only, so switching game mode chooses the next block again.
+        int hash = shaped ? 7 : 1;
         List<ItemStack> slots = slots(contents);
         for (int i = 0; i < slots.size(); i++) {
             ItemStack stack = slots.get(i);

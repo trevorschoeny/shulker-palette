@@ -34,6 +34,15 @@ public final class ConfigScreen {
             keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.MODIFIER,
                     Component.translatable("key.shulkerpalette.modifier"),
                     OptionDescription.of(Component.translatable("shulkerpalette.config.modifier.description"))));
+            keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.SHAPE,
+                    Component.translatable("key.shulkerpalette.shape"),
+                    OptionDescription.of(Component.translatable("shulkerpalette.config.shape.description"))));
+            keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.PREVIOUS_SHAPE,
+                    Component.translatable("key.shulkerpalette.shape_previous"),
+                    OptionDescription.of(Component.translatable("shulkerpalette.config.shape_step.description"))));
+            keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.NEXT_SHAPE,
+                    Component.translatable("key.shulkerpalette.shape_next"),
+                    OptionDescription.of(Component.translatable("shulkerpalette.config.shape_step.description"))));
             keys.options(KeybinderyAPI.getInstance().createYACLChordOption(KeysClient.POWER,
                     Component.translatable("key.shulkerpalette.power"),
                     OptionDescription.of(Component.translatable("shulkerpalette.config.power.description"))));
@@ -64,6 +73,8 @@ public final class ConfigScreen {
                 .option(toggle("rainbow", Config::rainbow, Config::setRainbow))
                 .option(toggle("popup", Config::popup, Config::setPopup))
                 .option(toggle("open_box", Config::openBoxInHand, Config::setOpenBoxInHand))
+                .option(toggle("placement_ghost", Config::placementGhost, Config::setPlacementGhost))
+                .option(toggle("repaint_ghost", Config::repaintGhost, Config::setRepaintGhost))
                 .build();
 
         return YetAnotherConfigLib.createBuilder()

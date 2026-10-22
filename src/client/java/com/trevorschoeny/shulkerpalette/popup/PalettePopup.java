@@ -21,6 +21,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
+import net.minecraft.world.item.Item;
+import com.trevorschoeny.shulkerpalette.palette.Shapes;
+import com.trevorschoeny.shulkerpalette.palette.Shape;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
@@ -60,6 +64,12 @@ public final class PalettePopup {
 
     /** Opened by a modifier + scroll, closed by letting go of the modifier. */
     private static boolean open;
+    /** Which axis the popup shows: the one last scrolled. Only one shows at a time. */
+    private static boolean shapeAxis;
+    /** A shape step from a key (no modifier held) keeps the popup up this long. */
+    private static final long STEP_MILLIS = 1500;
+    private static long openUntil;
+    private static @Nullable Shape expectedShape;
 
     public static void register() {
         // A one-pixel strip along the top of the hotbar, as wide as it: the anchor the grid is
@@ -82,14 +92,35 @@ public final class PalettePopup {
         Palette palette = Palette.activeOn(held);
         if (palette == null) return;
         open = true;
+        shapeAxis = false;
         if (!Scroll.scrolls(palette)) return; // random modes: the popup just shows the box
         expected = Scroll.moved(withSelection(palette, selection(palette)), contents(held), steps);
         expectedAt = System.currentTimeMillis();
     }
 
+    /** Called right after a shape scroll is sent: open on the shape axis, guess the new shape. */
+    public static void scrolledShape(int steps) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return;
+        ItemStack held = mc.player.getMainHandItem();
+        Palette palette = Palette.activeOn(held);
+        if (palette == null) return;
+        open = true;
+        shapeAxis = true;
+        expectedShape = Scroll.movedShape(palette.withShape(shape(palette)), contents(held), steps);
+        expectedAt = System.currentTimeMillis();
+    }
+
+    /** A shape key: the same as a shape scroll, and the popup stays up a moment on its own. */
+    public static void steppedShape(int steps) {
+        scrolledShape(steps);
+        openUntil = System.currentTimeMillis() + STEP_MILLIS;
+    }
+
     private static boolean shown() {
         Minecraft mc = Minecraft.getInstance();
-        if (!KeysClient.modifierDown()) open = false;
+        boolean held = shapeAxis ? KeysClient.shapeDown() || System.currentTimeMillis() < openUntil : KeysClient.modifierDown();
+        if (!held) open = false;
         if (!open || !Config.popup() || mc.player == null || mc.gui.screen() != null) return false;
         return Palette.activeOn(mc.player.getMainHandItem()) != null;
     }
@@ -100,6 +131,37 @@ public final class PalettePopup {
         if (waiting && palette.selection() != expected) return expected;
         expected = -1;
         return palette.selection();
+    }
+
+    /** The server's shape, unless we scrolled a moment ago and it hasn't caught up yet. */
+    private static Shape shape(Palette palette) {
+        boolean waiting = expectedShape != null && System.currentTimeMillis() - expectedAt < EXPECT_MILLIS;
+        if (waiting && palette.shape() != expectedShape) return expectedShape;
+        expectedShape = null;
+        return palette.shape();
+    }
+
+    /**
+     * The shape view: one cell per shape the box offers, each the first material that comes in
+     * it, shaped; the current shape framed.
+     */
+    private static List<List<Cell>> shapeRows(Palette palette, List<ItemStack> slots) {
+        Shape current = Shapes.effective(shape(palette), slots);
+        List<Cell> cells = new ArrayList<>();
+        for (Shape shape : Shapes.available(slots)) {
+            for (ItemStack stack : slots) {
+                if (!Draw.eligible(stack)) continue;
+                Item shaped = Shapes.variant(stack.getItem(), shape);
+                if (shaped == null) continue;
+                cells.add(new Cell(new ItemStack(shaped), shape == current));
+                break;
+            }
+        }
+        List<List<Cell>> rows = new ArrayList<>();
+        for (int from = 0; from < cells.size(); from += Palette.ROW_WIDTH) {
+            rows.add(cells.subList(from, Math.min(from + Palette.ROW_WIDTH, cells.size())));
+        }
+        return rows;
     }
 
     /** One cell of the popup: the stack drawn, and whether it wears the selection frame. */
@@ -151,13 +213,17 @@ public final class PalettePopup {
         Palette palette = Palette.activeOn(held);
         if (palette == null) return;
         palette = withSelection(palette, selection(palette));
-        List<List<Cell>> rows = rows(palette, Draw.slots(contents(held)));
+        List<ItemStack> slots = Draw.slots(contents(held));
+        List<List<Cell>> rows = shapeAxis ? shapeRows(palette, slots) : rows(palette, slots);
         int height = TITLE_H + ROW_PITCH * rows.size() + (ROW_H - ROW_PITCH);
 
         // Centred over the held hotbar slot (vanilla's slot i is centred 11 + 20i in from the
         // hotbar's left), kept on screen, bottom resting just above the hotbar.
         int widest = rows.stream().mapToInt(List::size).max().orElse(0) * SLOT_PITCH + 2;
-        Component title = title(palette);
+        Component title = shapeAxis
+                ? Component.translatable("shulkerpalette.popup.shape",
+                        Component.translatable("shulkerpalette.shape." + Shapes.effective(shape(palette), slots).getSerializedName()))
+                : title(palette);
         int width = Math.max(widest, mc.font.width(title));
         int slotCentre = originX + 11 + 20 * mc.player.getInventory().getSelectedSlot();
         float left = Math.clamp(slotCentre - width * SCALE / 2, 0, g.guiWidth() - width * SCALE);
@@ -208,7 +274,7 @@ public final class PalettePopup {
     }
 
     private static Palette withSelection(Palette p, int selection) {
-        return new Palette(p.on(), p.mode(), p.repaint(), p.rows(), selection, p.next(), p.fingerprint());
+        return p.withSelection(selection);
     }
 
     private static ItemContainerContents contents(ItemStack shulker) {

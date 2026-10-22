@@ -34,8 +34,9 @@ public final class Upkeep {
             Palette palette = Palette.activeOn(stack);
             if (palette == null) continue;
             ItemContainerContents contents = stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
-            if (Draw.fingerprint(contents) != palette.fingerprint()) {
-                Placement.rollNext(stack, palette, contents, player.level());
+            boolean shaped = Placement.shaped(player);
+            if (Draw.fingerprint(contents, shaped) != palette.fingerprint()) {
+                Placement.rollNext(stack, palette, contents, player.level(), shaped);
             }
         }
     }

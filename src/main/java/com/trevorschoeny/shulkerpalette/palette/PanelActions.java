@@ -48,11 +48,11 @@ public final class PanelActions {
      * player's inventory the server chooses one for the new settings ({@link Upkeep}).
      */
     private static Palette with(Palette p, boolean on, Mode mode, boolean repaint) {
-        return new Palette(on, mode, repaint, p.rows(), p.selection(), Optional.empty(), 0);
+        return new Palette(on, mode, repaint, p.rows(), p.selection(), p.shape(), Optional.empty(), 0);
     }
 
     private static Palette withRows(Palette p, int rows) {
-        return new Palette(p.on(), p.mode(), p.repaint(), rows, p.selection(), Optional.empty(), 0);
+        return new Palette(p.on(), p.mode(), p.repaint(), rows, p.selection(), p.shape(), Optional.empty(), 0);
     }
 
     /** Is the palette's last row empty in this box, so the rows minus button may take it away? */
@@ -83,6 +83,6 @@ public final class PanelActions {
     public static Optional<Palette> unpack(int packed) {
         if ((packed & PRESENT) == 0) return Optional.empty();
         return Optional.of(new Palette((packed & 1) != 0, Mode.values()[packed >> 1 & 3], (packed >> 3 & 1) != 0,
-                packed >> 4 & 31, 0, Optional.empty(), 0));
+                packed >> 4 & 31, 0, Shape.BLOCK, Optional.empty(), 0));
     }
 }

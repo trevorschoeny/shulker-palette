@@ -29,12 +29,21 @@ abstract class MouseHandlerMixin {
             target = "Lnet/minecraft/world/entity/player/Inventory;setSelectedSlot(I)V"))
     private void shulkerpalette$scrollPalette(long handle, double xoffset, double yoffset, CallbackInfo ci,
                                               @Local(ordinal = 0) int wheel) {
-        if (minecraft.player == null || !KeysClient.modifierDown()) return;
+        if (minecraft.player == null) return;
         Palette palette = Palette.activeOn(minecraft.player.getMainHandItem());
         if (palette == null) return;
+        // The shape axis first: its chord holds the material modifier too. Creative only; in
+        // survival the same keys move the material.
+        if (KeysClient.shapeDown() && minecraft.player.isCreative()) {
+            ClientPlayNetworking.send(new Scroll.Payload(-wheel, true));
+            PalettePopup.scrolledShape(-wheel);
+            ci.cancel();
+            return;
+        }
+        if (!KeysClient.modifierDown()) return;
         // Vanilla moves the hotbar against the wheel (up is left); the selection follows suit.
         // Random modes have nothing to select: the scroll only opens the popup.
-        if (Scroll.scrolls(palette)) ClientPlayNetworking.send(new Scroll.Payload(-wheel));
+        if (Scroll.scrolls(palette)) ClientPlayNetworking.send(new Scroll.Payload(-wheel, false));
         PalettePopup.scrolled(-wheel);
         ci.cancel();
     }

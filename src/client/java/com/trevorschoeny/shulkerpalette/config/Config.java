@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import net.fabricmc.loader.api.FabricLoader;
 
 /**
- * Shulker Palette's own settings: three look switches, all on by default. Same static-field +
+ * Shulker Palette's own settings: five look switches, all on by default. Same static-field +
  * JSON shape as the other house mods, saved on every change to
  * {@code config/shulkerpalette/config.json}. Client only: every one changes what this player
  * sees, nothing the server does. The keys live with vanilla's key binds (options.txt).
@@ -27,6 +27,10 @@ public final class Config {
     private static boolean popup = true;
     // In hand, the open box with the next block inside; off shows the next block alone.
     private static boolean openBoxInHand = true;
+    // A see-through copy of the next block where a click would place it (survival and creative).
+    private static boolean placementGhost = true;
+    // The same over the block repaint would replace (creative).
+    private static boolean repaintGhost = true;
 
     private static Path filePath() {
         return FabricLoader.getInstance().getConfigDir().resolve("shulkerpalette").resolve("config.json");
@@ -41,6 +45,8 @@ public final class Config {
             rainbow = readBool(root, "rainbow", rainbow);
             popup = readBool(root, "popup", popup);
             openBoxInHand = readBool(root, "openBoxInHand", openBoxInHand);
+            placementGhost = readBool(root, "placementGhost", placementGhost);
+            repaintGhost = readBool(root, "repaintGhost", repaintGhost);
         } catch (Exception e) {
             ShulkerPalette.LOGGER.error("[config] couldn't read {}, using defaults", path, e);
         }
@@ -59,6 +65,8 @@ public final class Config {
             root.addProperty("rainbow", rainbow);
             root.addProperty("popup", popup);
             root.addProperty("openBoxInHand", openBoxInHand);
+            root.addProperty("placementGhost", placementGhost);
+            root.addProperty("repaintGhost", repaintGhost);
             Files.writeString(path, GSON.toJson(root));
         } catch (Exception e) {
             ShulkerPalette.LOGGER.error("[config] couldn't write {}, changes won't persist", path, e);
@@ -73,4 +81,10 @@ public final class Config {
 
     public static boolean openBoxInHand() { return openBoxInHand; }
     public static void setOpenBoxInHand(boolean v) { openBoxInHand = v; save(); }
+
+    public static boolean placementGhost() { return placementGhost; }
+    public static void setPlacementGhost(boolean v) { placementGhost = v; save(); }
+
+    public static boolean repaintGhost() { return repaintGhost; }
+    public static void setRepaintGhost(boolean v) { repaintGhost = v; save(); }
 }
