@@ -9,6 +9,7 @@ import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.panel.OutsideRegion;
 import com.trevlar.menukit.api.panel.Panel;
 import com.trevlar.menukit.api.panel.PanelPosition;
+import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.ScreenPanelAdapter;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
@@ -27,15 +28,18 @@ import net.minecraft.resources.Identifier;
  * It holds no state. Every button reads the palette the server last synced into the menu
  * and asks the server to change it; the new state comes back the same way.
  *
- * <p>Palette off shows only the power button and, in creative, the rows buttons, since extra
- * rows are storage whether the palette is on or not. The rows buttons add or take away the
- * box's last row; a row is only taken away empty.
+ * <p>Palette off shows only the power button. In creative a bar under the box adds or takes
+ * away its last row, palette on or off, since extra rows are storage too; a row is only taken
+ * away empty.
  */
 public final class ControlPanel {
     private ControlPanel() {}
 
     private static final int SIZE = 14; // the icons are 10 px, drawn 1:1 inside a 2 px inset
     private static final int TINT_ON = 0x6040C040;
+    private static final int FRAME_WIDTH = 176; // vanilla's shulker screen
+    private static final int ROW_GAP = 2;
+    private static final int ROW_BUTTON_HEIGHT = 12;
 
     public static void register() {
         Panel panel = Panel.builder(ShulkerPalette.MOD_ID + ":controls")
@@ -68,20 +72,6 @@ public final class ControlPanel {
                                 .visibleWhen(() -> on() && creative())
                                 .build())
                         .add(Button.builder()
-                                .icon(() -> sprite("rows_more"))
-                                .size(SIZE, SIZE)
-                                .onClick(() -> press(PanelActions.ROWS_MORE))
-                                .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", rows(), Palette.MAX_ROWS))
-                                .visibleWhen(() -> creative())
-                                .build())
-                        .add(Button.builder()
-                                .icon(() -> sprite("rows_less"))
-                                .size(SIZE, SIZE)
-                                .onClick(() -> press(PanelActions.ROWS_LESS))
-                                .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", rows(), Palette.MAX_ROWS))
-                                .visibleWhen(() -> creative())
-                                .build())
-                        .add(Button.builder()
                                 .icon(() -> sprite("save"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.SAVE))
@@ -106,7 +96,33 @@ public final class ControlPanel {
                 .build()
                 .visibleWhen(() -> palette().isPresent());
 
+        // Rows, in creative: a short bar of two buttons under the box's frame, as wide as it,
+        // since rows belong to the box's grid rather than to the palette.
+        int half = (FRAME_WIDTH - ROW_GAP) / 2;
+        Panel rows = Panel.builder(ShulkerPalette.MOD_ID + ":rows_bar")
+                .style(PanelStyle.NONE)
+                .in(ModeScope.CREATIVE, Placement.screen(PanelPosition.region(OutsideRegion.BOTTOM_CENTER)))
+                .elements(List.of(Flow.builder().gap(ROW_GAP)
+                        .add(Button.builder()
+                                .label(Component.translatable("shulkerpalette.panel.rows.less.label"))
+                                .size(half, ROW_BUTTON_HEIGHT)
+                                .onClick(() -> press(PanelActions.ROWS_LESS))
+                                .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", rows(), Palette.MAX_ROWS))
+                                .disabledWhen(() -> rows() <= Palette.VANILLA_ROWS)
+                                .build())
+                        .add(Button.builder()
+                                .label(Component.translatable("shulkerpalette.panel.rows.more.label"))
+                                .size(half, ROW_BUTTON_HEIGHT)
+                                .onClick(() -> press(PanelActions.ROWS_MORE))
+                                .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", rows(), Palette.MAX_ROWS))
+                                .disabledWhen(() -> rows() >= Palette.MAX_ROWS)
+                                .build())
+                        .build()))
+                .build()
+                .visibleWhen(() -> palette().isPresent());
+
         new ScreenPanelAdapter(panel).on(ShulkerBoxScreen.class);
+        new ScreenPanelAdapter(rows).on(ShulkerBoxScreen.class);
     }
 
     /** The open shulker screen's palette, as last synced; empty on a container with no palette behind it. */

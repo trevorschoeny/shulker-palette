@@ -9,15 +9,13 @@ import com.trevlar.menukit.api.element.PanelElement;
 import com.trevlar.menukit.api.element.ScrollContainer;
 import com.trevlar.menukit.api.element.TextField;
 import com.trevlar.menukit.api.element.TextLabel;
-import com.trevlar.menukit.api.element.TextRole;
 import com.trevlar.menukit.api.element.Toggle;
 import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevlar.menukit.api.panel.Panel;
 import com.trevlar.menukit.api.panel.PanelPosition;
+import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.Placement;
-import com.trevlar.menukit.api.panel.ScreenOrigin;
 import com.trevlar.menukit.api.panel.ScreenPanelAdapter;
-import com.trevorschoeny.shulkerpalette.mixin.ScreenPosAccessor;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import com.trevorschoeny.shulkerpalette.palette.SavedPalette;
@@ -36,7 +34,7 @@ import org.jspecify.annotations.Nullable;
  *   <li><b>Save</b>: the panel asks the server for the box's palette; when it arrives, a
  *       dialog asks for a name and a shelf, and the palette is filed. A name already on the
  *       shelf is only replaced after a second question.</li>
- *   <li><b>Load</b>: a list beside the panel, This world then All worlds. A click sends the
+ *   <li><b>Load</b>: a dark modal list, This world then All worlds. A click sends the
  *       palette to the server, which fills the box (creative) or sets its cheat sheet
  *       (survival). Files that don't parse are listed with their problem and can't be picked.</li>
  * </ul>
@@ -50,15 +48,11 @@ public final class LibraryClient {
     public enum Answer { SAVE, LOAD }
 
     private static final long SHOW_MILLIS = 2500;
-    private static final int LIST_WIDTH = 130;
-    // The control panel's width (14 px buttons in a padded panel), the room between panels,
-    // and a panel's own border and padding on both sides.
-    private static final int CONTROLS_WIDTH = 22;
-    private static final int GAP = 4;
-    private static final int PANEL_PADDING = 10;
-    private static final int BOX_WIDTH = 176; // vanilla's shulker screen
-    private static final int LIST_HEIGHT = 120;
-    private static final int STRIP = 4;
+    private static final int LIST_WIDTH = 180;
+    private static final int SCROLLBAR = 8; // room the scroll box keeps for its bar
+    private static final int MUTED = 0xFFA0A0A0;
+    private static final int LIST_HEIGHT = 126;
+    private static final int STRIP = 5;
 
     private static @Nullable Component answer;
     private static Answer answerFor = Answer.SAVE;
@@ -126,19 +120,29 @@ public final class LibraryClient {
                 .build()
                 .visibleWhen(() -> pending != null && confirmingReplace);
 
-        // A popover just left of the control panel, level with the box's top. Sharing the
-        // panel's region would stack the two and push the panel out of place.
+        // A dark modal over the dimmed box: a title, the palettes as rows that light up under
+        // the pointer, and Manage library and Close. Escape or Close dismisses it.
         Panel loadList = Panel.builder(ShulkerPalette.MOD_ID + ":load")
-                .popover()
-                .in(ModeScope.BOTH, Placement.screen(PanelPosition.pixel(LibraryClient::loadListOrigin)))
+                .style(PanelStyle.DARK)
+                .in(ModeScope.BOTH, Placement.screen(PanelPosition.center()))
                 .elements(List.of(Flow.builder().vertical().gap(4)
-                        .add(TextLabel.builder().role(TextRole.HEADING).text(Component.translatable("shulkerpalette.library.load.title")).build())
+                        .add(TextLabel.builder().color(TextLabel.COLOR_LIGHT).shadow(true)
+                                .text(Component.translatable("shulkerpalette.library.load.title")).build())
                         .add(ScrollContainer.builder().size(LIST_WIDTH, LIST_HEIGHT).content(List.of(loadListView())).build())
-                        .add(Button.builder().label(Component.translatable("shulkerpalette.library.manage")).size(LIST_WIDTH, 16)
-                                .onClick(() -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(null)))
+                        .add(Flow.builder().gap(4)
+                                .add(Button.builder().label(Component.translatable("shulkerpalette.library.manage"))
+                                        .size((LIST_WIDTH - 4) / 2, 16)
+                                        .onClick(() -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(null)))
+                                        .build())
+                                .add(Button.builder().label(Component.translatable("gui.cancel"))
+                                        .size((LIST_WIDTH - 4) / 2, 16)
+                                        .onClick(() -> loadMenu = -1)
+                                        .build())
                                 .build())
                         .build()))
                 .build()
+                .modal()
+                .onEscape(() -> loadMenu = -1)
                 .visibleWhen(() -> openMenuId() >= 0 && openMenuId() == loadMenu);
 
         new ScreenPanelAdapter(loadList).on(ShulkerBoxScreen.class);
@@ -154,17 +158,15 @@ public final class LibraryClient {
                     case Row r -> r.entry().id();
                 })
                 .row(LibraryClient::loadRow)
-                // A click on a palette's row picks it; the list keeps no selection.
-                .selection(() -> null, LibraryClient::pick)
                 .gap(1)
-                .empty(TextLabel.builder().role(TextRole.MUTED).text(Component.translatable("shulkerpalette.library.load.none")).build())
+                .empty(TextLabel.builder().color(MUTED).text(Component.translatable("shulkerpalette.library.load.none")).build())
                 .build();
     }
 
     private static PanelElement loadRow(Item item) {
         return switch (item) {
-            case Heading h -> TextLabel.builder().role(TextRole.MUTED).text(Component.translatable(shelfKey(h.shelf()))).build();
-            case Row r -> LibraryRows.start(r.entry(), STRIP).build();
+            case Heading h -> TextLabel.builder().color(MUTED).text(Component.translatable(shelfKey(h.shelf()))).build();
+            case Row r -> PaletteRow.of(r.entry(), LIST_WIDTH - SCROLLBAR, STRIP, () -> pick(r.entry()));
         };
     }
 
@@ -188,16 +190,13 @@ public final class LibraryClient {
     }
 
     /** A click in the Load list: send that palette to the open box. */
-    private static void pick(@Nullable Object key) {
-        if (key == null || !(Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen)) return;
-        for (Item item : loadItems) {
-            if (!(item instanceof Row(Library.Entry entry)) || !entry.id().equals(key)) continue;
-            entry.palette().ifSuccess(palette -> {
-                ClientPlayNetworking.send(new PaletteTransfer.Load(screen.getMenu().containerId, palette));
-                answer(Answer.LOAD, Component.translatable("shulkerpalette.library.loaded", entry.name()));
-                loadMenu = -1;
-            });
-        }
+    private static void pick(Library.Entry entry) {
+        if (!(Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen)) return;
+        entry.palette().ifSuccess(palette -> {
+            ClientPlayNetworking.send(new PaletteTransfer.Load(screen.getMenu().containerId, palette));
+            answer(Answer.LOAD, Component.translatable("shulkerpalette.library.loaded", entry.name()));
+            loadMenu = -1;
+        });
     }
 
     /** Save pressed in the dialog: ask before replacing a palette of the same name. */
@@ -220,20 +219,6 @@ public final class LibraryClient {
 
     static String shelfKey(Library.Shelf shelf) {
         return shelf == Library.Shelf.WORLD ? "shulkerpalette.library.shelf.world" : "shulkerpalette.library.shelf.global";
-    }
-
-    /**
-     * Left of the control panel when there's room; else right of the box (item-list mods may
-     * be there, but a narrow screen has none); else at the screen's left edge over the box.
-     */
-    private static ScreenOrigin loadListOrigin() {
-        Minecraft mc = Minecraft.getInstance();
-        if (!(mc.gui.screen() instanceof ScreenPosAccessor screen)) return new ScreenOrigin(0, 0);
-        int width = LIST_WIDTH + PANEL_PADDING;
-        int left = screen.shulkerpalette$leftPos() - CONTROLS_WIDTH - GAP - width;
-        int right = screen.shulkerpalette$leftPos() + BOX_WIDTH + GAP;
-        int x = left >= GAP ? left : right + width <= mc.getWindow().getGuiScaledWidth() - GAP ? right : GAP;
-        return new ScreenOrigin(x, screen.shulkerpalette$topPos());
     }
 
     private static int openMenuId() {

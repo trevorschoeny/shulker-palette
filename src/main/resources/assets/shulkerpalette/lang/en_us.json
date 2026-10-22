@@ -78,5 +78,7 @@
   "shulkerpalette.library.status.name_taken_there": "A palette with that name is already there",
   "shulkerpalette.library.status.copied": "Copied to the clipboard",
   "shulkerpalette.library.status.pasted": "Pasted",
-  "shulkerpalette.library.status.save_failed": "Couldn't save the palette"
+  "shulkerpalette.library.status.save_failed": "Couldn't save the palette",
+  "shulkerpalette.panel.rows.less.label": "− Row",
+  "shulkerpalette.panel.rows.more.label": "+ Row"
 }
