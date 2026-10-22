@@ -1,38 +1,38 @@
 package com.trevorschoeny.shulkerpalette.panel;
 
-import com.trevlar.menukit.api.panel.Placement;
-import com.trevlar.menukit.api.panel.ModeScope;
+import com.trevlar.menukit.api.element.Button;
 import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.element.PanelElement;
-import com.trevlar.menukit.api.element.RenderContext;
 import com.trevlar.menukit.api.element.ScrollContainer;
-import com.trevlar.menukit.api.panel.Panel;
-import com.trevlar.menukit.api.panel.PanelPosition;
-import com.trevlar.menukit.api.panel.PanelStyle;
-import com.trevlar.menukit.api.panel.ScreenOrigin;
-import com.trevlar.menukit.api.panel.ScreenPanelAdapter;
+import com.trevlar.menukit.api.panel.ContainerRegion;
+import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevlar.slotkit.api.group.SlotGroupCategory;
 import com.trevlar.slotkit.api.group.SlotGroupId;
 import com.trevlar.slotkit.api.slot.SlotElement;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
-import com.trevorschoeny.shulkerpalette.mixin.ScreenPosAccessor;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
-import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
+import net.minecraft.network.chat.Component;
 
 /**
- * A box with extra rows shows all of them as one grid where vanilla's three rows sit: the
- * same three rows tall, scrolling smoothly through every row the box has, so it reads as one
- * taller shulker. Every cell is a vanilla slot of the menu (the 27 box slots, then the extra
- * rows after the player's inventory) moved into a MenuKit scroll box; a row straddling the
- * edge is cut, a row out of view is parked.
+ * The box's own section in MenuKit's container region, shown when the box needs more than
+ * vanilla's screen: extra rows, or the rows bar in creative. Without either the screen stays
+ * vanilla's.
  *
- * <p>Shown whenever the box has more than three rows, palette on or off. Hidden, the 27 slots
- * go back to their vanilla places and the screen is vanilla's.
+ * <ul>
+ *   <li><b>The grid</b>: every row the box has, three rows tall and scrolling smoothly, so it
+ *       reads as one taller shulker. Every cell is a vanilla slot of the box's "Shulker" group
+ *       (its 27 slots, then the extra rows after the player's inventory).</li>
+ *   <li><b>The rows bar</b> (creative): two short buttons under the grid, as wide as it, that
+ *       add or take away the box's last row. A row is only taken away empty.</li>
+ * </ul>
+ * The region lays the player's inventory out in its own panel below the section, so the bar
+ * pushes the inventory down instead of covering its label. It is the same region Open Anywhere
+ * stacks containers in, so the box section is one block wherever it is shown.
  */
 public final class RowGrid {
     private RowGrid() {}
@@ -40,10 +40,8 @@ public final class RowGrid {
     private static final int PITCH = 18;
     private static final int WIDTH = Palette.ROW_WIDTH * PITCH;
     private static final int VISIBLE_ROWS = Palette.VANILLA_ROWS;
-    /** Vanilla's grid frame, relative to the screen's frame: one pixel up-left of the first slot. */
-    private static final int LEFT = 7, TOP = 17;
-    /** The container background's grey, to cover the frames vanilla draws at the old spots. */
-    private static final int BACKGROUND = 0xFFC6C6C6;
+    private static final int ROW_GAP = 2;
+    private static final int BAR_HEIGHT = 12;
     /** The box's slot group: the 27 vanilla slots and every extra row, in row order. */
     private static final SlotGroupId SHULKER = SlotGroupId.category(SlotGroupCategory.SHULKER_STORAGE);
 
@@ -57,45 +55,47 @@ public final class RowGrid {
             int row = r;
             Flow.Builder cells = Flow.builder().gap(0, 0);
             for (int c = 0; c < Palette.ROW_WIDTH; c++) {
-                // Slot i of the box's "Shulker" group: its 27 slots, then the extra rows.
                 cells.add(SlotElement.builder().slot(SHULKER, row * Palette.ROW_WIDTH + c).build());
             }
-            rows.add(cells.visibleWhen(() -> row < rows()).build());
+            rows.add(cells.visibleWhen(() -> row < ControlPanel.rows()).build());
         }
         PanelElement grid = Flow.builder().vertical().gap(0, 0).addAll(rows).build();
         int lane = ScrollContainer.TRACK_WIDTH + ScrollContainer.SCROLLER_GUTTER;
-        Panel panel = Panel.builder(ShulkerPalette.MOD_ID + ":rows")
-                .style(PanelStyle.NONE)
-                .in(ModeScope.BOTH, Placement.screen(PanelPosition.pixel(RowGrid::origin)))
-                .add(new PanelElement() {
-                    // Covers the frames vanilla's background draws at the old spots; the slot
-                    // elements draw their own frames where they are now.
-                    @Override public int getChildX() { return 0; }
-                    @Override public int getChildY() { return 0; }
-                    @Override public int getWidth() { return WIDTH; }
-                    @Override public int getHeight() { return VISIBLE_ROWS * PITCH; }
-                    @Override public void render(RenderContext ctx) {
-                        ctx.graphics().fill(ctx.originX(), ctx.originY(), ctx.originX() + WIDTH, ctx.originY() + getHeight(), BACKGROUND);
-                    }
-                })
-                .add(ScrollContainer.builder().at(0, 0).size(WIDTH + lane, VISIBLE_ROWS * PITCH).content(List.of(grid)).build())
-                .visibleWhen(() -> rows() > Palette.VANILLA_ROWS)
+        PanelElement scroll = ScrollContainer.builder().size(WIDTH + lane, VISIBLE_ROWS * PITCH).content(List.of(grid)).build();
+
+        int half = (WIDTH - ROW_GAP) / 2;
+        PanelElement bar = Flow.builder().gap(ROW_GAP)
+                .add(Button.builder()
+                        .label(Component.translatable("shulkerpalette.panel.rows.less.label"))
+                        .size(half, BAR_HEIGHT)
+                        .onClick(() -> ControlPanel.press(PanelActions.ROWS_LESS))
+                        .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", ControlPanel.rows(), Palette.MAX_ROWS))
+                        .disabledWhen(() -> ControlPanel.rows() <= Palette.VANILLA_ROWS)
+                        .build())
+                .add(Button.builder()
+                        .label(Component.translatable("shulkerpalette.panel.rows.more.label"))
+                        .size(half, BAR_HEIGHT)
+                        .onClick(() -> ControlPanel.press(PanelActions.ROWS_MORE))
+                        .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", ControlPanel.rows(), Palette.MAX_ROWS))
+                        .disabledWhen(() -> ControlPanel.rows() >= Palette.MAX_ROWS)
+                        .build())
+                .visibleWhen(RowGrid::creative)
                 .build();
-        new ScreenPanelAdapter(panel, 0).on(ShulkerBoxScreen.class);
+
+        ContainerRegion.section(ShulkerPalette.MOD_ID + ":box", ModeScope.BOTH)
+                // The screen's own title: vanilla's key, or the name the player gave the box.
+                .title(() -> Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen
+                        ? screen.getTitle() : Component.translatable("container.shulkerBox"))
+                .texture(ContainerRegion.SHULKER_BOX)
+                .content(Flow.builder().vertical().gap(0, ROW_GAP + 1).add(scroll).add(bar).build())
+                .on(ShulkerBoxScreen.class)
+                .visibleWhen(() -> ControlPanel.palette().isPresent()
+                        && (ControlPanel.rows() > Palette.VANILLA_ROWS || creative()))
+                .declare();
     }
 
-    /** The open shulker screen's rows, palette on or off. */
-    private static int rows() {
-        return Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen
-                && screen.getMenu() instanceof PaletteMenu menu
-                ? PanelActions.unpack(menu.shulkerpalette$packedPalette()).map(Palette::rows).orElse(Palette.VANILLA_ROWS)
-                : Palette.VANILLA_ROWS;
-    }
-
-    private static ScreenOrigin origin() {
-        return Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen
-                ? new ScreenOrigin(((ScreenPosAccessor) screen).shulkerpalette$leftPos() + LEFT,
-                        ((ScreenPosAccessor) screen).shulkerpalette$topPos() + TOP)
-                : null;
+    private static boolean creative() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null && mc.player.isCreative();
     }
 }
