@@ -19,15 +19,16 @@ import net.minecraft.world.item.ItemStack;
  * (extra rows included, which the client never sees), so:
  * <ul>
  *   <li>Save: the panel presses a menu button; the server snapshots the box and sends the
- *       palette back ({@link Saved}); the client puts it on the clipboard.</li>
- *   <li>Load: the client reads the clipboard and sends the palette ({@link Load}); the server
- *       checks it and applies it to the open box.</li>
+ *       palette back ({@link Saved}); the client files it in its palette library.</li>
+ *   <li>Load: the client picks a palette from its library and sends it ({@link Load}); the
+ *       server checks it and applies it to the open box.</li>
  * </ul>
+ * The library itself is client-side files, so the server stores nothing.
  */
-public final class Clipboard {
-    private Clipboard() {}
+public final class PaletteTransfer {
+    private PaletteTransfer() {}
 
-    /** Server to client: the open box's palette, for the clipboard. */
+    /** Server to client: the open box's palette, for the library. */
     public record Saved(SavedPalette palette) implements CustomPacketPayload {
         public static final Type<Saved> TYPE = new Type<>(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "saved"));
         public static final StreamCodec<RegistryFriendlyByteBuf, Saved> STREAM_CODEC =

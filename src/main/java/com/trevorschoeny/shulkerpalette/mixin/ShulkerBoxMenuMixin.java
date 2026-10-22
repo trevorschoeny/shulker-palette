@@ -1,7 +1,7 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
 import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
-import com.trevorschoeny.shulkerpalette.palette.Clipboard;
+import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import java.util.List;
 import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
@@ -146,7 +146,7 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     public boolean clickMenuButton(Player player, int buttonId) {
         if (shulkerpalette$holder == null) return super.clickMenuButton(player, buttonId);
         if (buttonId == PanelActions.SAVE) {
-            if (player instanceof ServerPlayer server) Clipboard.save(server, shulkerpalette$holder);
+            if (player instanceof ServerPlayer server) PaletteTransfer.save(server, shulkerpalette$holder);
             return true;
         }
         if (buttonId == PanelActions.CLEAR) {

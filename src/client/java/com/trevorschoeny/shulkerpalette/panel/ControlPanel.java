@@ -3,6 +3,7 @@ package com.trevorschoeny.shulkerpalette.panel;
 import com.trevlar.menukit.api.panel.Placement;
 import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
+import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevlar.menukit.api.element.Button;
 import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.panel.OutsideRegion;
@@ -81,17 +82,17 @@ public final class ControlPanel {
                                 .visibleWhen(() -> creative())
                                 .build())
                         .add(Button.builder()
-                                .icon(() -> sprite("copy"))
+                                .icon(() -> sprite("save"))
                                 .size(SIZE, SIZE)
                                 .onClick(() -> press(PanelActions.SAVE))
-                                .tooltip(() -> answerOr(ClipboardClient.Button.SAVE, "shulkerpalette.panel.save"))
+                                .tooltip(() -> answerOr(LibraryClient.Answer.SAVE, "shulkerpalette.panel.save"))
                                 .visibleWhen(ControlPanel::on)
                                 .build())
                         .add(Button.builder()
-                                .icon(() -> sprite("paste"))
+                                .icon(() -> sprite("load"))
                                 .size(SIZE, SIZE)
-                                .onClick(ClipboardClient::load)
-                                .tooltip(() -> answerOr(ClipboardClient.Button.LOAD, "shulkerpalette.panel.load"))
+                                .onClick(LibraryClient::toggleLoad)
+                                .tooltip(() -> answerOr(LibraryClient.Answer.LOAD, "shulkerpalette.panel.load"))
                                 .visibleWhen(ControlPanel::on)
                                 .build())
                         .add(Button.builder()
@@ -146,8 +147,8 @@ public final class ControlPanel {
     }
 
     /** A Save or Load button's tooltip: the answer to the last press while it is fresh, else what it does. */
-    private static Component answerOr(ClipboardClient.Button button, String key) {
-        Component answer = ClipboardClient.answerFor(button);
+    private static Component answerOr(LibraryClient.Answer button, String key) {
+        Component answer = LibraryClient.answerFor(button);
         return answer != null ? answer : Component.translatable(key);
     }
 

@@ -31,7 +31,7 @@ import net.minecraft.world.item.ItemStackTemplate;
  * per row of the box:
  *
  * <pre>
- * shulker_palette mode=gradient rows=3
+ * shulker_palette name="Concrete fade" mode=gradient rows=3
  * row 1: white_concrete 30, white_wool 4
  * row 2: light_gray_concrete 30
  * row 3: -, -, gray_concrete 30
@@ -40,13 +40,16 @@ import net.minecraft.world.item.ItemStackTemplate;
  * Each row lists its slots left to right, separated by commas: an item ({@code id}, or
  * {@code id[components]} as in a command) and an optional count, or {@code -} for an empty
  * slot. Trailing empty slots and empty rows can be left out. Blank lines and lines starting
- * with {@code #} are ignored.
+ * with {@code #} are ignored. The name is optional, and in double quotes when it has spaces.
  *
  * <p>Pasted text is untrusted: {@link #parse} reads items with vanilla's own command parser,
  * says what is wrong and where, and the server checks a parsed palette again ({@link #valid})
  * before it touches a box.
  */
 public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
+
+    /** A palette with the name its text gives it (empty when it has none). The server never sees names. */
+    public record Named(String name, SavedPalette palette) {}
 
     /** One filled slot. */
     public record Entry(int slot, ItemStackTemplate item) {
@@ -98,7 +101,13 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
     // ---- writing ----
 
     public String write(HolderLookup.Provider registries) {
-        StringBuilder text = new StringBuilder(HEADER + " mode=" + mode.getSerializedName() + " rows=" + rows + "\n");
+        return write("", registries);
+    }
+
+    /** The text form, with {@code name} in the header unless it is blank. */
+    public String write(String name, HolderLookup.Provider registries) {
+        String named = name.isBlank() ? "" : " name=\"" + name.replace("\"", "'") + "\"";
+        StringBuilder text = new StringBuilder(HEADER + named + " mode=" + mode.getSerializedName() + " rows=" + rows + "\n");
         ItemStackTemplate[] bySlot = new ItemStackTemplate[rows * Palette.ROW_WIDTH];
         for (Entry entry : slots) bySlot[entry.slot()] = entry.item();
         for (int row = 0; row < rows; row++) {
@@ -141,6 +150,12 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
      * Anything at all may be on the clipboard, so "not a palette" is an error like any other.
      */
     public static DataResult<SavedPalette> parse(String text, HolderLookup.Provider registries) {
+        return parseNamed(text, registries).map(Named::palette);
+    }
+
+    /** {@link #parse}, keeping the name from the header. */
+    public static DataResult<Named> parseNamed(String text, HolderLookup.Provider registries) {
+        String name = "";
         List<String> lines = text.lines().map(String::strip).toList();
         Mode mode = null;
         int rows = -1;
@@ -153,12 +168,12 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
             if (line.isEmpty() || line.startsWith("#")) continue;
             if (mode == null) {
                 // The header comes first: shulker_palette mode=... rows=...
-                String[] words = line.split("\\s+");
-                if (!words[0].equals(HEADER)) return DataResult.error(() -> "Not a palette (it starts with " + HEADER + ")");
+                List<String> words = headerWords(line);
+                if (!words.get(0).equals(HEADER)) return DataResult.error(() -> "Not a palette (it starts with " + HEADER + ")");
                 mode = Mode.RANDOM;
                 rows = Palette.VANILLA_ROWS;
-                for (int w = 1; w < words.length; w++) {
-                    String word = words[w];
+                for (int w = 1; w < words.size(); w++) {
+                    String word = words.get(w);
                     String[] pair = word.split("=", 2);
                     if (pair.length != 2) return DataResult.error(() -> where + "expected key=value, got " + word);
                     switch (pair[0]) {
@@ -173,6 +188,7 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
                             if (rows < Palette.VANILLA_ROWS || rows > Palette.MAX_ROWS)
                                 return DataResult.error(() -> where + "rows must be " + Palette.VANILLA_ROWS + " to " + Palette.MAX_ROWS);
                         }
+                        case "name" -> name = pair[1];
                         default -> { return DataResult.error(() -> where + "unknown setting " + pair[0]); }
                     }
                 }
@@ -209,7 +225,23 @@ public record SavedPalette(Mode mode, int rows, List<Entry> slots) {
             }
         }
         if (mode == null) return DataResult.error(() -> "Not a palette (it starts with " + HEADER + ")");
-        return DataResult.success(new SavedPalette(mode, rows, slots));
+        return DataResult.success(new Named(name, new SavedPalette(mode, rows, slots)));
+    }
+
+    /** The header's words, split at spaces outside double quotes, with the quotes taken off. */
+    private static List<String> headerWords(String line) {
+        List<String> words = new ArrayList<>();
+        StringBuilder word = new StringBuilder();
+        boolean quoted = false;
+        for (char c : line.toCharArray()) {
+            if (c == '"') quoted = !quoted;
+            else if (Character.isWhitespace(c) && !quoted) {
+                if (!word.isEmpty()) words.add(word.toString());
+                word.setLength(0);
+            } else word.append(c);
+        }
+        if (!word.isEmpty()) words.add(word.toString());
+        return words;
     }
 
     /** Splits a row at its commas, but not commas inside an item's [components], {...} or quotes. */

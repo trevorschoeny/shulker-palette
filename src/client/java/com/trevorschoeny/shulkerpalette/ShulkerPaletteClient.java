@@ -4,7 +4,7 @@ import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.ghost.RepaintGhost;
 import com.trevorschoeny.shulkerpalette.panel.CheatSheetClient;
-import com.trevorschoeny.shulkerpalette.panel.ClipboardClient;
+import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.panel.ControlPanel;
 import com.trevorschoeny.shulkerpalette.panel.RowGrid;
 import com.trevorschoeny.shulkerpalette.popup.PalettePopup;
@@ -18,7 +18,7 @@ public final class ShulkerPaletteClient implements ClientModInitializer {
         KeysClient.register();
         ControlPanel.register();
         RowGrid.register();
-        ClipboardClient.register();
+        LibraryClient.register();
         CheatSheetClient.register();
         RepaintGhost.register();
         PalettePopup.register();

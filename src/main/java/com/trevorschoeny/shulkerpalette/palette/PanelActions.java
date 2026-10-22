@@ -17,7 +17,7 @@ public final class PanelActions {
     public static final int POWER = 0;
     public static final int MODE = 1;
     public static final int REPAINT = 2;
-    /** Save: answered with the box's palette for the clipboard ({@link Clipboard}), changes nothing. */
+    /** Save: answered with the box's palette for the library ({@link PaletteTransfer}), changes nothing. */
     public static final int SAVE = 3;
     /** Clear: removes the box's cheat sheet. */
     public static final int CLEAR = 4;

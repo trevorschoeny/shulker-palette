@@ -1,6 +1,7 @@
 package com.trevorschoeny.shulkerpalette.config;
 
 import com.trevorschoeny.keybindery.api.KeybinderyAPI;
+import com.trevorschoeny.shulkerpalette.library.LibraryScreen;
 import dev.isxander.yacl3.api.ButtonOption;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
@@ -47,6 +48,17 @@ public final class ConfigScreen {
                     .build());
         }
 
+        // The library is a MenuKit page (lists of palettes, later the item picker), which YACL
+        // can't host, so it opens as a screen of its own.
+        OptionGroup library = OptionGroup.createBuilder()
+                .name(Component.translatable("shulkerpalette.library.title"))
+                .option(ButtonOption.createBuilder()
+                        .name(Component.translatable("shulkerpalette.config.library"))
+                        .description(OptionDescription.of(Component.translatable("shulkerpalette.config.library.description")))
+                        .action((screen, option) -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(screen)))
+                        .build())
+                .build();
+
         OptionGroup look = OptionGroup.createBuilder()
                 .name(Component.translatable("shulkerpalette.config.look"))
                 .option(toggle("rainbow", Config::rainbow, Config::setRainbow))
@@ -59,6 +71,7 @@ public final class ConfigScreen {
                 .category(ConfigCategory.createBuilder()
                         .name(Component.translatable("shulkerpalette.config.title"))
                         .group(keys.build())
+                        .group(library)
                         .group(look)
                         .build())
                 .build()

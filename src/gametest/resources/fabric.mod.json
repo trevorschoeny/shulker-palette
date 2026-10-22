@@ -5,7 +5,8 @@
   "environment": "client",
   "entrypoints": {
     "fabric-client-gametest": [
-      "com.trevorschoeny.shulkerpalette.checks.RowChecks"
+      "com.trevorschoeny.shulkerpalette.checks.RowChecks",
+      "com.trevorschoeny.shulkerpalette.checks.LibraryChecks"
     ]
   }
 }
