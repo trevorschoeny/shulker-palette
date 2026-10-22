@@ -3,13 +3,14 @@
   "id": "shulkerpalette",
   "version": "${version}",
   "name": "Shulker Palette",
-  "description": "Hold a shulker box and build straight out of it: random blocks, a picked block, or a gradient row by row.",
+  "description": "Turns a shulker box into a block palette that places blocks from inside at random, by pick, or as a gradient.",
   "authors": [
     "trevorschoeny"
   ],
   "contact": {
     "homepage": "https://modrinth.com/mod/shulker-palette",
-    "sources": "https://github.com/trevorschoeny/shulker-palette"
+    "sources": "https://github.com/trevorschoeny/shulker-palette",
+    "issues": "https://github.com/trevorschoeny/shulker-palette/issues"
   },
   "license": "MIT",
   "icon": "assets/shulkerpalette/icon.png",
