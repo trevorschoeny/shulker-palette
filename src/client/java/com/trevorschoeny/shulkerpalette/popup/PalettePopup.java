@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.popup;
 
+import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevlar.menukit.api.hud.HudPanel;
@@ -64,7 +65,7 @@ public final class PalettePopup {
         // A one-pixel strip along the top of the hotbar, as wide as it: the anchor the grid is
         // drawn up from. HUD panels don't clip, so the grid's height (it grows with extra
         // rows) never has to be reserved.
-        HudPanel.builder(ShulkerPalette.MOD_ID + ":popup")
+        HudPanel.builder(ShulkerPalette.MOD_ID + ":popup", ModeScope.BOTH)
                 .region(OutsideRegion.TOP_CENTER)
                 .style(PanelStyle.NONE)
                 .size(HOTBAR_WIDTH, 1)

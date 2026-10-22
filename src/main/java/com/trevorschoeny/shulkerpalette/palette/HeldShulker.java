@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.palette;
 
+import com.trevlar.menukit.api.panel.ModeScope;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -49,7 +50,7 @@ public final class HeldShulker extends SimpleContainer implements PaletteHolder 
      * the menu's synced palette data, so the client refuses the same clicks the server would.
      */
     public static void register() {
-        SlotOperations.veto((ref, operation) -> ref.menu() != null && locks(ref.menu(), ref.container(), ref.containerSlot()));
+        SlotOperations.veto(ModeScope.BOTH, (ref, operation) -> ref.menu() != null && locks(ref.menu(), ref.container(), ref.containerSlot()));
     }
 
     /**

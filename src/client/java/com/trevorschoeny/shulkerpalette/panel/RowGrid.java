@@ -1,5 +1,7 @@
 package com.trevorschoeny.shulkerpalette.panel;
 
+import com.trevlar.menukit.api.panel.Placement;
+import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.element.PanelElement;
 import com.trevlar.menukit.api.element.RenderContext;
@@ -9,7 +11,8 @@ import com.trevlar.menukit.api.panel.PanelPosition;
 import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.ScreenOrigin;
 import com.trevlar.menukit.api.panel.ScreenPanelAdapter;
-import com.trevlar.slotkit.api.window.Address;
+import com.trevlar.slotkit.api.group.SlotGroupCategory;
+import com.trevlar.slotkit.api.group.SlotGroupId;
 import com.trevlar.slotkit.api.slot.SlotElement;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.mixin.ScreenPosAccessor;
@@ -20,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
-import net.minecraft.world.inventory.MenuType;
 
 /**
  * A box with extra rows shows all of them as one grid where vanilla's three rows sit: the
@@ -42,20 +44,21 @@ public final class RowGrid {
     private static final int LEFT = 7, TOP = 17;
     /** The container background's grey, to cover the frames vanilla draws at the old spots. */
     private static final int BACKGROUND = 0xFFC6C6C6;
-    /** Vanilla's layout: box 0 to 26, player 27 to 62, then the extra rows. */
-    private static final int BOX = 27, EXTRA_START = 63;
+    /** The box's slot group: the 27 vanilla slots and every extra row, in row order. */
+    private static final SlotGroupId SHULKER = SlotGroupId.category(SlotGroupCategory.SHULKER_STORAGE);
 
     public static void register() {
         // A column of rows, each a row of nine cells; a row shows only while the box has it.
         // A vertical Flow measures only the rows shown, so the scroll ends at the box's last row.
+        // Not one SlotGroupElement: it shows a vanilla slot whether or not the slot is active,
+        // so it would lay out all 16 rows of every box.
         List<PanelElement> rows = new ArrayList<>();
         for (int r = 0; r < Palette.MAX_ROWS; r++) {
             int row = r;
             Flow.Builder cells = Flow.builder().gap(0, 0);
             for (int c = 0; c < Palette.ROW_WIDTH; c++) {
-                int i = row * Palette.ROW_WIDTH + c;
-                int menuIndex = i < BOX ? i : EXTRA_START + i - BOX;
-                cells.add(SlotElement.builder().slot(Address.menuSlot(MenuType.SHULKER_BOX, menuIndex)).build());
+                // Slot i of the box's "Shulker" group: its 27 slots, then the extra rows.
+                cells.add(SlotElement.builder().slot(SHULKER, row * Palette.ROW_WIDTH + c).build());
             }
             rows.add(cells.visibleWhen(() -> row < rows()).build());
         }
@@ -63,7 +66,7 @@ public final class RowGrid {
         int lane = ScrollContainer.TRACK_WIDTH + ScrollContainer.SCROLLER_GUTTER;
         Panel panel = Panel.builder(ShulkerPalette.MOD_ID + ":rows")
                 .style(PanelStyle.NONE)
-                .position(PanelPosition.pixel(RowGrid::origin))
+                .in(ModeScope.BOTH, Placement.screen(PanelPosition.pixel(RowGrid::origin)))
                 .add(new PanelElement() {
                     // Covers the frames vanilla's background draws at the old spots; the slot
                     // elements draw their own frames where they are now.

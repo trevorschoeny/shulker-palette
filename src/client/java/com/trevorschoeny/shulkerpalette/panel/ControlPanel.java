@@ -1,5 +1,7 @@
 package com.trevorschoeny.shulkerpalette.panel;
 
+import com.trevlar.menukit.api.panel.Placement;
+import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevlar.menukit.api.element.Button;
 import com.trevlar.menukit.api.element.Flow;
@@ -36,7 +38,7 @@ public final class ControlPanel {
 
     public static void register() {
         Panel panel = Panel.builder(ShulkerPalette.MOD_ID + ":controls")
-                .position(PanelPosition.region(OutsideRegion.LEFT_ALIGN_TOP))
+                .in(ModeScope.BOTH, Placement.screen(PanelPosition.region(OutsideRegion.LEFT_ALIGN_TOP)))
                 // A vertical Flow, not a Column: a hidden button takes no room, so the ones
                 // left close up (palette off in creative: power, then the rows buttons).
                 .elements(List.of(Flow.builder().vertical().gap(0, 2)
