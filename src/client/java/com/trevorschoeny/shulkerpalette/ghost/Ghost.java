@@ -55,8 +55,13 @@ public final class Ghost {
 
     /** How opaque the ghost is (of 255). */
     private static final int ALPHA = 0x99;
-    /** Grows the ghost a hair past the block under it, so the two faces don't flicker. */
-    private static final float INFLATE = 0.004f;
+    /**
+     * The ghost is drawn scaled toward the camera by this much. Scaling about the eye leaves
+     * the picture on screen unchanged but brings every face of the ghost slightly in front of
+     * the world's, so it never flickers against the block it covers, a stair's step or a slab's
+     * top included (growing it about the block's own center left those faces where they were).
+     */
+    private static final float TOWARD_EYE = 0.995f;
     private static final Direction[] SIDES = {null, Direction.DOWN, Direction.UP, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST};
 
     /** A block state to draw at a position. */
@@ -111,8 +116,8 @@ public final class Ghost {
         mc.getModelManager().getBlockStateModelSet().get(state).collectParts(RandomSource.create(state.getSeed(pos)), parts);
         PoseStack poses = context.poseStack();
         poses.pushPose();
-        poses.translate(pos.getX() - camera.x - INFLATE, pos.getY() - camera.y - INFLATE, pos.getZ() - camera.z - INFLATE);
-        poses.scale(1 + 2 * INFLATE, 1 + 2 * INFLATE, 1 + 2 * INFLATE);
+        poses.scale(TOWARD_EYE, TOWARD_EYE, TOWARD_EYE);
+        poses.translate(pos.getX() - camera.x, pos.getY() - camera.y, pos.getZ() - camera.z);
         context.submitNodeCollector().submitCustomGeometry(poses, RenderTypes.translucentMovingBlock(),
                 (pose, out) -> draw(pose, out, parts));
         poses.popPose();
