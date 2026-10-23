@@ -18,6 +18,7 @@ import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
@@ -91,6 +92,28 @@ public final class PaletteScreen extends MKScreen {
         super.tick();
         // The menu is about the shulker in hand; with none there, there's nothing to show.
         if (!Palette.isShulker(held())) onClose();
+    }
+
+    /**
+     * The palette key (V) or the inventory key (E) closes the menu, as E closes an inventory.
+     * Not while a library dialog is up: a V typed into a palette's name is a letter.
+     */
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (!LibraryClient.dialogUp()) {
+            Minecraft mc = Minecraft.getInstance();
+            if (KeysClient.MODIFIER.matches(event)) {
+                // V is still down as the menu closes; its release must not count as a tap.
+                KeysClient.swallowTap();
+                onClose();
+                return true;
+            }
+            if (mc.options.keyInventory.matches(event)) {
+                onClose();
+                return true;
+            }
+        }
+        return super.keyPressed(event);
     }
 
     @Override

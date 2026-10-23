@@ -77,6 +77,15 @@ public final class KeysClient {
         });
     }
 
+    /**
+     * The palette key closed the menu while held: the release that follows ends that press,
+     * so it isn't a tap and doesn't open the menu again.
+     */
+    public static void swallowTap() {
+        wasDown = true;
+        scrolled = true;
+    }
+
     /** A scroll moved an axis while the palette key was held, so its release isn't a tap. */
     public static void markScrolled() {
         scrolled = true;

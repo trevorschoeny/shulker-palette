@@ -177,6 +177,11 @@ public final class LibraryClient {
         };
     }
 
+    /** Is a library dialog up (naming a save, confirming a replace, or the Load list)? Keys go to it then. */
+    public static boolean dialogUp() {
+        return pending != null || loadOpen;
+    }
+
     /** The menu's Load button: opens the list, or closes it. */
     public static void toggleLoad() {
         if (loadOpen) {

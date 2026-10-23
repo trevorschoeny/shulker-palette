@@ -23,7 +23,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.Container;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import testgallery.SceneWorld;
 
 /** Checks for the menu scene (test-gallery/scenes/shulker-palette/menu.json). */
@@ -63,8 +67,16 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.waitTicks(3);
         if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof PaletteScreen)) throw new AssertionError("a tap of V didn't open the palette menu");
         ctx.takeScreenshot("shulkerpalette-menu");
-        ctx.runOnClient(mc -> mc.gui.setScreen(null));
+
+        // V again closes it, and its release doesn't open it again; E closes it too.
+        ctx.getInput().pressKey(InputConstants.KEY_V);
+        ctx.waitTicks(5);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("V didn't close the menu, or its release reopened it");
+        ctx.getInput().pressKey(InputConstants.KEY_V);
         ctx.waitTicks(3);
+        ctx.getInput().pressKey(InputConstants.KEY_E);
+        ctx.waitTicks(3);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("E didn't close the menu");
 
         // Held through a scroll: the pick moves, and the release opens nothing.
         ctx.getInput().holdKey(InputConstants.KEY_V);
@@ -130,5 +142,43 @@ public class MenuChecks implements FabricClientGameTest {
             return null;
         });
         if (loaded != null) throw new AssertionError(loaded);
+
+        repaint(ctx, scene);
+    }
+
+    /**
+     * Repaint on blocks with a use of their own: a full barrel refuses (nothing is lost) and
+     * opens nothing; an empty barrel and a crafting table are repainted, not used.
+     */
+    private static void repaint(ClientGameTestContext ctx, SceneWorld.Opened scene) {
+        ItemStack painter = new ItemStack(Items.SHULKER_BOX);
+        painter.set(Palette.COMPONENT, new Palette(true, Mode.PICK, true, 3, 0, Shape.BLOCK, Optional.empty(), 0));
+        painter.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(new ItemStack(Items.STONE, 64))));
+        scene.world().getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().getInventory().setItem(0, painter.copy()));
+        ctx.waitTicks(5);
+        BlockPos aim = ctx.computeOnClient(mc -> mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit ? hit.getBlockPos() : null);
+        if (aim == null) throw new AssertionError("not looking at a block to repaint");
+
+        String full = clickOn(ctx, scene, aim, Blocks.BARREL.defaultBlockState(), true);
+        if (!full.contains("barrel")) throw new AssertionError("a full barrel was repainted into " + full);
+        String empty = clickOn(ctx, scene, aim, Blocks.BARREL.defaultBlockState(), false);
+        if (!empty.contains("stone")) throw new AssertionError("an empty barrel became " + empty + ", not stone");
+        String table = clickOn(ctx, scene, aim, Blocks.CRAFTING_TABLE.defaultBlockState(), false);
+        if (!table.contains("stone")) throw new AssertionError("a crafting table became " + table + ", not stone");
+    }
+
+    /** Sets {@code state} at {@code pos} (with a diamond inside when {@code filled}), right-clicks it, and names what's there after. */
+    private static String clickOn(ClientGameTestContext ctx, SceneWorld.Opened scene, BlockPos pos, BlockState state, boolean filled) {
+        scene.world().getServer().runOnServer(server -> {
+            // Cleared first: setting a barrel over a barrel keeps the old one and what's in it.
+            server.overworld().removeBlock(pos, false);
+            server.overworld().setBlock(pos, state, Block.UPDATE_ALL);
+            if (filled && server.overworld().getBlockEntity(pos) instanceof Container container) container.setItem(0, new ItemStack(Items.DIAMOND));
+        });
+        ctx.waitTicks(5);
+        ctx.getInput().pressKey(options -> options.keyUse);
+        ctx.waitTicks(5);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("a repaint click on " + state + " opened a screen");
+        return scene.world().getServer().computeOnServer(server -> server.overworld().getBlockState(pos).getBlock().toString());
     }
 }

@@ -12,7 +12,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.Container;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.LecternBlockEntity;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignTextSlot;
+import org.jspecify.annotations.Nullable;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
@@ -36,13 +42,40 @@ public final class Repaint {
     }
 
     /**
-     * Can this block be repainted? Any shape, but never a block with a block entity (replacing
-     * a chest would delete what is in it), a liquid, or half of a two-block-tall block (a door),
-     * which would leave its other half behind.
+     * Can this block be repainted? Any shape, chests and shulker boxes included, but never one
+     * that holds something (empty only, so a misclick never deletes a full chest), a liquid,
+     * or half of a two-block-tall block (a door), which would leave its other half behind.
      */
     public static boolean canRepaint(BlockGetter level, BlockPos pos, BlockState state) {
-        return !state.isAir() && !state.hasBlockEntity() && !(state.getBlock() instanceof LiquidBlock)
-                && !state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF);
+        return !state.isAir() && !(state.getBlock() instanceof LiquidBlock)
+                && !state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF)
+                && !holdsSomething(level.getBlockEntity(pos));
+    }
+
+    /**
+     * Does this block entity hold something repaint would delete? Items in a container (chest,
+     * shulker box, barrel, furnace, hopper, jukebox), a sign's words, a lectern's book. Others
+     * (a bed, a banner, a skull) keep nothing a player put in. Covers the three kinds of
+     * contents vanilla blocks have; a modded block that stores things some other way repaints
+     * as empty.
+     */
+    private static boolean holdsSomething(@Nullable BlockEntity entity) {
+        return switch (entity) {
+            case null -> false;
+            case Container container -> !container.isEmpty();
+            case SignBlockEntity sign -> java.util.Arrays.stream(SignTextSlot.values()).anyMatch(side -> sign.getText(side).hasMessage(false));
+            case LecternBlockEntity lectern -> lectern.hasBook();
+            default -> false;
+        };
+    }
+
+    /**
+     * Is this a right-click that repaints? Then the block's own use (a chest opening, a lever
+     * flipping) is skipped for it, as sneaking skips it, so the click repaints instead.
+     */
+    public static boolean claimsClick(Player player) {
+        Palette palette = Palette.activeOn(player.getMainHandItem());
+        return palette != null && active(palette, player);
     }
 
     /**
