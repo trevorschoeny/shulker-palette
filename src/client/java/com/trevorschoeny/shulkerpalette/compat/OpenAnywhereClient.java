@@ -15,6 +15,7 @@ import com.trevlar.slotkit.api.group.SlotGroups;
 import com.trevorschoeny.openanywhere.api.OpenItems;
 import com.trevorschoeny.openanywhere.api.ShownItem;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
+import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.menu.PaletteControls;
 import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
@@ -69,7 +70,8 @@ public final class OpenAnywhereClient {
                 // A vertical Flow: what doesn't apply is hidden and the rest close up.
                 .elements(List.of(Flow.builder().vertical().gap(0, 2).addAll(PaletteControls.icons(SHOWN)).build()))
                 .build()
-                .visibleWhen(() -> !SHOWN.stack().get().isEmpty());
+                // A setting, off by default: the palette is handled in hand unless the player turns it on.
+                .visibleWhen(() -> Config.openAnywherePanel() && !SHOWN.stack().get().isEmpty());
         new AnchorPanelAdapter(panel);
 
         for (Panel dialog : LibraryClient.panels("open_anywhere_", SHOWN)) new ScreenPanelAdapter(dialog).on(SCREENS);

@@ -11,6 +11,7 @@ import dev.isxander.yacl3.api.YetAnotherConfigLib;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -56,24 +57,38 @@ public final class ConfigScreen {
                 .option(toggle("repaint_ghost", Config::repaintGhost, Config::setRepaintGhost))
                 .build();
 
+        // Only with Open Anywhere installed: the palette panel on a box opened there. Off by
+        // default, so the palette is handled in hand.
+        OptionGroup openAnywhere = FabricLoader.getInstance().isModLoaded("openanywhere")
+                ? OptionGroup.createBuilder()
+                        .name(Component.translatable("shulkerpalette.config.open_anywhere"))
+                        .option(toggle("open_anywhere_panel", false, Config::openAnywherePanel, Config::setOpenAnywherePanel))
+                        .build()
+                : null;
+
+        ConfigCategory.Builder category = ConfigCategory.createBuilder()
+                .name(Component.translatable("shulkerpalette.config.title"))
+                .group(keys.build())
+                .group(library)
+                .group(look);
+        if (openAnywhere != null) category.group(openAnywhere);
         return YetAnotherConfigLib.createBuilder()
                 .title(Component.translatable("shulkerpalette.config.title"))
-                .category(ConfigCategory.createBuilder()
-                        .name(Component.translatable("shulkerpalette.config.title"))
-                        .group(keys.build())
-                        .group(library)
-                        .group(look)
-                        .build())
+                .category(category.build())
                 .build()
                 .generateScreen(parent);
     }
 
-    /** A look switch; every one defaults on. */
+    /** A switch that defaults on, as every look switch does. */
     private static Option<Boolean> toggle(String key, Supplier<Boolean> getter, Consumer<Boolean> setter) {
+        return toggle(key, true, getter, setter);
+    }
+
+    private static Option<Boolean> toggle(String key, boolean byDefault, Supplier<Boolean> getter, Consumer<Boolean> setter) {
         return Option.<Boolean>createBuilder()
                 .name(Component.translatable("shulkerpalette.config." + key))
                 .description(OptionDescription.of(Component.translatable("shulkerpalette.config." + key + ".description")))
-                .binding(true, getter, setter)
+                .binding(byDefault, getter, setter)
                 .controller(BooleanControllerBuilder::create)
                 .build();
     }

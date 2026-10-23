@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.trevorschoeny.openanywhere.api.OpenItems;
 import com.trevorschoeny.openanywhere.api.ShownItem;
 import com.trevorschoeny.shulkerpalette.compat.OpenAnywhereClient;
+import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.mixin.ScreenPosAccessor;
 import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
@@ -47,6 +48,9 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
      */
     private static void openAnywhere(ClientGameTestContext ctx, SceneWorld.Opened scene) {
         scene.standAt(scene.station("shulkerpalette:open_anywhere"), 30);
+        // The panel is a setting, off by default (the palette is handled in hand); on for this check.
+        if (ctx.computeOnClient(mc -> Config.openAnywherePanel())) throw new AssertionError("the Open Anywhere panel setting is on by default");
+        ctx.runOnClient(mc -> Config.setOpenAnywherePanel(true));
         int menuSlot = open(ctx);
         ctx.takeScreenshot("shulkerpalette-open-anywhere");
 

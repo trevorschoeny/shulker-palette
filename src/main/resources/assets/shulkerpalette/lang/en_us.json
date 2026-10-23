@@ -114,5 +114,8 @@
   "shulkerpalette.menu.mode.random": "Random",
   "shulkerpalette.menu.mode.equal": "Equal random",
   "shulkerpalette.menu.mode.pick": "Pick",
-  "shulkerpalette.menu.mode.gradient": "Gradient"
+  "shulkerpalette.menu.mode.gradient": "Gradient",
+  "shulkerpalette.config.open_anywhere": "Open Anywhere",
+  "shulkerpalette.config.open_anywhere_panel": "Palette panel on opened boxes",
+  "shulkerpalette.config.open_anywhere_panel.description": "Shows the palette buttons beside a shulker box you open from the inventory with Open Anywhere. Off: change the palette in hand, with the palette key."
 }

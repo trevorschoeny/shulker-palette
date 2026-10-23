@@ -31,6 +31,9 @@ public final class Config {
     private static boolean placementGhost = true;
     // The same over the block repaint would replace (creative).
     private static boolean repaintGhost = true;
+    // The palette's icon column on a box opened through Open Anywhere. Off: the palette is
+    // handled in hand only (the menu on V), which is the default.
+    private static boolean openAnywherePanel = false;
 
     private static Path filePath() {
         return FabricLoader.getInstance().getConfigDir().resolve("shulkerpalette").resolve("config.json");
@@ -47,6 +50,7 @@ public final class Config {
             openBoxInHand = readBool(root, "openBoxInHand", openBoxInHand);
             placementGhost = readBool(root, "placementGhost", placementGhost);
             repaintGhost = readBool(root, "repaintGhost", repaintGhost);
+            openAnywherePanel = readBool(root, "openAnywherePanel", openAnywherePanel);
         } catch (Exception e) {
             ShulkerPalette.LOGGER.error("[config] couldn't read {}, using defaults", path, e);
         }
@@ -67,6 +71,7 @@ public final class Config {
             root.addProperty("openBoxInHand", openBoxInHand);
             root.addProperty("placementGhost", placementGhost);
             root.addProperty("repaintGhost", repaintGhost);
+            root.addProperty("openAnywherePanel", openAnywherePanel);
             Files.writeString(path, GSON.toJson(root));
         } catch (Exception e) {
             ShulkerPalette.LOGGER.error("[config] couldn't write {}, changes won't persist", path, e);
@@ -87,4 +92,7 @@ public final class Config {
 
     public static boolean repaintGhost() { return repaintGhost; }
     public static void setRepaintGhost(boolean v) { repaintGhost = v; save(); }
+
+    public static boolean openAnywherePanel() { return openAnywherePanel; }
+    public static void setOpenAnywherePanel(boolean v) { openAnywherePanel = v; save(); }
 }
