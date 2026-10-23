@@ -9,6 +9,7 @@ import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
+import com.trevorschoeny.shulkerpalette.palette.Target;
 import com.trevorschoeny.shulkerpalette.popup.PalettePopup;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -117,7 +118,7 @@ public final class KeysClient {
     public static void act(Minecraft mc, int action) {
         if (mc.player == null || !Palette.isShulker(mc.player.getMainHandItem())
                 || !ClientPlayNetworking.canSend(HeldActions.Act.TYPE)) return;
-        ClientPlayNetworking.send(new HeldActions.Act(action));
+        ClientPlayNetworking.send(new HeldActions.Act(action, Target.HELD));
     }
 
     /** The shape keys: one step through the box's shapes, as a shape scroll would. */

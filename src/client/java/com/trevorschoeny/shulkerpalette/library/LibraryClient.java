@@ -16,7 +16,7 @@ import com.trevlar.menukit.api.panel.PanelPosition;
 import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.Placement;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
-import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
+import com.trevorschoeny.shulkerpalette.menu.PaletteControls;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import net.minecraft.core.component.DataComponents;
@@ -65,6 +65,12 @@ public final class LibraryClient {
     private static Library.Shelf draftShelf = Library.Shelf.WORLD;
     private static boolean confirmingReplace;
 
+    // The shulker the last Save or Load was for (the hand, or one open through Open Anywhere),
+    // and whether a Save is waiting for the server's answer. The dialogs show only on the
+    // screen whose controls asked.
+    private static PaletteControls.For target = PaletteControls.For.HAND;
+    private static boolean awaitingSave;
+
     // Load: whether the list is open, and what it shows.
     private static boolean loadOpen;
     private static List<Item> loadItems = List.of();
@@ -76,7 +82,9 @@ public final class LibraryClient {
 
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(PaletteTransfer.Saved.TYPE, (payload, context) -> {
-            if (!(context.client().gui.screen() instanceof PaletteScreen) || context.client().player == null) return;
+            // Only an answer to a Save pressed here; a stray one opens nothing.
+            if (!awaitingSave || context.client().player == null) return;
+            awaitingSave = false;
             if (payload.palette().slots().isEmpty()) {
                 answer(Answer.SAVE, Component.translatable("shulkerpalette.library.empty_box"));
                 return;
@@ -84,7 +92,7 @@ public final class LibraryClient {
             pending = payload.palette();
             draftShelf = Library.folder(Library.Shelf.WORLD) != null ? Library.Shelf.WORLD : Library.Shelf.GLOBAL;
             // A renamed box suggests its own name; a plain one the next free "Palette N".
-            Component custom = context.client().player.getMainHandItem().get(DataComponents.CUSTOM_NAME);
+            Component custom = target.stack().get().get(DataComponents.CUSTOM_NAME);
             draftName = custom != null ? custom.getString() : Library.freshName(draftShelf);
             confirmingReplace = false;
         });
@@ -92,13 +100,30 @@ public final class LibraryClient {
         pending = null;
     }
 
-    /** The save, replace and load dialogs, for the palette menu's screen. */
-    public static List<Panel> panels() {
+    /** A Save was pressed for {@code box}: the server's answer opens the save dialog for it. */
+    public static void expectSave(PaletteControls.For box) {
+        target = box;
+        awaitingSave = true;
+    }
+
+    /** No dialog up and nothing waiting: a screen that hosts the dialogs has just opened. */
+    public static void reset() {
         pending = null;
         loadOpen = false;
+        awaitingSave = false;
+    }
+
+    /**
+     * The save, replace and load dialogs, for a screen whose controls are for {@code owner}.
+     * Each screen gets its own set ({@code idPrefix} keeps their ids apart); a set shows only
+     * while the last Save or Load came from its owner.
+     */
+    public static List<Panel> panels(String idPrefix, PaletteControls.For owner) {
+        reset();
+        java.util.function.BooleanSupplier mine = () -> target == owner;
 
         Panel saveDialog = EditDialog.builder()
-                .id(ShulkerPalette.MOD_ID + ":save")
+                .id(ShulkerPalette.MOD_ID + ":" + idPrefix + "save")
                 .title(Component.translatable("shulkerpalette.library.save.title"))
                 .content(Flow.builder().vertical().gap(4)
                         .add(TextField.builder().size(160, 20).maxLength(64)
@@ -117,21 +142,21 @@ public final class LibraryClient {
                 .onSave(LibraryClient::trySave)
                 .onCancel(() -> pending = null)
                 .build()
-                .visibleWhen(() -> pending != null && !confirmingReplace);
+                .visibleWhen(() -> mine.getAsBoolean() && pending != null && !confirmingReplace);
 
         Panel replaceDialog = ConfirmDialog.builder()
-                .id(ShulkerPalette.MOD_ID + ":replace")
+                .id(ShulkerPalette.MOD_ID + ":" + idPrefix + "replace")
                 .title(() -> Component.translatable("shulkerpalette.library.replace.title", draftName))
                 .body(Component.translatable("shulkerpalette.library.replace.body"))
                 .confirmLabel(Component.translatable("shulkerpalette.library.replace"))
                 .onConfirm(LibraryClient::save)
                 .onCancel(() -> confirmingReplace = false)
                 .build()
-                .visibleWhen(() -> pending != null && confirmingReplace);
+                .visibleWhen(() -> mine.getAsBoolean() && pending != null && confirmingReplace);
 
         // A dark modal over the dimmed menu: a title, the palettes as rows that light up under
         // the pointer, and Manage library and Close. Escape or Close dismisses it.
-        Panel loadList = Panel.builder(ShulkerPalette.MOD_ID + ":load")
+        Panel loadList = Panel.builder(ShulkerPalette.MOD_ID + ":" + idPrefix + "load")
                 .style(PanelStyle.DARK)
                 .in(ModeScope.BOTH, Placement.screen(PanelPosition.center()))
                 .elements(List.of(Flow.builder().vertical().gap(4)
@@ -152,7 +177,7 @@ public final class LibraryClient {
                 .build()
                 .modal()
                 .onEscape(() -> loadOpen = false)
-                .visibleWhen(() -> loadOpen);
+                .visibleWhen(() -> mine.getAsBoolean() && loadOpen);
 
         return List.of(loadList, saveDialog, replaceDialog);
     }
@@ -182,12 +207,13 @@ public final class LibraryClient {
         return pending != null || loadOpen;
     }
 
-    /** The menu's Load button: opens the list, or closes it. */
-    public static void toggleLoad() {
+    /** A Load control: opens the list for {@code box}, or closes it. */
+    public static void toggleLoad(PaletteControls.For box) {
         if (loadOpen) {
             loadOpen = false;
             return;
         }
+        target = box;
         List<Item> items = new ArrayList<>();
         for (Library.Shelf shelf : Library.Shelf.values()) {
             List<Library.Entry> entries = Library.list(shelf);
@@ -199,10 +225,10 @@ public final class LibraryClient {
         loadOpen = true;
     }
 
-    /** A click in the Load list: send that palette to the shulker in hand. */
+    /** A click in the Load list: send that palette to the shulker the list was opened for. */
     private static void pick(Library.Entry entry) {
         entry.palette().ifSuccess(palette -> {
-            ClientPlayNetworking.send(new HeldActions.LoadHeld(palette));
+            ClientPlayNetworking.send(new HeldActions.LoadHeld(palette, target.menuSlot().getAsInt()));
             answer(Answer.LOAD, Component.translatable("shulkerpalette.library.loaded", entry.name()));
             loadOpen = false;
         });

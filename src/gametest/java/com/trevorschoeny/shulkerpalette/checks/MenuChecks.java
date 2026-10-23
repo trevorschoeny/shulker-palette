@@ -142,7 +142,7 @@ public class MenuChecks implements FabricClientGameTest {
         if (!placedOn.contains("granite")) throw new AssertionError("an on palette placed " + placedOn + ", not the picked granite");
 
         // Power off from the menu's action: the next right-click places the box itself.
-        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER)));
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, -1)));
         ctx.waitTicks(5);
         scene.world().getServer().runOnServer(server -> server.overworld().removeBlock(target, false));
         ctx.waitTicks(3);
@@ -156,7 +156,7 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.waitTicks(5);
         SavedPalette wall = new SavedPalette(Mode.RANDOM, 3, List.of(
                 new SavedPalette.Entry(4, ItemStackTemplate.fromNonEmptyStack(new ItemStack(Items.DIORITE, 9)))));
-        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall)));
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall, -1)));
         ctx.waitTicks(5);
         String loaded = scene.world().getServer().computeOnServer(server -> {
             List<ItemStack> items = server.getPlayerList().getPlayers().getFirst().getMainHandItem()

@@ -1,5 +1,7 @@
 package com.trevorschoeny.shulkerpalette;
 
+import com.trevorschoeny.shulkerpalette.compat.OpenAnywhereClient;
+import net.fabricmc.loader.api.FabricLoader;
 import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.ghost.Ghost;
@@ -20,5 +22,7 @@ public final class ShulkerPaletteClient implements ClientModInitializer {
         CheatSheetClient.register();
         Ghost.register();
         PalettePopup.register();
+        // A box opened from the inventory through Open Anywhere gets the palette panel there.
+        if (FabricLoader.getInstance().isModLoaded("openanywhere")) OpenAnywhereClient.register();
     }
 }

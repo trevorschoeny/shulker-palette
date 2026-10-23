@@ -38,6 +38,7 @@ repositories {
 evaluationDependsOn(':menukit')
 evaluationDependsOn(':slotkit')
 evaluationDependsOn(':keybindery')
+evaluationDependsOn(':open-anywhere')
 
 dependencies {
     // 26.x is unobfuscated: no mappings line, and plain Java configurations.
@@ -60,6 +61,11 @@ dependencies {
     implementation project(':keybindery-api')
     localRuntime project(':keybindery')
     localRuntime rootProject.project(':keybindery').sourceSets.client.output
+    // Open Anywhere is optional: with it, a box opened from the inventory gets the palette panel.
+    // Its API is compiled against, and it runs in dev so the two can be tested together.
+    compileOnly project(':open-anywhere')
+    localRuntime project(':open-anywhere')
+    localRuntime rootProject.project(':open-anywhere').sourceSets.client.output
 }
 
 loom {
@@ -106,6 +112,7 @@ apply from: rootProject.file('Trevlar Mods Codebases/test-gallery/kit/checks.gra
 dependencies {
     clientImplementation rootProject.project(':menukit').sourceSets.client.output
     clientImplementation rootProject.project(':slotkit').sourceSets.client.output
+    clientCompileOnly rootProject.project(':open-anywhere').sourceSets.client.output
 }
 
 jar {

@@ -38,7 +38,8 @@
     "keybindery": ">=1.4.1"
   },
   "suggests": {
-    "modmenu": "*"
+    "modmenu": "*",
+    "openanywhere": ">=1.0.0"
   },
   "custom": {
     "slotkit": {

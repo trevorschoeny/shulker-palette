@@ -120,12 +120,12 @@ public class LibraryChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(5);
         ctx.takeScreenshot("shulkerpalette-library-menu");
-        ctx.runOnClient(mc -> LibraryClient.toggleLoad());
+        ctx.runOnClient(mc -> LibraryClient.toggleLoad(com.trevorschoeny.shulkerpalette.menu.PaletteControls.For.HAND));
         ctx.waitTicks(5);
         ctx.takeScreenshot("shulkerpalette-library-load-list");
         ctx.runOnClient(mc -> {
-            LibraryClient.toggleLoad();
-            ClientPlayNetworking.send(new com.trevorschoeny.shulkerpalette.palette.HeldActions.Act(PanelActions.SAVE));
+            LibraryClient.toggleLoad(com.trevorschoeny.shulkerpalette.menu.PaletteControls.For.HAND);
+            com.trevorschoeny.shulkerpalette.menu.PaletteControls.For.HAND.act(PanelActions.SAVE);
         });
         ctx.waitTicks(10);
         ctx.takeScreenshot("shulkerpalette-library-save-dialog");

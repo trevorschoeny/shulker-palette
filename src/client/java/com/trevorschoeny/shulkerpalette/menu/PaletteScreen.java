@@ -12,9 +12,7 @@ import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.library.LibraryScreen;
-import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
-import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -39,38 +37,7 @@ public final class PaletteScreen extends MKScreen {
     }
 
     private static List<Panel> panels() {
-        List<PanelElement> rows = new ArrayList<>();
-        rows.add(MenuRow.of(() -> sprite(on() ? "power_on" : "power_off"),
-                () -> Component.translatable(on() ? "shulkerpalette.menu.power.on" : "shulkerpalette.menu.power.off"),
-                () -> act(PanelActions.POWER),
-                b -> b.tooltip(() -> Component.translatable(on() ? "shulkerpalette.panel.power.on" : "shulkerpalette.panel.power.off"))));
-        rows.add(MenuRow.of(() -> sprite("mode_" + palette().mode().getSerializedName()),
-                () -> Component.translatable("shulkerpalette.menu.mode",
-                        Component.translatable("shulkerpalette.menu.mode." + palette().mode().getSerializedName())),
-                () -> act(PanelActions.MODE),
-                b -> b.tooltip(() -> Component.translatable("shulkerpalette.panel.mode." + palette().mode().getSerializedName(),
-                                KeysClient.MODIFIER.getTranslatedKeyMessage()))
-                        .disabledWhen(() -> !on())));
-        rows.add(MenuRow.of(() -> sprite("repaint"),
-                () -> Component.translatable(palette().repaint() ? "shulkerpalette.menu.repaint.on" : "shulkerpalette.menu.repaint.off"),
-                () -> act(PanelActions.REPAINT),
-                b -> b.tooltip(() -> Component.translatable(palette().repaint()
-                                ? "shulkerpalette.panel.repaint.on" : "shulkerpalette.panel.repaint.off"))
-                        .disabledWhen(() -> !on())
-                        .visibleWhen(PaletteScreen::creative)));
-        rows.add(MenuRow.of(() -> sprite("save"),
-                () -> Component.translatable("shulkerpalette.menu.save"),
-                () -> act(PanelActions.SAVE),
-                b -> b.tooltip(() -> answerOr(LibraryClient.Answer.SAVE, "shulkerpalette.panel.save"))));
-        rows.add(MenuRow.of(() -> sprite("load"),
-                () -> Component.translatable("shulkerpalette.menu.load"),
-                LibraryClient::toggleLoad,
-                b -> b.tooltip(() -> answerOr(LibraryClient.Answer.LOAD, "shulkerpalette.panel.load"))));
-        rows.add(MenuRow.of(() -> sprite("clear"),
-                () -> Component.translatable("shulkerpalette.menu.clear"),
-                () -> act(PanelActions.CLEAR),
-                b -> b.tooltip(Component.translatable("shulkerpalette.panel.clear"))
-                        .visibleWhen(() -> held().has(CheatSheet.COMPONENT))));
+        List<PanelElement> rows = new ArrayList<>(PaletteControls.rows(PaletteControls.For.HAND));
         rows.add(MenuRow.of(() -> sprite("load"),
                 () -> Component.translatable("shulkerpalette.library.manage"),
                 () -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(Minecraft.getInstance().gui.screen())),
@@ -83,7 +50,7 @@ public final class PaletteScreen extends MKScreen {
                 .build();
         List<Panel> panels = new ArrayList<>();
         panels.add(main);
-        panels.addAll(LibraryClient.panels());
+        panels.addAll(LibraryClient.panels("", PaletteControls.For.HAND));
         return panels;
     }
 
@@ -124,30 +91,6 @@ public final class PaletteScreen extends MKScreen {
     private static ItemStack held() {
         Minecraft mc = Minecraft.getInstance();
         return mc.player == null ? ItemStack.EMPTY : mc.player.getMainHandItem();
-    }
-
-    /** The held shulker's palette, as the server last sent it; a plain shulker reads as off. */
-    private static Palette palette() {
-        return held().getOrDefault(Palette.COMPONENT, Palette.OFF);
-    }
-
-    private static boolean on() {
-        return palette().on();
-    }
-
-    private static boolean creative() {
-        Minecraft mc = Minecraft.getInstance();
-        return mc.player != null && mc.player.isCreative();
-    }
-
-    private static void act(int action) {
-        KeysClient.act(Minecraft.getInstance(), action);
-    }
-
-    /** A Save or Load button's tooltip: the answer to the last press while it is fresh, else what it does. */
-    private static Component answerOr(LibraryClient.Answer button, String key) {
-        Component answer = LibraryClient.answerFor(button);
-        return answer != null ? answer : Component.translatable(key);
     }
 
     private static Identifier sprite(String name) {
