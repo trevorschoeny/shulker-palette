@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.trevorschoeny.shulkerpalette.library.Library;
 import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.library.LibraryScreen;
+import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
@@ -99,18 +100,32 @@ public class LibraryChecks implements FabricClientGameTest {
         ctx.takeScreenshot("shulkerpalette-library-loaded");
         if (loaded != null) throw new AssertionError(loaded);
 
-        // Pictures for a look, not assertions: the Load list with a palette on each shelf,
-        // then the Save dialog the panel's Save button opens.
+        // Pictures for a look, not assertions: the palette menu's Load list with a palette on
+        // each shelf, then the Save dialog, both for a palette in hand.
+        scene.world().getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.closeContainer();
+            ItemStack held = new ItemStack(Items.SHULKER_BOX);
+            held.set(com.trevorschoeny.shulkerpalette.palette.Palette.COMPONENT,
+                    com.trevorschoeny.shulkerpalette.palette.Palette.OFF.withShape(com.trevorschoeny.shulkerpalette.palette.Shape.BLOCK));
+            held.set(net.minecraft.core.component.DataComponents.CONTAINER,
+                    net.minecraft.world.item.component.ItemContainerContents.fromItems(List.of(new ItemStack(Items.GRANITE, 20))));
+            player.getInventory().setItem(player.getInventory().getSelectedSlot(), held);
+        });
+        ctx.waitTicks(5);
         ctx.runOnClient(mc -> {
             Library.save(Library.Shelf.WORLD, "Stone wall", wall);
             Library.save(Library.Shelf.GLOBAL, "Concrete fade", wall);
-            LibraryClient.toggleLoad();
+            mc.gui.setScreen(new PaletteScreen());
         });
+        ctx.waitTicks(5);
+        ctx.takeScreenshot("shulkerpalette-library-menu");
+        ctx.runOnClient(mc -> LibraryClient.toggleLoad());
         ctx.waitTicks(5);
         ctx.takeScreenshot("shulkerpalette-library-load-list");
         ctx.runOnClient(mc -> {
             LibraryClient.toggleLoad();
-            mc.gameMode.handleInventoryButtonClick(mc.player.containerMenu.containerId, PanelActions.SAVE);
+            ClientPlayNetworking.send(new com.trevorschoeny.shulkerpalette.palette.HeldActions.Act(PanelActions.SAVE));
         });
         ctx.waitTicks(10);
         ctx.takeScreenshot("shulkerpalette-library-save-dialog");
@@ -118,6 +133,7 @@ public class LibraryChecks implements FabricClientGameTest {
         ctx.waitTicks(5);
         ctx.takeScreenshot("shulkerpalette-library-page");
         ctx.runOnClient(mc -> {
+            mc.gui.setScreen(null);
             Library.list(Library.Shelf.WORLD).forEach(Library::delete);
             Library.list(Library.Shelf.GLOBAL).stream().filter(e -> e.name().equals("Concrete fade")).forEach(Library::delete);
         });

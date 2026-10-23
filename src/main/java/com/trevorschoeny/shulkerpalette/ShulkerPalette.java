@@ -5,8 +5,7 @@ import com.trevorschoeny.shulkerpalette.palette.Upkeep;
 import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import com.trevorschoeny.shulkerpalette.palette.Drops;
-import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
-import com.trevorschoeny.shulkerpalette.palette.Keys;
+import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -27,8 +26,7 @@ public final class ShulkerPalette implements ModInitializer {
         Upkeep.register();
         Scroll.register();
         Drops.register();
-        HeldShulker.register();
         PaletteTransfer.register();
-        Keys.register();
+        HeldActions.register();
     }
 }

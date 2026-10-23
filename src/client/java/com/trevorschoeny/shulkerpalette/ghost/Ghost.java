@@ -6,7 +6,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Repaint;
 import com.trevorschoeny.shulkerpalette.config.Config;
-import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -43,8 +42,7 @@ import net.minecraft.world.phys.Vec3;
  *   <li><b>Repainting</b> (creative): over the block you look at, as the block it would become,
  *       the old block's facing and half carried over as repaint does.</li>
  * </ul>
- * Each has its own switch in the settings. Nothing shows while the palette modifier is held,
- * since a click then places the box itself. A door shows both halves.
+ * Each has its own switch in the settings. A door shows both halves.
  *
  * <p>Drawn through Fabric's level render event and vanilla's translucent block render type
  * (no raw OpenGL), the way Sandboxes draws its overlay, so it runs on every backend and
@@ -70,7 +68,7 @@ public final class Ghost {
     public static void register() {
         LevelRenderEvents.COLLECT_SUBMITS.register(context -> {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null || mc.level == null || KeysClient.modifierDown()) return;
+            if (mc.player == null || mc.level == null) return;
             if (!(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) return;
             Palette palette = Palette.activeOn(mc.player.getMainHandItem());
             if (palette == null) return;

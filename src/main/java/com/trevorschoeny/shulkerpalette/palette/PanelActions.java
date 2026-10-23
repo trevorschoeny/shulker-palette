@@ -4,11 +4,12 @@ import java.util.Optional;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * What the control panel's buttons do to a palette. The client sends a button id through
- * vanilla's menu-button packet (the one the enchanting table uses), and the server applies
- * it here, so every change is checked where the palette lives.
+ * What the palette menu's buttons, the palette keys and the box screen's rows bar do to a
+ * palette. The server applies each one here, so every change is checked where the palette
+ * lives: the menu and keys through {@link HeldActions}, the rows bar through vanilla's
+ * menu-button packet (the one the enchanting table uses).
  *
- * <p>The palette's state reaches the panel the other way, packed into one menu data slot
+ * <p>A box screen learns its palette the other way, packed into one menu data slot
  * ({@link #pack}), since a placed box's components never reach the client.
  */
 public final class PanelActions {
@@ -65,19 +66,13 @@ public final class PanelActions {
     }
 
     // The packed form: bit 0 on, bits 1-2 mode, bit 3 repaint, bits 4-8 rows, bit 9 "this menu
-    // has a palette", bit 10 "opened from the hand". Menu data travels as a short, so it stays
-    // under 15 bits.
+    // has a palette". Menu data travels as a short, so it stays under 15 bits.
     private static final int PRESENT = 1 << 9;
-    private static final int HELD = 1 << 10;
 
-    public static int pack(Palette p, boolean held) {
-        return PRESENT | (held ? HELD : 0) | (p.on() ? 1 : 0) | p.mode().ordinal() << 1 | (p.repaint() ? 1 : 0) << 3 | p.rows() << 4;
+    public static int pack(Palette p) {
+        return PRESENT | (p.on() ? 1 : 0) | p.mode().ordinal() << 1 | (p.repaint() ? 1 : 0) << 3 | p.rows() << 4;
     }
 
-    /** Was the menu with this packed palette opened over the shulker in hand? */
-    public static boolean held(int packed) {
-        return (packed & HELD) != 0;
-    }
 
     /** The panel's view of a packed palette; empty when the menu has none (a container another mod made). */
     public static Optional<Palette> unpack(int packed) {

@@ -7,8 +7,7 @@
     "BlockItemMixin",
     "UseOnContextAccessor",
     "ShulkerBoxBlockEntityMixin",
-    "ShulkerBoxMenuMixin",
-    "ItemMixin"
+    "ShulkerBoxMenuMixin"
   ],
   "client": [
     "MouseHandlerMixin",

@@ -3,7 +3,6 @@ package com.trevorschoeny.shulkerpalette.mixin;
 import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import java.util.List;
-import com.trevorschoeny.shulkerpalette.palette.HeldShulker;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
 import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
@@ -72,7 +71,7 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
                 CheatSheet.send(server, containerId, holder);
             }
             shulkerpalette$state = addDataSlot(new DataSlot() {
-                @Override public int get() { return PanelActions.pack(holder.shulkerpalette$palette(), holder instanceof HeldShulker); }
+                @Override public int get() { return PanelActions.pack(holder.shulkerpalette$palette()); }
                 @Override public void set(int value) {}
             });
         } else {
@@ -142,18 +141,14 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
         return shulkerpalette$state.get();
     }
 
+    /**
+     * The box screen's only buttons: the rows bar (creative). A placed box is always off, and
+     * its palette is never changed here; the palette menu changes a palette in the hand.
+     */
     @Override
     public boolean clickMenuButton(Player player, int buttonId) {
         if (shulkerpalette$holder == null) return super.clickMenuButton(player, buttonId);
-        if (buttonId == PanelActions.SAVE) {
-            if (player instanceof ServerPlayer server) PaletteTransfer.save(server, shulkerpalette$holder);
-            return true;
-        }
-        if (buttonId == PanelActions.CLEAR) {
-            shulkerpalette$holder.shulkerpalette$setCheatSheet(List.of());
-            if (player instanceof ServerPlayer server) CheatSheet.send(server, containerId, shulkerpalette$holder);
-            return true;
-        }
+        if (buttonId != PanelActions.ROWS_LESS && buttonId != PanelActions.ROWS_MORE) return true;
         Palette palette = shulkerpalette$holder.shulkerpalette$palette();
         // A row is only taken away empty, so nothing ends up where no slot reaches it.
         if (buttonId == PanelActions.ROWS_LESS && shulkerpalette$holder instanceof Container box
@@ -163,4 +158,5 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
         shulkerpalette$holder.shulkerpalette$setPalette(PanelActions.apply(palette, buttonId, player));
         return true;
     }
+
 }

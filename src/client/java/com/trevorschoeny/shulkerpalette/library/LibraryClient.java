@@ -15,20 +15,21 @@ import com.trevlar.menukit.api.panel.Panel;
 import com.trevlar.menukit.api.panel.PanelPosition;
 import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.Placement;
-import com.trevlar.menukit.api.panel.ScreenPanelAdapter;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
+import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
+import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
+import net.minecraft.core.component.DataComponents;
 import com.trevorschoeny.shulkerpalette.palette.SavedPalette;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The library at an open box: the panel's Save and Load.
+ * The library in the palette menu: its Save and Load, for the shulker in hand.
  *
  * <ul>
  *   <li><b>Save</b>: the panel asks the server for the box's palette; when it arrives, a
@@ -39,7 +40,7 @@ import org.jspecify.annotations.Nullable;
  *       (survival). Files that don't parse are listed with their problem and can't be picked.</li>
  * </ul>
  * The answer to each shows as its button's tooltip for a moment (the action bar is hidden
- * behind the open screen).
+ * behind the open screen). The dialogs are panels of the menu screen ({@link #panels}).
  */
 public final class LibraryClient {
     private LibraryClient() {}
@@ -64,8 +65,8 @@ public final class LibraryClient {
     private static Library.Shelf draftShelf = Library.Shelf.WORLD;
     private static boolean confirmingReplace;
 
-    // Load: the menu the list was opened for (so it closes with its screen), and what it shows.
-    private static int loadMenu = -1;
+    // Load: whether the list is open, and what it shows.
+    private static boolean loadOpen;
     private static List<Item> loadItems = List.of();
 
     /** A Load list line: a shelf heading, or a palette. */
@@ -75,7 +76,7 @@ public final class LibraryClient {
 
     public static void register() {
         ClientPlayNetworking.registerGlobalReceiver(PaletteTransfer.Saved.TYPE, (payload, context) -> {
-            if (!(context.client().gui.screen() instanceof ShulkerBoxScreen screen)) return;
+            if (!(context.client().gui.screen() instanceof PaletteScreen) || context.client().player == null) return;
             if (payload.palette().slots().isEmpty()) {
                 answer(Answer.SAVE, Component.translatable("shulkerpalette.library.empty_box"));
                 return;
@@ -83,10 +84,18 @@ public final class LibraryClient {
             pending = payload.palette();
             draftShelf = Library.folder(Library.Shelf.WORLD) != null ? Library.Shelf.WORLD : Library.Shelf.GLOBAL;
             // A renamed box suggests its own name; a plain one the next free "Palette N".
-            boolean named = !screen.getTitle().equals(Component.translatable("container.shulkerBox"));
-            draftName = named ? screen.getTitle().getString() : Library.freshName(draftShelf);
+            Component custom = context.client().player.getMainHandItem().get(DataComponents.CUSTOM_NAME);
+            draftName = custom != null ? custom.getString() : Library.freshName(draftShelf);
             confirmingReplace = false;
         });
+        // A new menu starts with no dialog up.
+        pending = null;
+    }
+
+    /** The save, replace and load dialogs, for the palette menu's screen. */
+    public static List<Panel> panels() {
+        pending = null;
+        loadOpen = false;
 
         Panel saveDialog = EditDialog.builder()
                 .id(ShulkerPalette.MOD_ID + ":save")
@@ -120,7 +129,7 @@ public final class LibraryClient {
                 .build()
                 .visibleWhen(() -> pending != null && confirmingReplace);
 
-        // A dark modal over the dimmed box: a title, the palettes as rows that light up under
+        // A dark modal over the dimmed menu: a title, the palettes as rows that light up under
         // the pointer, and Manage library and Close. Escape or Close dismisses it.
         Panel loadList = Panel.builder(ShulkerPalette.MOD_ID + ":load")
                 .style(PanelStyle.DARK)
@@ -132,22 +141,20 @@ public final class LibraryClient {
                         .add(Flow.builder().gap(4)
                                 .add(Button.builder().label(Component.translatable("shulkerpalette.library.manage"))
                                         .size((LIST_WIDTH - 4) / 2, 16)
-                                        .onClick(() -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(null)))
+                                        .onClick(() -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(Minecraft.getInstance().gui.screen())))
                                         .build())
                                 .add(Button.builder().label(Component.translatable("gui.cancel"))
                                         .size((LIST_WIDTH - 4) / 2, 16)
-                                        .onClick(() -> loadMenu = -1)
+                                        .onClick(() -> loadOpen = false)
                                         .build())
                                 .build())
                         .build()))
                 .build()
                 .modal()
-                .onEscape(() -> loadMenu = -1)
-                .visibleWhen(() -> openMenuId() >= 0 && openMenuId() == loadMenu);
+                .onEscape(() -> loadOpen = false)
+                .visibleWhen(() -> loadOpen);
 
-        new ScreenPanelAdapter(loadList).on(ShulkerBoxScreen.class);
-        new ScreenPanelAdapter(saveDialog).on(ShulkerBoxScreen.class);
-        new ScreenPanelAdapter(replaceDialog).on(ShulkerBoxScreen.class);
+        return List.of(loadList, saveDialog, replaceDialog);
     }
 
     private static PanelElement loadListView() {
@@ -170,12 +177,10 @@ public final class LibraryClient {
         };
     }
 
-    /** The panel's Load button: opens the list for this box, or closes it. */
+    /** The menu's Load button: opens the list, or closes it. */
     public static void toggleLoad() {
-        int menu = openMenuId();
-        if (menu < 0) return;
-        if (loadMenu == menu) {
-            loadMenu = -1;
+        if (loadOpen) {
+            loadOpen = false;
             return;
         }
         List<Item> items = new ArrayList<>();
@@ -186,16 +191,15 @@ public final class LibraryClient {
             for (Library.Entry entry : entries) items.add(new Row(entry));
         }
         loadItems = items;
-        loadMenu = menu;
+        loadOpen = true;
     }
 
-    /** A click in the Load list: send that palette to the open box. */
+    /** A click in the Load list: send that palette to the shulker in hand. */
     private static void pick(Library.Entry entry) {
-        if (!(Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen)) return;
         entry.palette().ifSuccess(palette -> {
-            ClientPlayNetworking.send(new PaletteTransfer.Load(screen.getMenu().containerId, palette));
+            ClientPlayNetworking.send(new HeldActions.LoadHeld(palette));
             answer(Answer.LOAD, Component.translatable("shulkerpalette.library.loaded", entry.name()));
-            loadMenu = -1;
+            loadOpen = false;
         });
     }
 
@@ -221,9 +225,6 @@ public final class LibraryClient {
         return shelf == Library.Shelf.WORLD ? "shulkerpalette.library.shelf.world" : "shulkerpalette.library.shelf.global";
     }
 
-    private static int openMenuId() {
-        return Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen ? screen.getMenu().containerId : -1;
-    }
 
     /** The answer to show as this button's tooltip, while it is fresh; else null. */
     public static @Nullable Component answerFor(Answer button) {

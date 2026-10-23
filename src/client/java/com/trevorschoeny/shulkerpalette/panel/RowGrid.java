@@ -11,9 +11,11 @@ import com.trevlar.slotkit.api.group.SlotGroupId;
 import com.trevlar.slotkit.api.slot.SlotElement;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
+import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
 import net.minecraft.network.chat.Component;
@@ -57,7 +59,7 @@ public final class RowGrid {
             for (int c = 0; c < Palette.ROW_WIDTH; c++) {
                 cells.add(SlotElement.builder().slot(SHULKER, row * Palette.ROW_WIDTH + c).build());
             }
-            rows.add(cells.visibleWhen(() -> row < ControlPanel.rows()).build());
+            rows.add(cells.visibleWhen(() -> row < rows()).build());
         }
         PanelElement grid = Flow.builder().vertical().gap(0, 0).addAll(rows).build();
         int lane = ScrollContainer.TRACK_WIDTH + ScrollContainer.SCROLLER_GUTTER;
@@ -68,16 +70,16 @@ public final class RowGrid {
                 .add(Button.builder()
                         .label(Component.translatable("shulkerpalette.panel.rows.less.label"))
                         .size(half, BAR_HEIGHT)
-                        .onClick(() -> ControlPanel.press(PanelActions.ROWS_LESS))
-                        .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", ControlPanel.rows(), Palette.MAX_ROWS))
-                        .disabledWhen(() -> ControlPanel.rows() <= Palette.VANILLA_ROWS)
+                        .onClick(() -> press(PanelActions.ROWS_LESS))
+                        .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.less", rows(), Palette.MAX_ROWS))
+                        .disabledWhen(() -> rows() <= Palette.VANILLA_ROWS)
                         .build())
                 .add(Button.builder()
                         .label(Component.translatable("shulkerpalette.panel.rows.more.label"))
                         .size(half, BAR_HEIGHT)
-                        .onClick(() -> ControlPanel.press(PanelActions.ROWS_MORE))
-                        .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", ControlPanel.rows(), Palette.MAX_ROWS))
-                        .disabledWhen(() -> ControlPanel.rows() >= Palette.MAX_ROWS)
+                        .onClick(() -> press(PanelActions.ROWS_MORE))
+                        .tooltip(() -> Component.translatable("shulkerpalette.panel.rows.more", rows(), Palette.MAX_ROWS))
+                        .disabledWhen(() -> rows() >= Palette.MAX_ROWS)
                         .build())
                 .visibleWhen(RowGrid::creative)
                 .build();
@@ -89,9 +91,29 @@ public final class RowGrid {
                 .texture(ContainerRegion.SHULKER_BOX)
                 .content(Flow.builder().vertical().gap(0, ROW_GAP + 1).add(scroll).add(bar).build())
                 .on(ShulkerBoxScreen.class)
-                .visibleWhen(() -> ControlPanel.palette().isPresent()
-                        && (ControlPanel.rows() > Palette.VANILLA_ROWS || creative()))
+                .visibleWhen(() -> palette().isPresent()
+                        && (rows() > Palette.VANILLA_ROWS || creative()))
                 .declare();
+    }
+
+    /** The open box screen's palette, as last synced; empty on a container with no palette behind it. */
+    private static Optional<Palette> palette() {
+        return Minecraft.getInstance().gui.screen() instanceof ShulkerBoxScreen screen
+                && screen.getMenu() instanceof PaletteMenu menu
+                ? PanelActions.unpack(menu.shulkerpalette$packedPalette())
+                : Optional.empty();
+    }
+
+    private static int rows() {
+        return palette().map(Palette::rows).orElse(Palette.VANILLA_ROWS);
+    }
+
+    /** Sends a rows press through vanilla's menu-button packet; the server decides. */
+    private static void press(int button) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.gameMode != null && mc.gui.screen() instanceof ShulkerBoxScreen screen) {
+            mc.gameMode.handleInventoryButtonClick(screen.getMenu().containerId, button);
+        }
     }
 
     private static boolean creative() {

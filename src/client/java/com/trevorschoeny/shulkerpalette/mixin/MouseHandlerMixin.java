@@ -16,10 +16,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Holding the palette modifier while scrolling with a palette in hand opens its popup, and in
- * pick or gradient mode moves its selection, instead of the hotbar. Plain scroll, and modifier + scroll
- * with anything else in hand, stay vanilla. Hooked at the one call where vanilla turns the wheel into a hotbar
- * slot, so screens, spectator mode and flying speed are untouched.
+ * Scrolling with a palette in hand while holding the palette key (V) moves its material, and
+ * with the shape key (V + Shift, creative) its shape, instead of the hotbar; either opens the
+ * popup for that axis. Plain scroll, and the keys with anything else in hand, stay vanilla.
+ * Hooked at the one call where vanilla turns the wheel into a hotbar slot, so screens,
+ * spectator mode and flying speed are untouched.
  */
 @Mixin(MouseHandler.class)
 abstract class MouseHandlerMixin {
@@ -37,6 +38,7 @@ abstract class MouseHandlerMixin {
         if (KeysClient.shapeDown() && minecraft.player.isCreative()) {
             ClientPlayNetworking.send(new Scroll.Payload(-wheel, true));
             PalettePopup.scrolledShape(-wheel);
+            KeysClient.markScrolled();
             ci.cancel();
             return;
         }
@@ -45,6 +47,7 @@ abstract class MouseHandlerMixin {
         // Random modes have nothing to select: the scroll only opens the popup.
         if (Scroll.scrolls(palette)) ClientPlayNetworking.send(new Scroll.Payload(-wheel, false));
         PalettePopup.scrolled(-wheel);
+        KeysClient.markScrolled();
         ci.cancel();
     }
 }

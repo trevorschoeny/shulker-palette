@@ -1,17 +1,17 @@
 package com.trevorschoeny.shulkerpalette.config;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
-import com.trevorschoeny.shulkerpalette.palette.Keys;
+import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
+import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
 import com.trevorschoeny.shulkerpalette.popup.PalettePopup;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -21,9 +21,9 @@ import net.minecraft.resources.Identifier;
  * The palette keys, as ordinary vanilla key binds (Controls, and Keybindery's chords when it
  * is installed), also shown on the mod's settings screen.
  *
- * <p>The modifier is held, not pressed: the client reports it to the server each time it
- * changes ({@link Keys}), at the start of the tick, so a click later in the same tick is
- * already judged with it.
+ * <p>The palette key (V) does two things: held while scrolling it moves the material, and a tap
+ * (pressed and released with no scroll in between) opens the palette menu for the shulker in
+ * hand. The shape key (V + Shift) held while scrolling moves the shape.
  */
 public final class KeysClient {
     private KeysClient() {}
@@ -31,13 +31,13 @@ public final class KeysClient {
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "keys"));
 
-    /** Held with scroll or right-click for the palette gestures. Left Option (Alt) by default. */
+    /** Hold with scroll to move the material; tap to open the palette menu. V by default. */
     public static final KeyMapping MODIFIER = new KeyMapping(
-            "key.shulkerpalette.modifier", InputConstants.Type.KEYBOARD, InputConstants.KEY_LALT, CATEGORY);
+            "key.shulkerpalette.modifier", InputConstants.Type.KEYBOARD, InputConstants.KEY_V, CATEGORY);
     /**
      * Held with scroll to move the palette's shape (creative). Meant to default to the chord
-     * Left Alt + Left Shift, which needs Keybindery's chord defaults; until those land it ships
-     * unbound, and an unbound shape key means Palette modifier + Left Shift.
+     * V + Left Shift, which needs Keybindery's chord defaults (asked of Lead, 2026-10-23); until
+     * those land it ships unbound, and an unbound shape key means the palette key + Left Shift.
      */
     public static final KeyMapping SHAPE = new KeyMapping(
             "key.shulkerpalette.shape", InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), CATEGORY);
@@ -53,8 +53,9 @@ public final class KeysClient {
     public static final KeyMapping REPAINT = new KeyMapping(
             "key.shulkerpalette.repaint", InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), CATEGORY);
 
-    /** What the server was last told. */
-    private static boolean reported;
+    // The palette key's tap: down since this press, and whether a scroll used it.
+    private static boolean wasDown;
+    private static boolean scrolled;
 
     public static void register() {
         KeyMappingHelper.registerKeyMapping(MODIFIER);
@@ -64,33 +65,44 @@ public final class KeysClient {
         KeyMappingHelper.registerKeyMapping(POWER);
         KeyMappingHelper.registerKeyMapping(REPAINT);
 
-        ClientTickEvents.START_CLIENT_TICK.register(mc -> {
-            if (mc.player == null || !ClientPlayNetworking.canSend(Keys.Modifier.TYPE)) return;
-            boolean held = modifierDown();
-            if (held != reported) {
-                reported = held;
-                Keys.setClientModifier(held);
-                ClientPlayNetworking.send(new Keys.Modifier(held));
-            }
-        });
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
+            tap(mc);
             while (PREVIOUS_SHAPE.consumeClick()) stepShape(mc, -1);
             while (NEXT_SHAPE.consumeClick()) stepShape(mc, 1);
-            while (POWER.consumeClick()) toggle(mc, PanelActions.POWER);
-            while (REPAINT.consumeClick()) toggle(mc, PanelActions.REPAINT);
-        });
-        // A new connection starts with the server thinking the modifier is up.
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, mc) -> {
-            reported = false;
-            Keys.setClientModifier(false);
+            while (POWER.consumeClick()) act(mc, PanelActions.POWER);
+            while (REPAINT.consumeClick()) act(mc, PanelActions.REPAINT);
         });
     }
 
-    /** Asks the server to press a panel button for the shulker in hand; it checks the rules. */
-    private static void toggle(Minecraft mc, int action) {
+    /** A scroll moved an axis while the palette key was held, so its release isn't a tap. */
+    public static void markScrolled() {
+        scrolled = true;
+    }
+
+    /**
+     * On release of the palette key, open the menu if nothing scrolled since it went down. A tap
+     * shorter than a tick is down and up again before this runs, so a press counted by vanilla
+     * (its click count) counts as down too.
+     */
+    private static void tap(Minecraft mc) {
+        boolean pressed = false;
+        while (MODIFIER.consumeClick()) pressed = true;
+        boolean down = mc.gui.screen() == null && held(MODIFIER);
+        if ((down || pressed) && !wasDown) wasDown = true;
+        if (!down && wasDown) {
+            if (!scrolled && mc.gui.screen() == null && mc.player != null && Palette.isShulker(mc.player.getMainHandItem())) {
+                mc.gui.setScreen(new PaletteScreen());
+            }
+            wasDown = false;
+            scrolled = false; // reset on release, so a scroll anywhere in the hold counts
+        }
+    }
+
+    /** Asks the server to press a palette button for the shulker in hand; it checks the rules. */
+    public static void act(Minecraft mc, int action) {
         if (mc.player == null || !Palette.isShulker(mc.player.getMainHandItem())
-                || !ClientPlayNetworking.canSend(Keys.Toggle.TYPE)) return;
-        ClientPlayNetworking.send(new Keys.Toggle(action));
+                || !ClientPlayNetworking.canSend(HeldActions.Act.TYPE)) return;
+        ClientPlayNetworking.send(new HeldActions.Act(action));
     }
 
     /** The shape keys: one step through the box's shapes, as a shape scroll would. */
@@ -101,12 +113,12 @@ public final class KeysClient {
         PalettePopup.steppedShape(steps);
     }
 
-    /** Is the material modifier down (its whole chord, with Keybindery)? Not while a screen is open: no gestures happen there. */
+    /** Is the palette key down (its whole chord, with Keybindery)? Not while a screen is open: no gestures happen there. */
     public static boolean modifierDown() {
         return Minecraft.getInstance().gui.screen() == null && held(MODIFIER);
     }
 
-    /** Is the shape modifier down? Checked before the material one, since its chord includes it by default. */
+    /** Is the shape key down? Checked before the palette key, since its chord includes it by default. */
     public static boolean shapeDown() {
         if (Minecraft.getInstance().gui.screen() != null) return false;
         boolean bound = FabricLoader.getInstance().isModLoaded("keybindery")
