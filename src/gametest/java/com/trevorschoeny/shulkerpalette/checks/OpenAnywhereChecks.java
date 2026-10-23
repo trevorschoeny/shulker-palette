@@ -12,6 +12,7 @@ import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
 import com.trevorschoeny.shulkerpalette.palette.SavedPalette;
+import com.trevorschoeny.shulkerpalette.palette.Target;
 import java.util.List;
 import java.util.function.Predicate;
 import net.fabricmc.fabric.api.client.creativetab.v1.FabricCreativeModeInventoryScreen;
@@ -43,7 +44,7 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
 
     /**
      * Station "shulkerpalette:open_anywhere": a palette box opened from the inventory through Open
-     * Anywhere is the one its controls change (named by its menu slot); its cheat sheet's ghost
+     * Anywhere is the one its controls change (named as the box in front); its cheat sheet's ghost
      * shows in the right slot; a survival load sets ghosts on it; a creative load fills its slots.
      */
     private static void openAnywhere(ClientGameTestContext ctx, SceneWorld.Opened scene) {
@@ -51,7 +52,7 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
         // The panel is a setting, off by default (the palette is handled in hand); on for this check.
         if (ctx.computeOnClient(mc -> Config.openAnywherePanel())) throw new AssertionError("the Open Anywhere panel setting is on by default");
         ctx.runOnClient(mc -> Config.setOpenAnywherePanel(true));
-        int menuSlot = open(ctx);
+        open(ctx);
         ctx.takeScreenshot("shulkerpalette-open-anywhere");
 
         // The ghost: the cheat sheet names slot 5, diorite.
@@ -64,18 +65,18 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
         });
         if (ghost != null) throw new AssertionError(ghost);
 
-        // Power, sent for the open box by its menu slot: it goes off; the hand is empty.
-        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, menuSlot)));
+        // Power, sent for the box in front: it goes off; the hand is empty.
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, Target.SHOWN)));
         ctx.waitTicks(5);
         boolean on = scene.world().getServer().computeOnServer(server -> box(server.getPlayerList().getPlayers().getFirst()).getOrDefault(Palette.COMPONENT, Palette.OFF).on());
         if (on) throw new AssertionError("power for the open box didn't turn it off");
-        boolean stillOpen = scene.world().getServer().computeOnServer(server -> OpenItems.openAt(server.getPlayerList().getPlayers().getFirst(), menuSlot) != null);
+        boolean stillOpen = scene.world().getServer().computeOnServer(server -> OpenItems.shown(server.getPlayerList().getPlayers().getFirst()) != null);
         if (!stillOpen) throw new AssertionError("changing the open box's palette closed it");
 
         // Survival load: a cheat sheet on the box, its items untouched.
         SavedPalette wall = new SavedPalette(Mode.RANDOM, 3, List.of(
                 new SavedPalette.Entry(4, ItemStackTemplate.fromNonEmptyStack(new ItemStack(Items.ANDESITE, 7)))));
-        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall, menuSlot)));
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall, Target.SHOWN)));
         ctx.waitTicks(5);
         String survival = scene.world().getServer().computeOnServer(server -> {
             ItemStack box = box(server.getPlayerList().getPlayers().getFirst());
@@ -90,30 +91,26 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
         ctx.waitTicks(3);
         scene.world().getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().setGameMode(GameType.CREATIVE));
         ctx.waitTicks(5);
-        int creativeSlot = open(ctx);
-        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall, creativeSlot)));
+        open(ctx);
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall, Target.SHOWN)));
         ctx.waitTicks(10);
         String creative = scene.world().getServer().computeOnServer(server -> {
             var player = server.getPlayerList().getPlayers().getFirst();
-            if (OpenItems.openAt(player, creativeSlot) == null) return "the box closed on a creative load";
-            for (OpenItems.OpenItem item : OpenItems.of(player)) {
-                if (item.menuSlot() != creativeSlot) continue;
-                ItemStack box = item.stack();
-                var items = box.getOrDefault(net.minecraft.core.component.DataComponents.CONTAINER,
-                        net.minecraft.world.item.component.ItemContainerContents.EMPTY).itemCopies().toList();
-                if (items.size() < 5 || !items.get(4).is(Items.ANDESITE)) return "creative load: box slot 4 holds " + (items.size() > 4 ? items.get(4) : "nothing");
-                if (!items.get(0).isEmpty()) return "creative load left the stone in slot 0";
-                return null;
-            }
-            return "no open box after a creative load";
+            OpenItems.OpenItem item = OpenItems.shown(player);
+            if (item == null) return "the box closed on a creative load";
+            var items = item.stack().getOrDefault(net.minecraft.core.component.DataComponents.CONTAINER,
+                    net.minecraft.world.item.component.ItemContainerContents.EMPTY).itemCopies().toList();
+            if (items.size() < 5 || !items.get(4).is(Items.ANDESITE)) return "creative load: box slot 4 holds " + (items.size() > 4 ? items.get(4) : "nothing");
+            if (!items.get(0).isEmpty()) return "creative load left the stone in slot 0";
+            return null;
         });
         if (creative != null) throw new AssertionError(creative);
         ctx.runOnClient(mc -> mc.player.closeContainer());
         ctx.waitTicks(3);
     }
 
-    /** Opens the inventory and double-clicks hotbar slot 0's box; returns the open box's menu slot. */
-    private static int open(ClientGameTestContext ctx) {
+    /** Opens the inventory and double-clicks hotbar slot 0's box, which comes up on its own screen. */
+    private static void open(ClientGameTestContext ctx) {
         boolean creative = ctx.computeOnClient(mc -> mc.player.isCreative());
         if (creative) {
             // Creative's inventory is the creative screen's Inventory tab; its slots are wrappers
@@ -135,11 +132,11 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
                 mouse.invokeOnButton(mc.getWindow().handle(), new MouseButtonInfo(InputConstants.MOUSE_BUTTON_LEFT, 0), action);
         });
         ctx.waitTicks(8);
-        return ctx.computeOnClient(mc -> {
-            OpenItems.OpenItem shown = ShownItem.get();
-            if (shown == null || !Palette.isShulker(shown.stack())) throw new AssertionError("no shulker shown after the double-click; screen " + mc.gui.screen());
-            return shown.menuSlot();
+        String shown = ctx.computeOnClient(mc -> {
+            OpenItems.OpenItem item = ShownItem.get();
+            return item != null && Palette.isShulker(item.stack()) ? null : "no shulker shown after the double-click; screen " + mc.gui.screen();
         });
+        if (shown != null) throw new AssertionError(shown);
     }
 
     private static void hover(ClientGameTestContext ctx, Predicate<Slot> p) {

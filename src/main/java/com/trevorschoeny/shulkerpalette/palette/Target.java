@@ -9,9 +9,9 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The shulker a palette action is for: the one in the main hand, or one the player has open
- * through Open Anywhere, named by its slot on the open menu. The server resolves it from what
- * the client sent and checks it is really there before anything changes.
+ * The shulker a palette action is for: the one in the main hand, or the one whose screen the
+ * player has in front through Open Anywhere. The server resolves it from what the client sent
+ * and checks it is really there before anything changes.
  *
  * @param stack the box itself, changed in place
  * @param slots the box's slots on the open menu while it is open there, in box order; null for
@@ -22,6 +22,8 @@ import org.jspecify.annotations.Nullable;
 public record Target(ItemStack stack, @Nullable List<Slot> slots) {
     /** The menu slot the client sends for "the shulker in the main hand". */
     public static final int HELD = -1;
+    /** The menu slot the client sends for "the shulker opened through Open Anywhere, in front". */
+    public static final int SHOWN = -2;
 
     /** What {@code menuSlot} names for this player now, or null if it isn't a shulker that's there. */
     public static @Nullable Target resolve(ServerPlayer player, int menuSlot) {
@@ -29,8 +31,8 @@ public record Target(ItemStack stack, @Nullable List<Slot> slots) {
             ItemStack hand = player.getMainHandItem();
             return Palette.isShulker(hand) ? new Target(hand, null) : null;
         }
-        // Only Open Anywhere opens a box away from the hand; without it, a menu slot names nothing.
-        if (menuSlot < 0 || !FabricLoader.getInstance().isModLoaded("openanywhere")) return null;
-        return OpenAnywhereServer.resolve(player, menuSlot);
+        // Only Open Anywhere opens a box away from the hand; without it, nothing else is named.
+        if (menuSlot != SHOWN || !FabricLoader.getInstance().isModLoaded("openanywhere")) return null;
+        return OpenAnywhereServer.resolve(player);
     }
 }

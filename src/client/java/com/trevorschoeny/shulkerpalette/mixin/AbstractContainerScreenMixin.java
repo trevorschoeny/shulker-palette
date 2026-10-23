@@ -39,8 +39,8 @@ abstract class AbstractContainerScreenMixin {
         ItemStack ghost = ItemStack.EMPTY;
         // A placed box: the cheat sheet the server sent for this menu.
         if (menu instanceof ShulkerBoxMenu && !(slot.container instanceof Inventory)) ghost = CheatSheetClient.ghost(menu.containerId, slot.getContainerSlot());
-        // A box opened through Open Anywhere: the cheat sheet on the box itself.
-        else if (FabricLoader.getInstance().isModLoaded("openanywhere")) ghost = OpenAnywhereClient.ghost(menu, slot);
+        // A box opened through Open Anywhere (the same screen, no sheet sent): the cheat sheet on the box itself.
+        if (ghost.isEmpty() && FabricLoader.getInstance().isModLoaded("openanywhere")) ghost = OpenAnywhereClient.ghost(menu, slot);
         if (ghost.isEmpty()) return;
         graphics.item(ghost, slot.x, slot.y);
         graphics.fill(slot.x, slot.y, slot.x + 16, slot.y + 16, GHOST);
