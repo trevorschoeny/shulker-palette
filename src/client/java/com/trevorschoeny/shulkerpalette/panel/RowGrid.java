@@ -26,7 +26,7 @@ import net.minecraft.network.chat.Component;
  * vanilla's.
  *
  * <ul>
- *   <li><b>The grid</b>: every row the box has, three rows tall and scrolling smoothly, so it
+ *   <li><b>The grid</b>: every row the box has while the window fits them, scrolling only when it doesn't, so it
  *       reads as one taller shulker. Every cell is a vanilla slot of the box's "Shulker" group
  *       (its 27 slots, then the extra rows after the player's inventory).</li>
  *   <li><b>The rows bar</b> (creative): two short buttons under the grid, as wide as it, that
@@ -62,8 +62,10 @@ public final class RowGrid {
             rows.add(cells.visibleWhen(() -> row < rows()).build());
         }
         PanelElement grid = Flow.builder().vertical().gap(0, 0).addAll(rows).build();
-        int lane = ScrollContainer.TRACK_WIDTH + ScrollContainer.SCROLLER_GUTTER;
-        PanelElement scroll = ScrollContainer.builder().size(WIDTH + lane, VISIBLE_ROWS * PITCH).content(List.of(grid)).build();
+        // Every row the box has while the window has the height; shorter by whole rows, and
+        // scrolling with its lane beside it, only once it doesn't. Never under three rows.
+        PanelElement scroll = ScrollContainer.builder().size(WIDTH, VISIBLE_ROWS * PITCH)
+                .laneOutside().fitRoom(PITCH).content(List.of(grid)).build();
 
         int half = (WIDTH - ROW_GAP) / 2;
         PanelElement bar = Flow.builder().gap(ROW_GAP)
