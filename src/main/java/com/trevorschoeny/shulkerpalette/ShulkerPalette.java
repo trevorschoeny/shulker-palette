@@ -7,7 +7,9 @@ import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import com.trevorschoeny.shulkerpalette.palette.Drops;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
+import com.trevorschoeny.shulkerpalette.compat.OpenAnywhereServer;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,5 +30,6 @@ public final class ShulkerPalette implements ModInitializer {
         Drops.register();
         PaletteTransfer.register();
         HeldActions.register();
+        if (FabricLoader.getInstance().isModLoaded("openanywhere")) OpenAnywhereServer.register();
     }
 }

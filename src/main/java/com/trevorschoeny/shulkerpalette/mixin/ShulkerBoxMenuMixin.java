@@ -1,6 +1,10 @@
 package com.trevorschoeny.shulkerpalette.mixin;
 
+import com.trevorschoeny.shulkerpalette.compat.OpenAnywhereServer;
 import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
+import net.fabricmc.loader.api.FabricLoader;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Shadow;
 import com.trevorschoeny.shulkerpalette.palette.PaletteTransfer;
 import java.util.List;
 import com.trevorschoeny.shulkerpalette.palette.PaletteHolder;
@@ -30,7 +34,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * Wires the shulker screen to the palette behind it. On the server the menu's container is
- * the placed box or the held item ({@link PaletteHolder}): its palette is synced to the client as one data
+ * the placed box ({@link PaletteHolder}) or a box opened through Open Anywhere (a holder over
+ * the item, {@link OpenAnywhereServer#holder}): its palette is synced to the client as one data
  * slot, and the panel's buttons arrive as menu-button clicks. On the client the data slot
  * is a plain holder the panel reads.
  *
@@ -41,6 +46,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(ShulkerBoxMenu.class)
 abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements PaletteMenu {
+    @Shadow @Final private Container container;
     @Unique private @Nullable PaletteHolder shulkerpalette$holder;
     @Unique private DataSlot shulkerpalette$state;
     /** Where the extra rows' slots sit in {@code slots}; empty when the menu has none. */
@@ -50,6 +56,7 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
     @Unique private static final int SHULKERPALETTE$BOX = 27, SHULKERPALETTE$PLAYER_END = 63;
     @Unique private static final int SHULKERPALETTE$PARKED = -10000;
     @Unique private static final int SHULKERPALETTE$ROOM = Palette.MAX_ROWS * Palette.ROW_WIDTH;
+    @Unique private static final boolean SHULKERPALETTE$OPEN_ANYWHERE = FabricLoader.getInstance().isModLoaded("openanywhere");
 
     private ShulkerBoxMenuMixin(@Nullable MenuType<?> type, int containerId) {
         super(type, containerId);
@@ -63,7 +70,9 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
 
     @Inject(method = "<init>(ILnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/world/Container;)V", at = @At("TAIL"))
     private void shulkerpalette$syncPalette(int containerId, Inventory inventory, Container container, CallbackInfo ci) {
-        if (container instanceof PaletteHolder holder) {
+        PaletteHolder holder = container instanceof PaletteHolder placed ? placed
+                : SHULKERPALETTE$OPEN_ANYWHERE ? OpenAnywhereServer.holder(container) : null;
+        if (holder != null) {
             shulkerpalette$holder = holder;
             // The client can't read a placed box's components; send it the cheat sheet. (This
             // arrives before the screen opens; the client keeps it by container id.)
@@ -79,9 +88,10 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
             // a holder for whatever the server sends, 0 meaning "no palette here".
             shulkerpalette$state = addDataSlot(DataSlot.standalone());
         }
-        // The extra rows, on a palette box (server) or the client's copy (which always has the
-        // room); never over another mod's 27-slot container. Both sides add the same slots.
-        if (shulkerpalette$holder != null || container.getContainerSize() >= SHULKERPALETTE$ROOM) {
+        // The extra rows, on a placed box (whose item list always has the room, whatever size it
+        // reports), an opened box with room for every row, or the client's copy (which always has
+        // it); never over a 27-slot container. Both sides add the same slots.
+        if (container instanceof PaletteHolder || container.getContainerSize() >= SHULKERPALETTE$ROOM) {
             shulkerpalette$extraStart = slots.size();
             for (int i = SHULKERPALETTE$BOX; i < SHULKERPALETTE$ROOM; i++) {
                 // Off-screen until the row grid places them: they have no spot in vanilla's
@@ -151,8 +161,7 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
         if (buttonId != PanelActions.ROWS_LESS && buttonId != PanelActions.ROWS_MORE) return true;
         Palette palette = shulkerpalette$holder.shulkerpalette$palette();
         // A row is only taken away empty, so nothing ends up where no slot reaches it.
-        if (buttonId == PanelActions.ROWS_LESS && shulkerpalette$holder instanceof Container box
-                && !PanelActions.canDropRow(palette, box)) {
+        if (buttonId == PanelActions.ROWS_LESS && !PanelActions.canDropRow(palette, container)) {
             return true;
         }
         shulkerpalette$holder.shulkerpalette$setPalette(PanelActions.apply(palette, buttonId, player));

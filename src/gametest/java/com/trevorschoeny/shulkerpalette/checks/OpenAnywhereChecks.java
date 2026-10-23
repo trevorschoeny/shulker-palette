@@ -45,7 +45,8 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
     /**
      * Station "shulkerpalette:open_anywhere": a palette box opened from the inventory through Open
      * Anywhere is the one its controls change (named as the box in front); its cheat sheet's ghost
-     * shows in the right slot; a survival load sets ghosts on it; a creative load fills its slots.
+     * shows in the right slot; a survival load sets ghosts on it; a creative load fills its slots;
+     * a 5-row box shows its rows past 3 and shift-clicks out of them.
      */
     private static void openAnywhere(ClientGameTestContext ctx, SceneWorld.Opened scene) {
         scene.standAt(scene.station("shulkerpalette:open_anywhere"), 30);
@@ -105,6 +106,48 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
             return null;
         });
         if (creative != null) throw new AssertionError(creative);
+        ctx.runOnClient(mc -> mc.player.closeContainer());
+        ctx.waitTicks(3);
+
+        // Five rows: an item in row 5 (slot 40) shows on the opened box, row 6 doesn't, and
+        // shift-clicking it out moves it to the player and empties slot 40 on the box item.
+        scene.world().getServer().runOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            player.setGameMode(GameType.SURVIVAL);
+            ItemStack box = box(player);
+            box.set(Palette.COMPONENT, new Palette(false, Mode.RANDOM, false, 5, 0, Palette.OFF.shape(), java.util.Optional.empty(), 0));
+            var items = new java.util.ArrayList<ItemStack>(java.util.Collections.nCopies(41, ItemStack.EMPTY));
+            items.set(40, new ItemStack(Items.COBBLESTONE, 13));
+            box.set(net.minecraft.core.component.DataComponents.CONTAINER, net.minecraft.world.item.component.ItemContainerContents.fromItems(items));
+            player.getInventory().setItem(8, ItemStack.EMPTY);
+        });
+        ctx.waitTicks(5);
+        open(ctx);
+        int[] row5 = ctx.computeOnClient(mc -> {
+            var menu = ((AbstractContainerScreen<?>) mc.gui.screen()).getMenu();
+            int found = -1;
+            for (Slot slot : menu.slots) {
+                if (slot.container instanceof Inventory) continue;
+                if (slot.getContainerSlot() == 40) {
+                    if (!slot.isActive() || !slot.getItem().is(Items.COBBLESTONE)) throw new AssertionError("row 5 of the opened box: slot 40 active " + slot.isActive() + ", holds " + slot.getItem());
+                    found = slot.index;
+                }
+                if (slot.getContainerSlot() == 45 && slot.isActive()) throw new AssertionError("row 6 shows on a 5-row box");
+            }
+            if (found < 0) throw new AssertionError("the opened box has no slot 40");
+            return new int[] {menu.containerId, found};
+        });
+        ctx.runOnClient(mc -> mc.gameMode.handleContainerInput(row5[0], row5[1], 0, net.minecraft.world.inventory.ContainerInput.QUICK_MOVE, mc.player));
+        ctx.waitTicks(5);
+        String shift = scene.world().getServer().computeOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            var items = box(player).getOrDefault(net.minecraft.core.component.DataComponents.CONTAINER,
+                    net.minecraft.world.item.component.ItemContainerContents.EMPTY).itemCopies().toList();
+            if (items.size() > 40 && !items.get(40).isEmpty()) return "shift-click left box slot 40 holding " + items.get(40);
+            if (player.getInventory().countItem(Items.COBBLESTONE) != 13) return "shift-click out of row 5: the player has " + player.getInventory().countItem(Items.COBBLESTONE) + " cobblestone";
+            return null;
+        });
+        if (shift != null) throw new AssertionError(shift);
         ctx.runOnClient(mc -> mc.player.closeContainer());
         ctx.waitTicks(3);
     }
