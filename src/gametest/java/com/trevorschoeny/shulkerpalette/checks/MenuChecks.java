@@ -2,7 +2,10 @@ package com.trevorschoeny.shulkerpalette.checks;
 
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.trevorschoeny.keybindery.api.Chord;
+import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.shulkerpalette.config.ConfigScreen;
+import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
@@ -102,6 +105,27 @@ public class MenuChecks implements FabricClientGameTest {
         if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("releasing V + Shift after a scroll opened a screen");
         Palette shaped = ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF));
         if (shaped.shape() == Shape.BLOCK || shaped.selection() != 1) throw new AssertionError("V + Shift scroll gave shape " + shaped.shape() + ", pick " + shaped.selection());
+        scene.world().getServer().runOnServer(server -> {
+            ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
+            hand.set(Palette.COMPONENT, hand.get(Palette.COMPONENT).withShape(Shape.BLOCK));
+        });
+        ctx.waitTicks(5);
+
+        // The shape key's default is the chord V + Shift (Keybindery), and it holds in the
+        // other press order too: V first, then Shift.
+        boolean chord = ctx.computeOnClient(mc -> KeybinderyAPI.getInstance().getChord(KeysClient.SHAPE)
+                .equals(Chord.ofKeys(InputConstants.KEY_V, InputConstants.KEY_LSHIFT)));
+        if (!chord) throw new AssertionError("the shape key's default isn't V + Shift");
+        ctx.getInput().holdKey(InputConstants.KEY_V);
+        ctx.getInput().holdKey(InputConstants.KEY_LSHIFT);
+        ctx.waitTicks(2);
+        ctx.getInput().scroll(-1);
+        ctx.waitTicks(2);
+        ctx.getInput().releaseKey(InputConstants.KEY_LSHIFT);
+        ctx.getInput().releaseKey(InputConstants.KEY_V);
+        ctx.waitTicks(5);
+        Palette vFirst = ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF));
+        if (vFirst.shape() == Shape.BLOCK || vFirst.selection() != 1) throw new AssertionError("V then Shift scroll gave shape " + vFirst.shape() + ", pick " + vFirst.selection());
         scene.world().getServer().runOnServer(server -> {
             ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
             hand.set(Palette.COMPONENT, hand.get(Palette.COMPONENT).withShape(Shape.BLOCK));

@@ -1,6 +1,7 @@
 package com.trevorschoeny.shulkerpalette.config;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.trevorschoeny.keybindery.api.Chord;
 import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
@@ -38,12 +39,13 @@ public final class KeysClient {
     public static final KeyMapping MODIFIER = new KeyMapping(
             "key.shulkerpalette.palette", InputConstants.Type.KEYBOARD, InputConstants.KEY_V, CATEGORY);
     /**
-     * Held with scroll to move the palette's shape (creative). Meant to default to the chord
-     * V + Left Shift, which needs Keybindery's chord defaults (asked of Lead, 2026-10-23); until
-     * those land it ships unbound, and an unbound shape key means the palette key + Left Shift.
+     * Held with scroll to move the palette's shape (creative). Defaults to the chord V + Left
+     * Shift (Keybindery's chord default, set in {@link #register}); vanilla's default key is
+     * V, which the chord must contain. A fresh id, as with the palette key: the old shape key is
+     * saved in players' options as unbound, and a saved bind beats a new default.
      */
     public static final KeyMapping SHAPE = new KeyMapping(
-            "key.shulkerpalette.shape", InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), CATEGORY);
+            "key.shulkerpalette.shape_scroll", InputConstants.Type.KEYBOARD, InputConstants.KEY_V, CATEGORY);
     /** Step the shape without scrolling, for players who'd rather press keys. Unbound by default. */
     public static final KeyMapping PREVIOUS_SHAPE = new KeyMapping(
             "key.shulkerpalette.shape_previous", InputConstants.Type.KEYBOARD, InputConstants.UNKNOWN.getValue(), CATEGORY);
@@ -67,6 +69,7 @@ public final class KeysClient {
         KeyMappingHelper.registerKeyMapping(NEXT_SHAPE);
         KeyMappingHelper.registerKeyMapping(POWER);
         KeyMappingHelper.registerKeyMapping(REPAINT);
+        KeybinderyAPI.getInstance().setDefaultChord(SHAPE, Chord.ofKeys(InputConstants.KEY_V, InputConstants.KEY_LSHIFT));
 
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             tap(mc);
@@ -130,11 +133,9 @@ public final class KeysClient {
         return Minecraft.getInstance().gui.screen() == null && held(MODIFIER);
     }
 
-    /** Is the shape key down? Checked before the palette key, since its chord includes it by default. */
+    /** Is the shape key's whole chord down? Checked before the palette key, since its chord includes it by default. */
     public static boolean shapeDown() {
-        if (Minecraft.getInstance().gui.screen() != null) return false;
-        if (!KeybinderyAPI.getInstance().getChord(SHAPE).isUnbound()) return held(SHAPE);
-        return held(MODIFIER) && InputConstants.isKeyDown(InputConstants.KEY_LSHIFT);
+        return Minecraft.getInstance().gui.screen() == null && held(SHAPE);
     }
 
     /** Every key of the mapping's chord held. */
