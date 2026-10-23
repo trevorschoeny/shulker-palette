@@ -37,6 +37,7 @@ repositories {
 // needs them evaluated first. A published jar holds both halves.
 evaluationDependsOn(':menukit')
 evaluationDependsOn(':slotkit')
+evaluationDependsOn(':keybindery')
 
 dependencies {
     // 26.x is unobfuscated: no mappings line, and plain Java configurations.
@@ -54,10 +55,11 @@ dependencies {
     include        "maven.modrinth:yacl:3.9.7+26.3-fabric"
     compileOnly "com.terraformersmc:modmenu:21.0.0"
     localRuntime "com.terraformersmc:modmenu:21.0.0"
-    // Keybindery's API for chord rows on the settings screen. Bundled, so the mod runs without
-    // Keybindery: then the screen offers vanilla's key binds instead.
+    // Keybindery is required: the palette keys are chords, set on the settings screen. Its jar
+    // bundles keybindery-api, so only the API is compiled against; the full mod runs in dev.
     implementation project(':keybindery-api')
-    include        project(':keybindery-api')
+    localRuntime project(':keybindery')
+    localRuntime rootProject.project(':keybindery').sourceSets.client.output
 }
 
 loom {

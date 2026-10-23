@@ -2,6 +2,7 @@ package com.trevorschoeny.shulkerpalette.checks;
 
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.trevorschoeny.shulkerpalette.config.ConfigScreen;
 import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
@@ -52,6 +54,10 @@ public class MenuChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(10);
 
+        // Keybindery is loaded (it's required), so the settings screen builds its chord rows.
+        if (!FabricLoader.getInstance().isModLoaded("keybindery")) throw new AssertionError("Keybindery isn't loaded");
+        ctx.runOnClient(mc -> ConfigScreen.create(null));
+
         // A tap opens the menu.
         ctx.getInput().pressKey(InputConstants.KEY_V);
         ctx.waitTicks(3);
@@ -70,6 +76,25 @@ public class MenuChecks implements FabricClientGameTest {
         if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("releasing V after a scroll opened a screen");
         int selection = ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF).selection());
         if (selection != 1) throw new AssertionError("the scroll didn't move the pick: selection " + selection);
+
+        // V + Shift held through a scroll moves the shape (stone and granite have stairs and
+        // slabs), not the pick, and opens nothing.
+        ctx.getInput().holdKey(InputConstants.KEY_LSHIFT);
+        ctx.getInput().holdKey(InputConstants.KEY_V);
+        ctx.waitTicks(2);
+        ctx.getInput().scroll(-1);
+        ctx.waitTicks(2);
+        ctx.getInput().releaseKey(InputConstants.KEY_V);
+        ctx.getInput().releaseKey(InputConstants.KEY_LSHIFT);
+        ctx.waitTicks(5);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("releasing V + Shift after a scroll opened a screen");
+        Palette shaped = ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF));
+        if (shaped.shape() == Shape.BLOCK || shaped.selection() != 1) throw new AssertionError("V + Shift scroll gave shape " + shaped.shape() + ", pick " + shaped.selection());
+        scene.world().getServer().runOnServer(server -> {
+            ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
+            hand.set(Palette.COMPONENT, hand.get(Palette.COMPONENT).withShape(Shape.BLOCK));
+        });
+        ctx.waitTicks(5);
 
         // On: a right-click on the ground places a block from the box, not the box.
         BlockPos target = ctx.computeOnClient(mc -> mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit

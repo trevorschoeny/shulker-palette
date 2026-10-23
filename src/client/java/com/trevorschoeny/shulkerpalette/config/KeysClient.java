@@ -12,14 +12,13 @@ import com.trevorschoeny.shulkerpalette.popup.PalettePopup;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 
 /**
- * The palette keys, as ordinary vanilla key binds (Controls, and Keybindery's chords when it
- * is installed), also shown on the mod's settings screen.
+ * The palette keys: vanilla key binds held as Keybindery chords (Keybindery is required), set
+ * on the mod's settings screen or in Controls.
  *
  * <p>The palette key (V) does two things: held while scrolling it moves the material, and a tap
  * (pressed and released with no scroll in between) opens the palette menu for the shulker in
@@ -31,9 +30,13 @@ public final class KeysClient {
     private static final KeyMapping.Category CATEGORY =
             KeyMapping.Category.register(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "keys"));
 
-    /** Hold with scroll to move the material; tap to open the palette menu. V by default. */
+    /**
+     * Hold with scroll to move the material; tap to open the palette menu. V by default. Its id
+     * is new with V: the old Option key's id is still saved in players' options with Left Alt,
+     * and a saved bind beats a new default, so keeping the id would have left V unbound.
+     */
     public static final KeyMapping MODIFIER = new KeyMapping(
-            "key.shulkerpalette.modifier", InputConstants.Type.KEYBOARD, InputConstants.KEY_V, CATEGORY);
+            "key.shulkerpalette.palette", InputConstants.Type.KEYBOARD, InputConstants.KEY_V, CATEGORY);
     /**
      * Held with scroll to move the palette's shape (creative). Meant to default to the chord
      * V + Left Shift, which needs Keybindery's chord defaults (asked of Lead, 2026-10-23); until
@@ -121,14 +124,12 @@ public final class KeysClient {
     /** Is the shape key down? Checked before the palette key, since its chord includes it by default. */
     public static boolean shapeDown() {
         if (Minecraft.getInstance().gui.screen() != null) return false;
-        boolean bound = FabricLoader.getInstance().isModLoaded("keybindery")
-                ? !KeybinderyAPI.getInstance().getChord(SHAPE).isUnbound() : !SHAPE.isUnbound();
-        if (bound) return held(SHAPE);
+        if (!KeybinderyAPI.getInstance().getChord(SHAPE).isUnbound()) return held(SHAPE);
         return held(MODIFIER) && InputConstants.isKeyDown(InputConstants.KEY_LSHIFT);
     }
 
-    /** Every key of the mapping's chord held (Keybindery), else its one key. */
+    /** Every key of the mapping's chord held. */
     private static boolean held(KeyMapping mapping) {
-        return FabricLoader.getInstance().isModLoaded("keybindery") ? KeybinderyAPI.getInstance().isHeld(mapping) : mapping.isDown();
+        return KeybinderyAPI.getInstance().isHeld(mapping);
     }
 }
