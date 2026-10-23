@@ -40,7 +40,7 @@ abstract class ShulkerBoxBlockEntityMixin extends BlockEntity implements Palette
     private static final int SHULKERPALETTE$CAPACITY = Palette.MAX_ROWS * Palette.ROW_WIDTH;
 
     /**
-     * Both constructors (the coloured one is what placing a box uses) size the item list at
+     * Both constructors (the colored one is what placing a box uses) size the item list at
      * 27; every box gets the full room instead, or a placed box would cut its item's extra
      * rows off.
      */

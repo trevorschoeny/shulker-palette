@@ -22,7 +22,7 @@ import org.joml.Vector3fc;
  * ground, an item frame, the inventory) the shulker draws as usual.
  *
  * <p>The outline is an inverted hull: the block's own quads, grown a little about the
- * model's centre, drawn in flat colour with their winding reversed so back-face culling
+ * model's center, drawn in flat color with their winding reversed so back-face culling
  * keeps only the faces behind the block. Only a rim past the block's edge stays visible.
  * It works in the first-person pass, which vanilla's glowing outline (a level-only post
  * effect) does not reach.
@@ -35,12 +35,12 @@ public final class HeldLook {
 
     /** How much bigger the hull is than the block: the outline's thickness. */
     private static final float GROW = 0.07f;
-    /** One trip round the colour wheel, in milliseconds. */
+    /** One trip round the color wheel, in milliseconds. */
     private static final float CYCLE_MILLIS = 4000f;
-    /** How much of the wheel spans the block, so the colours run round it as bands. */
+    /** How much of the wheel spans the block, so the colors run round it as bands. */
     private static final float SPREAD = 0.5f;
 
-    // A flat-colour pipeline like vanilla's debug boxes, but culling back faces and writing
+    // A flat-color pipeline like vanilla's debug boxes, but culling back faces and writing
     // depth, so the reversed hull hides behind the block and the block wins where they overlap.
     private static final RenderPipeline HULL_PIPELINE = RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
             .withLocation(Identifier.fromNamespaceAndPath("shulkerpalette", "pipeline/rainbow_hull"))

@@ -217,7 +217,7 @@ public final class PalettePopup {
         List<List<Cell>> rows = shapeAxis ? shapeRows(palette, slots) : rows(palette, slots);
         int height = TITLE_H + ROW_PITCH * rows.size() + (ROW_H - ROW_PITCH);
 
-        // Centred over the held hotbar slot (vanilla's slot i is centred 11 + 20i in from the
+        // Centered over the held hotbar slot (vanilla's slot i is centered 11 + 20i in from the
         // hotbar's left), kept on screen, bottom resting just above the hotbar.
         int widest = rows.stream().mapToInt(List::size).max().orElse(0) * SLOT_PITCH + 2;
         Component title = shapeAxis
@@ -225,15 +225,15 @@ public final class PalettePopup {
                         Component.translatable("shulkerpalette.shape." + Shapes.effective(shape(palette), slots).getSerializedName()))
                 : title(palette);
         int width = Math.max(widest, mc.font.width(title));
-        int slotCentre = originX + 11 + 20 * mc.player.getInventory().getSelectedSlot();
-        float left = Math.clamp(slotCentre - width * SCALE / 2, 0, g.guiWidth() - width * SCALE);
+        int slotCenter = originX + 11 + 20 * mc.player.getInventory().getSelectedSlot();
+        float left = Math.clamp(slotCenter - width * SCALE / 2, 0, g.guiWidth() - width * SCALE);
         float top = originY + 1 - height * SCALE;
 
         g.pose().pushMatrix();
         g.pose().translate(left, top);
         g.pose().scale(SCALE, SCALE);
 
-        // What the box does, centred above the grid.
+        // What the box does, centered above the grid.
         g.text(mc.font, title.getVisualOrderText(), (width - mc.font.width(title)) / 2, 1, TITLE_COLOR, true);
 
         for (int r = 0; r < rows.size(); r++) {

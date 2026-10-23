@@ -33,7 +33,7 @@ public final class OpenIcon {
             .translate(0.5f - INNER_SCALE / 2, INNER_FLOOR, 0.5f - INNER_SCALE / 2)
             .scale(INNER_SCALE);
 
-    /** An opened copy of each shulker renderer, made once per box colour and per place. */
+    /** An opened copy of each shulker renderer, made once per box color and per place. */
     private static final Map<ShulkerBoxSpecialRenderer, ShulkerBoxSpecialRenderer> ICON_OPENED = new IdentityHashMap<>();
     private static final Map<ShulkerBoxSpecialRenderer, ShulkerBoxSpecialRenderer> HAND_OPENED = new IdentityHashMap<>();
     /** Marks the icon's identity, so vanilla's icon cache keeps an open box apart from a closed one. */
