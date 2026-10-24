@@ -28,7 +28,8 @@ public final class Config {
     // In hand, the open box with the next block inside; off shows the next block alone.
     private static boolean openBoxInHand = true;
     // A see-through copy of the next block where a click would place it (survival and creative).
-    private static boolean placementGhost = true;
+    // Off by default; the repaint one stays on, since repaint replaces blocks and needs the preview.
+    private static boolean placementGhost = false;
     // The same over the block repaint would replace (creative).
     private static boolean repaintGhost = true;
     // The palette's icon column on a box opened through Open Anywhere. Off: the palette is

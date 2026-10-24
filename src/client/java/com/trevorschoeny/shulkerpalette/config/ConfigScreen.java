@@ -53,7 +53,7 @@ public final class ConfigScreen {
                 .option(toggle("rainbow", Config::rainbow, Config::setRainbow))
                 .option(toggle("popup", Config::popup, Config::setPopup))
                 .option(toggle("open_box", Config::openBoxInHand, Config::setOpenBoxInHand))
-                .option(toggle("placement_ghost", Config::placementGhost, Config::setPlacementGhost))
+                .option(toggle("placement_ghost", false, Config::placementGhost, Config::setPlacementGhost))
                 .option(toggle("repaint_ghost", Config::repaintGhost, Config::setRepaintGhost))
                 .build();
 
@@ -79,7 +79,7 @@ public final class ConfigScreen {
                 .generateScreen(parent);
     }
 
-    /** A switch that defaults on, as every look switch does. */
+    /** A switch that defaults on, as most look switches do. */
     private static Option<Boolean> toggle(String key, Supplier<Boolean> getter, Consumer<Boolean> setter) {
         return toggle(key, true, getter, setter);
     }

@@ -61,6 +61,10 @@ public class MenuChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(10);
 
+        // The placement preview is off by default; the repaint preview is on.
+        if (ctx.computeOnClient(mc -> com.trevorschoeny.shulkerpalette.config.Config.placementGhost()
+                || !com.trevorschoeny.shulkerpalette.config.Config.repaintGhost())) throw new AssertionError("ghost defaults aren't placement off, repaint on");
+
         // Keybindery is loaded (it's required), so the settings screen builds its chord rows.
         if (!FabricLoader.getInstance().isModLoaded("keybindery")) throw new AssertionError("Keybindery isn't loaded");
         ctx.runOnClient(mc -> ConfigScreen.create(null));
