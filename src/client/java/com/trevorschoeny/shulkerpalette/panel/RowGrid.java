@@ -3,7 +3,7 @@ package com.trevorschoeny.shulkerpalette.panel;
 import com.trevlar.menukit.api.element.Button;
 import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.element.PanelElement;
-import com.trevlar.menukit.api.element.ScrollContainer;
+import com.trevlar.menukit.api.element.SlotScroll;
 import com.trevlar.menukit.api.panel.ContainerRegion;
 import com.trevlar.menukit.api.panel.ModeScope;
 import com.trevlar.slotkit.api.group.SlotGroupCategory;
@@ -13,8 +13,6 @@ import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.PaletteMenu;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
@@ -48,24 +46,13 @@ public final class RowGrid {
     private static final SlotGroupId SHULKER = SlotGroupId.category(SlotGroupCategory.SHULKER_STORAGE);
 
     public static void register() {
-        // A column of rows, each a row of nine cells; a row shows only while the box has it.
-        // A vertical Flow measures only the rows shown, so the scroll ends at the box's last row.
-        // Not one SlotGroupElement: it shows a vanilla slot whether or not the slot is active,
-        // so it would lay out all 16 rows of every box.
-        List<PanelElement> rows = new ArrayList<>();
-        for (int r = 0; r < Palette.MAX_ROWS; r++) {
-            int row = r;
-            Flow.Builder cells = Flow.builder().gap(0, 0);
-            for (int c = 0; c < Palette.ROW_WIDTH; c++) {
-                cells.add(SlotElement.builder().slot(SHULKER, row * Palette.ROW_WIDTH + c).build());
-            }
-            rows.add(cells.visibleWhen(() -> row < rows()).build());
-        }
-        PanelElement grid = Flow.builder().vertical().gap(0, 0).addAll(rows).build();
         // Every row the box has while the window has the height; shorter by whole rows, and
         // scrolling with its lane beside it, only once it doesn't. Never under three rows.
-        PanelElement scroll = ScrollContainer.builder().size(WIDTH, VISIBLE_ROWS * PITCH)
-                .laneOutside().fitRoom(PITCH).content(List.of(grid)).build();
+        PanelElement scroll = SlotScroll.builder()
+                .cells(Palette.MAX_ROWS * Palette.ROW_WIDTH, (i, x, y, shown) ->
+                        SlotElement.builder().slot(SHULKER, i).at(x, y).visibleWhen(shown).build())
+                .columns(Palette.ROW_WIDTH).minRows(VISIBLE_ROWS).liveCount(() -> rows() * Palette.ROW_WIDTH)
+                .build();
 
         int half = (WIDTH - ROW_GAP) / 2;
         PanelElement bar = Flow.builder().gap(ROW_GAP)
