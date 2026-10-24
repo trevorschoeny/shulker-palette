@@ -41,7 +41,7 @@ public final class PaletteScreen extends MKScreen {
         rows.add(MenuRow.of(() -> sprite("load"),
                 () -> Component.translatable("shulkerpalette.library.manage"),
                 () -> Minecraft.getInstance().gui.setScreen(new LibraryScreen(Minecraft.getInstance().gui.screen())),
-                b -> b));
+                b -> b.disabledWhen(() -> !PaletteControls.For.HAND.palette().on())));
 
         Panel main = Panel.builder(ShulkerPalette.MOD_ID + ":menu")
                 .style(PanelStyle.RAISED)

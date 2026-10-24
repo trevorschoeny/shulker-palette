@@ -61,9 +61,10 @@ public final class PaletteControls {
      * @param needsOn   only does something while the palette is on (the menu greys it, the icon column hides it)
      * @param shown     whether it applies at all here (repaint: creative; clear: a cheat sheet)
      * @param lit       drawn lit in the icon column (repaint on)
+     * @param isPower   the one control that still works, and turns the palette back on, while it's off
      */
     record Control(Supplier<Identifier> icon, Supplier<Component> label, Supplier<Component> tooltip,
-                   Runnable onClick, boolean needsOn, BooleanSupplier shown, BooleanSupplier lit) {}
+                   Runnable onClick, boolean needsOn, BooleanSupplier shown, BooleanSupplier lit, boolean isPower) {}
 
     private static final int ICON_SIZE = 14; // the icons are 10 px, drawn 1:1 inside a 2 px inset
     private static final int TINT_ON = 0x6040C040;
@@ -75,36 +76,36 @@ public final class PaletteControls {
                 new Control(() -> sprite(box.palette().on() ? "power_on" : "power_off"),
                         () -> Component.translatable(box.palette().on() ? "shulkerpalette.menu.power.on" : "shulkerpalette.menu.power.off"),
                         () -> Component.translatable(box.palette().on() ? "shulkerpalette.panel.power.on" : "shulkerpalette.panel.power.off"),
-                        () -> box.act(PanelActions.POWER), false, always, never),
+                        () -> box.act(PanelActions.POWER), false, always, never, true),
                 new Control(() -> sprite("mode_" + box.palette().mode().getSerializedName()),
                         () -> Component.translatable("shulkerpalette.menu.mode",
                                 Component.translatable("shulkerpalette.menu.mode." + box.palette().mode().getSerializedName())),
                         () -> Component.translatable("shulkerpalette.panel.mode." + box.palette().mode().getSerializedName(),
                                 KeysClient.MODIFIER.getTranslatedKeyMessage()),
-                        () -> box.act(PanelActions.MODE), true, always, never),
+                        () -> box.act(PanelActions.MODE), true, always, never, false),
                 new Control(() -> sprite("repaint"),
                         () -> Component.translatable(box.palette().repaint() ? "shulkerpalette.menu.repaint.on" : "shulkerpalette.menu.repaint.off"),
                         () -> Component.translatable(box.palette().repaint() ? "shulkerpalette.panel.repaint.on" : "shulkerpalette.panel.repaint.off"),
-                        () -> box.act(PanelActions.REPAINT), true, PaletteControls::creative, () -> box.palette().repaint()),
+                        () -> box.act(PanelActions.REPAINT), true, PaletteControls::creative, () -> box.palette().repaint(), false),
                 new Control(() -> sprite("save"),
                         () -> Component.translatable("shulkerpalette.menu.save"),
                         () -> answerOr(LibraryClient.Answer.SAVE, "shulkerpalette.panel.save"),
-                        () -> box.act(PanelActions.SAVE), false, always, never),
+                        () -> box.act(PanelActions.SAVE), false, always, never, false),
                 new Control(() -> sprite("load"),
                         () -> Component.translatable("shulkerpalette.menu.load"),
                         () -> answerOr(LibraryClient.Answer.LOAD, "shulkerpalette.panel.load"),
-                        () -> LibraryClient.toggleLoad(box), false, always, never),
+                        () -> LibraryClient.toggleLoad(box), false, always, never, false),
                 new Control(() -> sprite("clear"),
                         () -> Component.translatable("shulkerpalette.menu.clear"),
                         () -> Component.translatable("shulkerpalette.panel.clear"),
-                        () -> box.act(PanelActions.CLEAR), false, () -> box.stack().get().has(CheatSheet.COMPONENT), never));
+                        () -> box.act(PanelActions.CLEAR), false, () -> box.stack().get().has(CheatSheet.COMPONENT), never, false));
     }
 
-    /** The menu's labeled rows: an off palette's mode and repaint are greyed, not hidden. */
+    /** The menu's labeled rows: an off palette greys every row but power, which turns it back on. */
     static List<PanelElement> rows(For box) {
         return controls(box).stream().<PanelElement>map(c -> MenuRow.of(c.icon(), c.label(), c.onClick(),
                 b -> b.tooltip(c.tooltip())
-                        .disabledWhen(() -> c.needsOn() && !box.palette().on())
+                        .disabledWhen(() -> !c.isPower() && !box.palette().on())
                         .visibleWhen(c.shown()))).toList();
     }
 
