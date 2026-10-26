@@ -9,7 +9,8 @@
       "com.trevorschoeny.shulkerpalette.checks.LibraryChecks",
       "com.trevorschoeny.shulkerpalette.checks.ShapeChecks",
       "com.trevorschoeny.shulkerpalette.checks.MenuChecks",
-      "com.trevorschoeny.shulkerpalette.checks.OpenAnywhereChecks"
+      "com.trevorschoeny.shulkerpalette.checks.OpenAnywhereChecks",
+      "com.trevorschoeny.shulkerpalette.checks.CheatSheetChecks"
     ]
   }
 }
