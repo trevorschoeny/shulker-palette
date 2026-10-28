@@ -54,8 +54,8 @@ It's needed on both the client and the server. Singleplayer and LAN worlds work 
 ### Requirements
 
 - [Fabric API](https://modrinth.com/mod/fabric-api).
-- [MenuKit](https://modrinth.com/mod/menukit) 7.4.0 or newer, below 8.0.0. It draws the palette menu, the palette library, and the box view above the hotbar.
-- [SlotKit](https://modrinth.com/mod/slotkit) 2.1.0 or newer, below 3.0.0. It lays out the shulker box's slots, including the extra rows.
+- [MenuKit](https://modrinth.com/mod/menukit) 7.5.0 or newer, below 8.0.0. It draws the palette menu, the palette library, and the box view above the hotbar.
+- [SlotKit](https://modrinth.com/mod/slotkit) 2.2.0 or newer, below 3.0.0. It lays out the shulker box's slots, including the extra rows.
 - [Keybindery](https://modrinth.com/mod/keybindery) 1.4.1 or newer. It lets the keys be set as key combinations, and gives the shape key its V + Left Shift default.
 
 YACL comes bundled, so it doesn't need a separate install.
