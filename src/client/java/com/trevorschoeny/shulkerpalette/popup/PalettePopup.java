@@ -70,8 +70,8 @@ public final class PalettePopup {
     private static final Identifier NONE_ICON = Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "variant_none");
     /**
      * General mode's icons: each variant in a neutral gray or pale block, so the row reads as
-     * "a stairs", not as any one material's stairs. ponytail: stand-ins, not a grayscale render
-     * of the box's own blocks; render those desaturated if the stand-ins read as real choices.
+     * "a stairs", not as any one material's stairs. These are stand-ins, not a grayscale render
+     * of the box's own blocks; render those desaturated instead if the stand-ins read as real choices.
      */
     private static final Map<Shape, String> GENERAL_ICONS = Map.ofEntries(
             Map.entry(Shape.BLOCK, "stone"), Map.entry(Shape.STAIRS, "stone_stairs"), Map.entry(Shape.SLAB, "stone_slab"),
