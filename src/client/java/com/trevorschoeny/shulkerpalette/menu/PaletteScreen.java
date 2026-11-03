@@ -9,13 +9,13 @@ import com.trevlar.menukit.api.panel.PanelPosition;
 import com.trevlar.menukit.api.panel.PanelStyle;
 import com.trevlar.menukit.api.panel.Placement;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
-import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.library.LibraryScreen;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -81,23 +81,16 @@ public final class PaletteScreen extends MKScreen {
     }
 
     /**
-     * The palette key (V) or the inventory key (E) closes the menu, as E closes an inventory.
-     * Not while a library dialog is up: a V typed into a palette's name is a letter.
+     * The inventory key (E) closes the menu outright, as it closes an inventory. The palette key
+     * (V) is handled in {@code KeysClient}, on release, so a hold can show the HUD view without
+     * closing anything; it also leaves a library dialog's typing alone (a V typed into a
+     * palette's name is a letter, not the key).
      */
     @Override
     public boolean keyPressed(KeyEvent event) {
-        if (!LibraryClient.dialogUp()) {
-            Minecraft mc = Minecraft.getInstance();
-            if (KeysClient.MODIFIER.matches(event)) {
-                // V is still down as the menu closes; its release must not count as a tap.
-                KeysClient.swallowTap();
-                onClose();
-                return true;
-            }
-            if (mc.options.keyInventory.matches(event)) {
-                onClose();
-                return true;
-            }
+        if (!LibraryClient.dialogUp() && Minecraft.getInstance().options.keyInventory.matches(event)) {
+            onClose();
+            return true;
         }
         return super.keyPressed(event);
     }
@@ -105,6 +98,25 @@ public final class PaletteScreen extends MKScreen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    /**
+     * Opened from a screen (a hover-open): draws that screen in full, as the backdrop, dimmed,
+     * so it is clear what closing the menu goes back to. Opened from the world: vanilla's usual
+     * background for this kind of screen (a blurred view of the game), unchanged.
+     */
+    @Override
+    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        if (parent == null) {
+            super.extractBackground(graphics, mouseX, mouseY, partialTick);
+            return;
+        }
+        // Off screen, so nothing in the parent reads as hovered: it's a backdrop, not live.
+        // extractBlurredBackground draws a snapshot from before this screen opened, not a live
+        // blur of what's just been drawn, so it would cover the parent rather than blur it; a
+        // flat dim over the parent's real content reads better here (Trev, 2026-11-03).
+        parent.extractRenderState(graphics, -1, -1, partialTick);
+        graphics.fill(0, 0, width, height, 0x80000000);
     }
 
     private static Identifier sprite(String name) {

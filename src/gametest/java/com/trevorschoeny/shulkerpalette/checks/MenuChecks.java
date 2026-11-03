@@ -75,17 +75,14 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.runOnClient(mc -> ConfigScreen.create(null));
 
         // A tap opens the menu.
-        ctx.getInput().pressKey(InputConstants.KEY_V);
-        ctx.waitTicks(3);
+        tapV(ctx);
         if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof PaletteScreen)) throw new AssertionError("a tap of V didn't open the palette menu");
         ctx.takeScreenshot("shulkerpalette-menu");
 
         // V again closes it, and its release doesn't open it again; E closes it too.
-        ctx.getInput().pressKey(InputConstants.KEY_V);
-        ctx.waitTicks(5);
+        tapV(ctx);
         if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("V didn't close the menu, or its release reopened it");
-        ctx.getInput().pressKey(InputConstants.KEY_V);
-        ctx.waitTicks(3);
+        tapV(ctx);
         ctx.getInput().pressKey(InputConstants.KEY_E);
         ctx.waitTicks(3);
         if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("E didn't close the menu");
@@ -137,12 +134,13 @@ public class MenuChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(5);
 
-        // A hold with no scroll: past the tap time it counts as a hold (the HUD view is up), and
-        // letting go opens nothing.
+        // The HUD view shows the instant V goes down, no delay: one tick in, it's already up.
         ctx.getInput().holdKey(InputConstants.KEY_V);
-        ctx.waitTicks(12);
-        if (!ctx.computeOnClient(mc -> KeysClient.holding())) throw new AssertionError("holding V didn't count as a hold");
+        ctx.waitTicks(1);
+        if (!ctx.computeOnClient(mc -> KeysClient.heldForPopup())) throw new AssertionError("the HUD view didn't show right away on holding V");
         ctx.takeScreenshot("shulkerpalette-hold");
+        // Held well past a tap, still no scroll: letting go opens nothing (it was a hold, not a tap).
+        ctx.waitTicks(12);
         ctx.getInput().releaseKey(InputConstants.KEY_V);
         ctx.waitTicks(5);
         if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("letting go of a held V opened a screen");
@@ -237,6 +235,7 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.getInput().pressKey(InputConstants.KEY_V);
         ctx.waitTicks(3);
         if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof PaletteScreen)) throw new AssertionError("V over a shulker in the inventory didn't open its menu");
+        ctx.takeScreenshot("shulkerpalette-hover-menu");
         ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, Target.inventorySlot(1))));
         ctx.waitTicks(5);
         boolean on = scene.world().getServer().computeOnServer(server -> server.getPlayerList().getPlayers().getFirst()
@@ -278,6 +277,19 @@ public class MenuChecks implements FabricClientGameTest {
             server.overworld().removeBlock(chest, false);
             server.getPlayerList().getPlayers().getFirst().getInventory().setItem(1, ItemStack.EMPTY);
         });
+        ctx.waitTicks(3);
+    }
+
+    /**
+     * A real tap of the palette key: down for one tick, then released, well inside the tap
+     * window. (Vanilla only counts a registered mapping's clicks with no screen open, so a
+     * sub-tick synthetic press, {@code pressKey}, wouldn't be seen at all while the palette menu
+     * is open; this spans a tick instead, as any real human press does.)
+     */
+    private static void tapV(ClientGameTestContext ctx) {
+        ctx.getInput().holdKey(InputConstants.KEY_V);
+        ctx.waitTick();
+        ctx.getInput().releaseKey(InputConstants.KEY_V);
         ctx.waitTicks(3);
     }
 

@@ -39,6 +39,9 @@ public final class HoverOpen {
         int where = target(screen, slot);
         if (where == Integer.MIN_VALUE) return false;
         Minecraft.getInstance().gui.setScreen(new PaletteScreen(new PaletteControls.For(slot::getItem, () -> where), screen));
+        // This same key press opened the screen; its release must not also count as the tap
+        // that closes it again.
+        KeysClient.swallowRelease();
         return true;
     }
 

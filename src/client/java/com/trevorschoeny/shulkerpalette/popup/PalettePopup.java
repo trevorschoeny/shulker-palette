@@ -107,8 +107,9 @@ public final class PalettePopup {
 
     private static boolean shown() {
         Minecraft mc = Minecraft.getInstance();
-        // Up while the palette key is held (past a tap, or used to scroll), before any scroll.
-        if (!KeysClient.holding() || !Config.popup() || mc.player == null || mc.gui.screen() != null) return false;
+        // Up the instant the palette key is held, in the world or over the palette menu itself
+        // (not any other screen): the menu dims the game behind it, but doesn't hide the HUD.
+        if (!KeysClient.heldForPopup() || !Config.popup() || mc.player == null) return false;
         shapeAxis = KeysClient.shapeDown() && mc.player.isCreative();
         return Palette.activeOn(mc.player.getMainHandItem()) != null;
     }
