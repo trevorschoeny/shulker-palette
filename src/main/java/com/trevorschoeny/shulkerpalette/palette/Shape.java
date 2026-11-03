@@ -8,12 +8,14 @@ import net.minecraft.util.StringRepresentable;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The shape a palette places its materials in (creative only): a full block, or one of the
- * shaped blocks vanilla makes from a material. The second axis of a palette, next to which
- * material: stone in the box with stairs chosen places stone stairs. The order here is the
- * order the shape cycle runs in.
+ * The variant a palette places its materials in (creative only): none (the box's items as they
+ * are), a full block, or one of the shaped blocks vanilla makes from a material. The second axis
+ * of a palette, next to which material: stone in the box with stairs chosen places stone stairs.
+ * The order here is the order the variant row runs in.
  */
 public enum Shape implements StringRepresentable {
+    /** No variant: each item places as it is in the box (stairs stay stairs). The default. */
+    NONE("none"),
     BLOCK("block"),
     STAIRS("stairs"),
     SLAB("slab"),

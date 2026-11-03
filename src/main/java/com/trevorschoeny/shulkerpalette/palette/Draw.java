@@ -86,17 +86,33 @@ public final class Draw {
     }
 
     /**
+     * The blocks a draw can choose from now, which is what the variant row offers variants for:
+     * the picked type in pick mode, the current row in gradient mode, the whole box otherwise.
+     */
+    public static List<ItemStack> inPlay(Palette palette, List<ItemStack> slots) {
+        if (palette.mode() == Mode.PICK) {
+            List<Entry> types = types(slots);
+            int pick = currentPick(palette, types);
+            return pick < 0 ? List.of() : List.of(types.get(pick).type());
+        }
+        return scope(palette, slots).stream().map(slots::get).toList();
+    }
+
+    /**
      * Chooses the next block for this palette from these contents. Empty when nothing is eligible.
      *
-     * <p>With {@code shaped} (creative), the palette's shape applies: only materials that come in
-     * it take part, keeping their ratios, and the block chosen is that material in that shape. A
-     * shape the box no longer offers falls back to a full block. Without it (survival) the box's
-     * items are placed as they are, since a shape would need items the box doesn't hold.
+     * <p>With {@code shaped} (creative), the palette's variant applies. None places the box's
+     * items as they are. Any other variant: only blocks that come in it take part (their own
+     * variant in specific mode, or their closest match in general mode), and the ratios are
+     * those blocks' alone, as if the rest weren't in the box; the block chosen is placed in that
+     * variant. A variant the blocks in play no longer offer falls back to None. Without
+     * {@code shaped} (survival) the box's items are placed as they are, since a variant would
+     * need items the box doesn't hold.
      */
     public static Optional<ItemStackTemplate> roll(Palette palette, ItemContainerContents contents, RandomSource random, boolean shaped) {
         List<ItemStack> slots = slots(contents);
-        Shape shape = shaped ? Shapes.effective(palette.shape(), slots) : null;
-        Predicate<ItemStack> fits = stack -> shape == null || Shapes.variant(stack.getItem(), shape) != null;
+        Shape shape = shaped ? Shapes.effective(palette, inPlay(palette, slots)) : Shape.NONE;
+        Predicate<ItemStack> fits = stack -> Shapes.variant(stack.getItem(), shape, palette.general()) != null;
         ItemStack chosen = switch (palette.mode()) {
             case RANDOM, GRADIENT -> byCount(slots, scope(palette, slots).stream().filter(i -> fits.test(slots.get(i))).toList(), random);
             case EQUAL -> {
@@ -104,15 +120,15 @@ public final class Draw {
                 yield types.isEmpty() ? ItemStack.EMPTY : types.get(random.nextInt(types.size())).type();
             }
             case PICK -> {
-                // The picked material, if it comes in the shape; pick mode doesn't move on by itself.
+                // The picked material, if it comes in the variant; pick mode doesn't move on by itself.
                 List<Entry> types = types(slots);
                 int pick = currentPick(palette, types);
                 yield pick < 0 || !fits.test(types.get(pick).type()) ? ItemStack.EMPTY : types.get(pick).type();
             }
         };
         if (chosen.isEmpty()) return Optional.empty();
-        if (shape == null) return Optional.of(ItemStackTemplate.fromNonEmptyStack(chosen, 1));
-        return Optional.of(ItemStackTemplate.fromNonEmptyStack(new ItemStack(Shapes.variant(chosen.getItem(), shape)), 1));
+        if (shape == Shape.NONE) return Optional.of(ItemStackTemplate.fromNonEmptyStack(chosen, 1));
+        return Optional.of(ItemStackTemplate.fromNonEmptyStack(new ItemStack(Shapes.variant(chosen.getItem(), shape, palette.general())), 1));
     }
 
     /** One item, uniformly, from every item in the given slots: each item is one ticket. */

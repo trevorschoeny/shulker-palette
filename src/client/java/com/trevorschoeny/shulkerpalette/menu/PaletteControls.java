@@ -9,6 +9,7 @@ import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.PanelActions;
+import com.trevorschoeny.shulkerpalette.palette.Shape;
 import com.trevorschoeny.shulkerpalette.palette.Target;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -87,6 +88,13 @@ public final class PaletteControls {
                         () -> Component.translatable(box.palette().repaint() ? "shulkerpalette.menu.repaint.on" : "shulkerpalette.menu.repaint.off"),
                         () -> Component.translatable(box.palette().repaint() ? "shulkerpalette.panel.repaint.on" : "shulkerpalette.panel.repaint.off"),
                         () -> box.act(PanelActions.REPAINT), true, PaletteControls::creative, () -> box.palette().repaint(), false),
+                // The variant and its mode; a click switches general and specific (the variant
+                // itself is chosen in the HUD, palette key + Shift + scroll).
+                new Control(() -> sprite(box.palette().shape() == Shape.NONE ? "variant_none" : "variant"),
+                        () -> Component.translatable(box.palette().general() ? "shulkerpalette.menu.variant.general" : "shulkerpalette.menu.variant.specific",
+                                Component.translatable("shulkerpalette.shape." + box.palette().shape().getSerializedName())),
+                        () -> Component.translatable(box.palette().general() ? "shulkerpalette.panel.variant.general" : "shulkerpalette.panel.variant.specific"),
+                        () -> box.act(PanelActions.VARIANT_MODE), true, PaletteControls::creative, () -> box.palette().general(), false),
                 new Control(() -> sprite("save"),
                         () -> Component.translatable("shulkerpalette.menu.save"),
                         () -> answerOr(LibraryClient.Answer.SAVE, "shulkerpalette.panel.save"),

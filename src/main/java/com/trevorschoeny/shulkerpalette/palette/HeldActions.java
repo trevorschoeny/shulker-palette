@@ -81,12 +81,13 @@ public final class HeldActions {
         // Any shulker can be switched on, so one with no palette yet counts as off.
         Palette palette = shulker.getOrDefault(Palette.COMPONENT, Palette.OFF);
         switch (action) {
-            case PanelActions.POWER, PanelActions.MODE, PanelActions.REPAINT -> {
+            case PanelActions.POWER, PanelActions.MODE, PanelActions.REPAINT, PanelActions.VARIANT_MODE -> {
                 Palette changed = PanelActions.apply(palette, action, player);
                 if (changed == palette) return;
                 shulker.set(Palette.COMPONENT, changed);
                 if (action == PanelActions.POWER) say(player, changed.on() ? "shulkerpalette.key.power.on" : "shulkerpalette.key.power.off");
                 if (action == PanelActions.REPAINT) say(player, changed.repaint() ? "shulkerpalette.key.repaint.on" : "shulkerpalette.key.repaint.off");
+                if (action == PanelActions.VARIANT_MODE) say(player, changed.general() ? "shulkerpalette.variant.general" : "shulkerpalette.variant.specific");
             }
             case PanelActions.SAVE -> ServerPlayNetworking.send(player, new PaletteTransfer.Saved(SavedPalette.of(palette, box(target, palette))));
             case PanelActions.CLEAR -> shulker.remove(CheatSheet.COMPONENT);
@@ -106,7 +107,7 @@ public final class HeldActions {
         ItemStack shulker = target.stack();
         Palette current = shulker.getOrDefault(Palette.COMPONENT, Palette.OFF);
         int rows = player.isCreative() ? saved.rows() : current.rows();
-        shulker.set(Palette.COMPONENT, new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, current.shape(), Optional.empty(), 0));
+        shulker.set(Palette.COMPONENT, new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, current.shape(), current.general(), Optional.empty(), 0));
         int room = target.slots() == null ? rows * Palette.ROW_WIDTH : Math.min(rows * Palette.ROW_WIDTH, target.slots().size());
         List<SavedPalette.Entry> fitting = saved.slots().stream().filter(e -> e.slot() < room).toList();
         if (player.isCreative()) {

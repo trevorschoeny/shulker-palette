@@ -20,8 +20,8 @@ import net.minecraft.world.item.component.ItemContainerContents;
  * <ul>
  *   <li><b>Material</b> (palette modifier + scroll): the picked block type in pick mode, the
  *       row in gradient mode.</li>
- *   <li><b>Shape</b> (shape modifier + scroll, creative only): full block, stairs, slab and so on,
- *       through the shapes the box's materials come in.</li>
+ *   <li><b>Variant</b> (palette key + Shift + scroll, creative only): none, full block, stairs,
+ *       slab and so on, through the variants the row offers ({@link Shapes#offered}).</li>
  * </ul>
  * The client only reports the scroll; the server moves the axis on the shulker in hand, chooses
  * the next block, and says what is selected.
@@ -74,13 +74,14 @@ public final class Scroll {
     }
 
     /**
-     * The shape after scrolling {@code steps} through the shapes the box offers, wrapping round.
-     * A shape the box no longer offers counts as a full block. The client runs this too.
+     * The variant after scrolling {@code steps} through the ones the row offers for the blocks
+     * in play ({@link Shapes#offered}), wrapping round. A variant they no longer offer counts as
+     * None. The client runs this too.
      */
     public static Shape movedShape(Palette palette, ItemContainerContents contents, int steps) {
-        List<Shape> shapes = Shapes.available(Draw.slots(contents));
-        if (shapes.isEmpty()) return palette.shape();
-        int at = Math.max(0, shapes.indexOf(Shapes.effective(palette.shape(), Draw.slots(contents))));
+        List<ItemStack> inPlay = Draw.inPlay(palette, Draw.slots(contents));
+        List<Shape> shapes = Shapes.offered(inPlay, palette.general());
+        int at = Math.max(0, shapes.indexOf(Shapes.effective(palette, inPlay)));
         return shapes.get(Math.floorMod(at + steps, shapes.size()));
     }
 

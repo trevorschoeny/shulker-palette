@@ -16,6 +16,8 @@ import com.trevorschoeny.shulkerpalette.palette.Palette;
 import com.trevorschoeny.shulkerpalette.palette.Scroll;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import net.minecraft.core.registries.BuiltInRegistries;
 import java.util.function.IntPredicate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -62,12 +64,22 @@ public final class PalettePopup {
     private static int expected = -1;
     private static long expectedAt;
 
-    /**
-     * Which axis the popup shows: the shape with Shift held (creative), else the material. Only
-     * one shows at a time, and it follows Shift, so it's always the one a scroll would move.
-     */
-    private static boolean shapeAxis;
     private static @Nullable Shape expectedShape;
+
+    /** The None variant's icon: a slashed circle. */
+    private static final Identifier NONE_ICON = Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "variant_none");
+    /**
+     * General mode's icons: each variant in a neutral gray or pale block, so the row reads as
+     * "a stairs", not as any one material's stairs. ponytail: stand-ins, not a grayscale render
+     * of the box's own blocks; render those desaturated if the stand-ins read as real choices.
+     */
+    private static final Map<Shape, String> GENERAL_ICONS = Map.ofEntries(
+            Map.entry(Shape.BLOCK, "stone"), Map.entry(Shape.STAIRS, "stone_stairs"), Map.entry(Shape.SLAB, "stone_slab"),
+            Map.entry(Shape.WALL, "cobblestone_wall"), Map.entry(Shape.FENCE, "pale_oak_fence"),
+            Map.entry(Shape.FENCE_GATE, "pale_oak_fence_gate"), Map.entry(Shape.CARPET, "light_gray_carpet"),
+            Map.entry(Shape.CUSHION, "light_gray_cushion"), Map.entry(Shape.PRESSURE_PLATE, "stone_pressure_plate"),
+            Map.entry(Shape.BUTTON, "stone_button"), Map.entry(Shape.TRAPDOOR, "pale_oak_trapdoor"),
+            Map.entry(Shape.DOOR, "pale_oak_door"));
 
     public static void register() {
         // A one-pixel strip along the top of the hotbar, as wide as it: the anchor the grid is
@@ -110,7 +122,6 @@ public final class PalettePopup {
         // Up the instant the palette key is held, in the world or over the palette menu itself
         // (not any other screen): the menu dims the game behind it, but doesn't hide the HUD.
         if (!KeysClient.heldForPopup() || !Config.popup() || mc.player == null) return false;
-        shapeAxis = KeysClient.shapeDown() && mc.player.isCreative();
         return Palette.activeOn(mc.player.getMainHandItem()) != null;
     }
 
@@ -131,26 +142,33 @@ public final class PalettePopup {
     }
 
     /**
-     * The shape view: one cell per shape the box offers, each the first material that comes in
-     * it, shaped; the current shape framed.
+     * The variant row, above the box's own blocks (creative): with Shift held, every variant
+     * the row offers, the current one framed; without, just the current one. Specific mode
+     * shows each variant as the first block in play that has it; general mode as a neutral
+     * stand-in ({@link #GENERAL_ICONS}), since any block can take it. None is a slashed circle.
      */
-    private static List<List<Cell>> shapeRows(Palette palette, List<ItemStack> slots) {
-        Shape current = Shapes.effective(shape(palette), slots);
+    private static List<Cell> variantCells(Palette palette, List<ItemStack> slots, boolean open) {
+        List<ItemStack> inPlay = Draw.inPlay(palette, slots);
+        Shape current = Shapes.effective(palette.withShape(shape(palette)), inPlay);
         List<Cell> cells = new ArrayList<>();
-        for (Shape shape : Shapes.available(slots)) {
-            for (ItemStack stack : slots) {
-                if (!Draw.eligible(stack)) continue;
-                Item shaped = Shapes.variant(stack.getItem(), shape);
-                if (shaped == null) continue;
-                cells.add(new Cell(new ItemStack(shaped), shape == current));
-                break;
-            }
+        for (Shape shape : open ? Shapes.offered(inPlay, palette.general()) : List.of(current)) {
+            cells.add(new Cell(icon(shape, inPlay, palette.general()), open && shape == current));
         }
-        List<List<Cell>> rows = new ArrayList<>();
-        for (int from = 0; from < cells.size(); from += Palette.ROW_WIDTH) {
-            rows.add(cells.subList(from, Math.min(from + Palette.ROW_WIDTH, cells.size())));
+        return cells;
+    }
+
+    /** A variant's icon; empty for None, which is drawn as its sprite. */
+    private static ItemStack icon(Shape shape, List<ItemStack> inPlay, boolean general) {
+        if (shape == Shape.NONE) return ItemStack.EMPTY;
+        if (general) {
+            return BuiltInRegistries.ITEM.getOptional(Identifier.withDefaultNamespace(GENERAL_ICONS.get(shape)))
+                    .map(ItemStack::new).orElse(ItemStack.EMPTY);
         }
-        return rows;
+        for (ItemStack stack : inPlay) {
+            Item own = Draw.eligible(stack) ? Shapes.own(stack.getItem(), shape) : null;
+            if (own != null) return new ItemStack(own);
+        }
+        return ItemStack.EMPTY;
     }
 
     /** One cell of the popup: the stack drawn, and whether it wears the selection frame. */
@@ -203,17 +221,28 @@ public final class PalettePopup {
         if (palette == null) return;
         palette = withSelection(palette, selection(palette));
         List<ItemStack> slots = Draw.slots(contents(held));
-        List<List<Cell>> rows = shapeAxis ? shapeRows(palette, slots) : rows(palette, slots);
-        int height = TITLE_H + ROW_PITCH * rows.size() + (ROW_H - ROW_PITCH);
+
+        // Two sections, drawn top to bottom: the variant (creative), then the box's own blocks,
+        // always as they are, so a variant never hides what's in the box.
+        List<Section> sections = new ArrayList<>();
+        if (mc.player.isCreative()) {
+            boolean open = KeysClient.shapeDown();
+            Shape current = Shapes.effective(palette.withShape(shape(palette)), Draw.inPlay(palette, slots));
+            Component name = Component.translatable("shulkerpalette.shape." + current.getSerializedName());
+            Component title = Component.translatable(palette.general() ? "shulkerpalette.popup.variant.general" : "shulkerpalette.popup.variant.specific", name);
+            sections.add(new Section(title, List.of(variantCells(palette, slots, open))));
+        }
+        sections.add(new Section(title(palette), rows(palette, slots)));
+
+        int height = 0, widest = 0;
+        for (Section section : sections) {
+            height += section.height();
+            widest = Math.max(widest, Math.max(section.width(), mc.font.width(section.title())));
+        }
+        int width = widest;
 
         // Centered over the held hotbar slot (vanilla's slot i is centered 11 + 20i in from the
         // hotbar's left), kept on screen, bottom resting just above the hotbar.
-        int widest = rows.stream().mapToInt(List::size).max().orElse(0) * SLOT_PITCH + 2;
-        Component title = shapeAxis
-                ? Component.translatable("shulkerpalette.popup.shape",
-                        Component.translatable("shulkerpalette.shape." + Shapes.effective(shape(palette), slots).getSerializedName()))
-                : title(palette);
-        int width = Math.max(widest, mc.font.width(title));
         int slotCenter = originX + 11 + 20 * mc.player.getInventory().getSelectedSlot();
         float left = Math.clamp(slotCenter - width * SCALE / 2, 0, g.guiWidth() - width * SCALE);
         float top = originY + 1 - height * SCALE;
@@ -221,23 +250,45 @@ public final class PalettePopup {
         g.pose().pushMatrix();
         g.pose().translate(left, top);
         g.pose().scale(SCALE, SCALE);
+        int y = 0;
+        for (Section section : sections) {
+            drawSection(g, mc, section, width, y);
+            y += section.height();
+        }
+        g.pose().popMatrix();
+    }
 
-        // What the box does, centered above the grid.
-        g.text(mc.font, title.getVisualOrderText(), (width - mc.font.width(title)) / 2, 1, TITLE_COLOR, true);
+    /** A titled block of hotbar-style rows. */
+    private record Section(Component title, List<List<Cell>> rows) {
+        int height() {
+            return rows.isEmpty() ? TITLE_H : TITLE_H + ROW_PITCH * rows.size() + (ROW_H - ROW_PITCH);
+        }
 
+        int width() {
+            return rows.stream().mapToInt(List::size).max().orElse(0) * SLOT_PITCH + 2;
+        }
+    }
+
+    private static void drawSection(GuiGraphicsExtractor g, Minecraft mc, Section section, int width, int top) {
+        g.text(mc.font, section.title().getVisualOrderText(), (width - mc.font.width(section.title())) / 2, top + 1, TITLE_COLOR, true);
+        List<List<Cell>> rows = section.rows();
         for (int r = 0; r < rows.size(); r++) {
             List<Cell> cells = rows.get(r);
             int rowWidth = cells.size() * SLOT_PITCH + 2;
             int x0 = (width - rowWidth) / 2;
-            int y = TITLE_H + ROW_PITCH * r;
+            int y = top + TITLE_H + ROW_PITCH * r;
             // The hotbar sprite cut to this many slots: its left end and slots, then its right edge.
             g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, 0, 0, x0, y, rowWidth - 1, ROW_H);
             g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, ROW_W - 1, 0, x0 + rowWidth - 1, y, 1, ROW_H);
             for (int c = 0; c < cells.size(); c++) {
                 int x = x0 + SLOT_PITCH * c;
                 ItemStack stack = cells.get(c).stack();
-                g.item(stack, x + 3, y + 3);
-                g.itemDecorations(mc.font, stack, x + 3, y + 3);
+                if (stack.isEmpty()) {
+                    g.blitSprite(RenderPipelines.GUI_TEXTURED, NONE_ICON, x + 3, y + 3, 16, 16);
+                } else {
+                    g.item(stack, x + 3, y + 3);
+                    g.itemDecorations(mc.font, stack, x + 3, y + 3);
+                }
             }
         }
         // Frames last, so a frame is never covered by the next row's sprite.
@@ -246,11 +297,10 @@ public final class PalettePopup {
             int x0 = (width - (cells.size() * SLOT_PITCH + 2)) / 2;
             for (int c = 0; c < cells.size(); c++) {
                 if (cells.get(c).lit()) {
-                    g.blitSprite(RenderPipelines.GUI_TEXTURED, SELECTION, x0 + SLOT_PITCH * c - 1, TITLE_H + ROW_PITCH * r - 1, 24, 23);
+                    g.blitSprite(RenderPipelines.GUI_TEXTURED, SELECTION, x0 + SLOT_PITCH * c - 1, top + TITLE_H + ROW_PITCH * r - 1, 24, 23);
                 }
             }
         }
-        g.pose().popMatrix();
     }
 
     private static Component title(Palette palette) {

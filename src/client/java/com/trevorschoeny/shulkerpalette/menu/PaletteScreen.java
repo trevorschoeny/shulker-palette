@@ -1,5 +1,6 @@
 package com.trevorschoeny.shulkerpalette.menu;
 
+import com.trevlar.menukit.api.MK;
 import com.trevlar.menukit.api.element.Flow;
 import com.trevlar.menukit.api.element.PanelElement;
 import com.trevlar.menukit.api.panel.MKScreen;
@@ -111,11 +112,11 @@ public final class PaletteScreen extends MKScreen {
             super.extractBackground(graphics, mouseX, mouseY, partialTick);
             return;
         }
-        // Off screen, so nothing in the parent reads as hovered: it's a backdrop, not live.
+        // MenuKit draws it as it looks open (its frame and region panels too), taking no input.
         // extractBlurredBackground draws a snapshot from before this screen opened, not a live
         // blur of what's just been drawn, so it would cover the parent rather than blur it; a
         // flat dim over the parent's real content reads better here.
-        parent.extractRenderState(graphics, -1, -1, partialTick);
+        MK.drawBackdrop(parent, graphics, partialTick);
         graphics.fill(0, 0, width, height, 0x80000000);
     }
 

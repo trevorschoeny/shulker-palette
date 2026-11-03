@@ -79,8 +79,7 @@
   "shulkerpalette.config.placement_ghost.description": "Shows a see-through copy of the next block where a right-click would place it.",
   "shulkerpalette.config.repaint_ghost": "Repaint preview",
   "shulkerpalette.config.repaint_ghost.description": "Shows what the block you look at would become, while repaint is on.",
-  "shulkerpalette.scroll.shape": "Shape: %s",
-  "shulkerpalette.popup.shape": "Shape: %s",
+  "shulkerpalette.scroll.shape": "Variant: %s",
   "shulkerpalette.shape.block": "Full block",
   "shulkerpalette.shape.stairs": "Stairs",
   "shulkerpalette.shape.slab": "Slab",
@@ -108,5 +107,14 @@
   "shulkerpalette.menu.mode.gradient": "Gradient",
   "shulkerpalette.config.open_anywhere": "Open Anywhere",
   "shulkerpalette.config.open_anywhere_panel": "Palette panel on opened boxes",
-  "shulkerpalette.config.open_anywhere_panel.description": "Shows the palette buttons beside a shulker box you open from the inventory with Open Anywhere. When it's off, you change the palette in hand with the palette key."
+  "shulkerpalette.config.open_anywhere_panel.description": "Shows the palette buttons beside a shulker box you open from the inventory with Open Anywhere. When it's off, you change the palette in hand with the palette key.",
+  "shulkerpalette.shape.none": "None",
+  "shulkerpalette.popup.variant.specific": "%s",
+  "shulkerpalette.popup.variant.general": "%s (general)",
+  "shulkerpalette.variant.general": "Variants: general, every variant, closest match where a block lacks one",
+  "shulkerpalette.variant.specific": "Variants: specific, only what the blocks have",
+  "shulkerpalette.menu.variant.specific": "Variant: %s (specific)",
+  "shulkerpalette.menu.variant.general": "Variant: %s (general)",
+  "shulkerpalette.panel.variant.specific": "Specific: the variant row only offers what the blocks in play have. Click for general. Pick the variant with the palette key + Shift + scroll.",
+  "shulkerpalette.panel.variant.general": "General: every variant; a block that lacks one places its closest match. Click for specific. Pick the variant with the palette key + Shift + scroll."
 }

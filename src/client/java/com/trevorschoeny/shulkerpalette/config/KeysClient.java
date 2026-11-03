@@ -5,7 +5,11 @@ import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
+import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
+import com.trevorschoeny.shulkerpalette.palette.PanelActions;
+import com.trevorschoeny.shulkerpalette.palette.Target;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
@@ -19,7 +23,9 @@ import net.minecraft.resources.Identifier;
  * <ul>
  *   <li><b>tap</b> (released quickly, no scroll): opens the palette menu;</li>
  *   <li><b>hold</b>: shows the box in the HUD ({@code PalettePopup}), the instant it goes down;</li>
- *   <li><b>hold and scroll</b>: moves the material; with Shift also held, the shape (creative).</li>
+ *   <li><b>hold and scroll</b>: moves the material; with Shift also held, the variant (creative);</li>
+ *   <li><b>hold, and tap Shift</b> (no scroll): switches the variant row between general and
+ *       specific (creative).</li>
  * </ul>
  * In an inventory screen, pressing it over a slot holding a shulker box opens the palette menu
  * for that box ({@code HoverOpen}).
@@ -53,6 +59,9 @@ public final class KeysClient {
     // The current press: when it went down (0 while up), and whether a scroll used it.
     private static long downSince;
     private static boolean scrolled;
+    // Shift during that press: when it went down (0 while up), and whether a variant scroll used it.
+    private static long shiftSince;
+    private static boolean shiftScrolled;
 
     public static void register() {
         KeyMappingHelper.registerKeyMapping(MODIFIER);
@@ -62,6 +71,12 @@ public final class KeysClient {
     /** A scroll moved an axis while the palette key was held, so its release isn't a tap. */
     public static void markScrolled() {
         scrolled = true;
+    }
+
+    /** A variant scroll: neither the palette key's release nor Shift's is a tap now. */
+    public static void markShapeScrolled() {
+        scrolled = true;
+        shiftScrolled = true;
     }
 
     /**
@@ -88,6 +103,7 @@ public final class KeysClient {
     private static void tap(Minecraft mc) {
         boolean down = trackable(mc) && KeybinderyAPI.getInstance().isHeld(MODIFIER);
         if (down && downSince == 0) downSince = System.currentTimeMillis();
+        shiftTap(mc, down && mc.gui.screen() == null);
         if (!down && downSince != 0) {
             boolean tapped = !scrolled && System.currentTimeMillis() - downSince < TAP_MILLIS;
             if (tapped) {
@@ -99,6 +115,30 @@ public final class KeysClient {
             }
             downSince = 0;
             scrolled = false; // reset on release, so a scroll anywhere in the press counts
+        }
+    }
+
+    /**
+     * A tap of Shift while the palette key is held in the world (down and up within
+     * {@link #TAP_MILLIS}, no variant scroll): switches general and specific. The server checks
+     * creative and an on palette. Any Shift during the press spends it, so letting go of the
+     * palette key afterwards opens nothing.
+     */
+    private static void shiftTap(Minecraft mc, boolean keyDown) {
+        boolean shift = keyDown && (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT));
+        long now = System.currentTimeMillis();
+        if (shift && shiftSince == 0) {
+            shiftSince = now;
+            scrolled = true;
+        }
+        if (!shift && shiftSince != 0) {
+            if (keyDown && !shiftScrolled && now - shiftSince < TAP_MILLIS && mc.player != null
+                    && mc.player.isCreative() && Palette.activeOn(mc.player.getMainHandItem()) != null
+                    && ClientPlayNetworking.canSend(HeldActions.Act.TYPE)) {
+                ClientPlayNetworking.send(new HeldActions.Act(PanelActions.VARIANT_MODE, Target.HELD));
+            }
+            shiftSince = 0;
+            shiftScrolled = false;
         }
     }
 

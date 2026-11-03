@@ -25,6 +25,8 @@ public final class PanelActions {
     /** Rows minus and plus (creative): the box loses or gains its last row. */
     public static final int ROWS_LESS = 5;
     public static final int ROWS_MORE = 6;
+    /** Variant mode (creative, palette on): general and specific, flipped. */
+    public static final int VARIANT_MODE = 7;
 
     /** The palette after button {@code id}, or the same palette if the press isn't allowed. */
     public static Palette apply(Palette palette, int id, Player player) {
@@ -39,6 +41,7 @@ public final class PanelActions {
                     ? withRows(palette, palette.rows() - 1) : palette;
             case ROWS_MORE -> player.isCreative() && palette.rows() < Palette.MAX_ROWS
                     ? withRows(palette, palette.rows() + 1) : palette;
+            case VARIANT_MODE -> palette.on() && player.isCreative() ? palette.withGeneral(!palette.general()).withNext(Optional.empty(), 0) : palette;
             default -> palette;
         };
         return changed;
@@ -49,11 +52,11 @@ public final class PanelActions {
      * player's inventory the server chooses one for the new settings ({@link Upkeep}).
      */
     private static Palette with(Palette p, boolean on, Mode mode, boolean repaint) {
-        return new Palette(on, mode, repaint, p.rows(), p.selection(), p.shape(), Optional.empty(), 0);
+        return new Palette(on, mode, repaint, p.rows(), p.selection(), p.shape(), p.general(), Optional.empty(), 0);
     }
 
     private static Palette withRows(Palette p, int rows) {
-        return new Palette(p.on(), p.mode(), p.repaint(), rows, p.selection(), p.shape(), Optional.empty(), 0);
+        return new Palette(p.on(), p.mode(), p.repaint(), rows, p.selection(), p.shape(), p.general(), Optional.empty(), 0);
     }
 
     /** Is the palette's last row empty in this box, so the rows minus button may take it away? */
@@ -78,6 +81,6 @@ public final class PanelActions {
     public static Optional<Palette> unpack(int packed) {
         if ((packed & PRESENT) == 0) return Optional.empty();
         return Optional.of(new Palette((packed & 1) != 0, Mode.values()[packed >> 1 & 3], (packed >> 3 & 1) != 0,
-                packed >> 4 & 31, 0, Shape.BLOCK, Optional.empty(), 0));
+                packed >> 4 & 31, 0, Shape.NONE, Optional.empty(), 0));
     }
 }

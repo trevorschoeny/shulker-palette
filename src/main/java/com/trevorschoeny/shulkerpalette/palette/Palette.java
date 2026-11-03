@@ -31,13 +31,16 @@ import org.jspecify.annotations.Nullable;
  * @param repaint     right-click replaces the targeted block instead of placing (creative only)
  * @param rows        rows the box has, 3 to 16 (extra rows are creative only)
  * @param selection   the picked block type (pick) or the current row (gradient); unused otherwise
- * @param shape       the shape materials are placed in (creative only; survival places them as they are)
+ * @param shape       the variant materials are placed in (creative only; survival places them as they are)
+ * @param general     the variant row offers every variant, filling a block's gaps with its closest
+ *                    match ({@link Shapes#closest}); off (specific), only variants the blocks in
+ *                    play have themselves
  * @param next        the block the next click places, chosen in advance so it can be shown
  * @param fingerprint the contents {@link #next} was chosen from; a mismatch means the box
  *                    changed since, so the next block is chosen again
  */
 public record Palette(boolean on, Mode mode, boolean repaint, int rows, int selection, Shape shape,
-                      Optional<ItemStackTemplate> next, int fingerprint) {
+                      boolean general, Optional<ItemStackTemplate> next, int fingerprint) {
 
     public static final int VANILLA_ROWS = 3;
     /** Room for rows in the stored data: placed and held boxes keep 16 rows of items. */
@@ -48,21 +51,36 @@ public record Palette(boolean on, Mode mode, boolean repaint, int rows, int sele
         rows = Math.clamp(rows, VANILLA_ROWS, MAX_ROWS);
     }
 
+    /** A specific-mode palette: the common case, for callers that don't touch the mode. */
+    public Palette(boolean on, Mode mode, boolean repaint, int rows, int selection, Shape shape,
+                   Optional<ItemStackTemplate> next, int fingerprint) {
+        this(on, mode, repaint, rows, selection, shape, false, next, fingerprint);
+    }
+
     /** A shulker that has never been a palette reads as this. */
-    public static final Palette OFF = new Palette(false, Mode.RANDOM, false, VANILLA_ROWS, 0, Shape.BLOCK, Optional.empty(), 0);
+    public static final Palette OFF = new Palette(false, Mode.RANDOM, false, VANILLA_ROWS, 0, Shape.NONE, Optional.empty(), 0);
 
     // Every field is optional in the saved form, so a command or a scene can write a partial
     // palette ({on:true}) and get the defaults for the rest.
+    //
+    // The variant is saved as "variant". Boxes from before None existed saved "shape", where
+    // "block" was the default nobody chose, so it reads as None; any other old shape carries
+    // over. "shape" is read, never written.
     public static final Codec<Palette> CODEC = RecordCodecBuilder.create(i -> i.group(
             Codec.BOOL.optionalFieldOf("on", false).forGetter(Palette::on),
             Mode.CODEC.optionalFieldOf("mode", Mode.RANDOM).forGetter(Palette::mode),
             Codec.BOOL.optionalFieldOf("repaint", false).forGetter(Palette::repaint),
             Codec.intRange(VANILLA_ROWS, MAX_ROWS).optionalFieldOf("rows", VANILLA_ROWS).forGetter(Palette::rows),
             Codec.INT.optionalFieldOf("selection", 0).forGetter(Palette::selection),
-            Shape.CODEC.optionalFieldOf("shape", Shape.BLOCK).forGetter(Palette::shape),
+            Shape.CODEC.optionalFieldOf("variant").forGetter(p -> Optional.of(p.shape())),
+            Shape.CODEC.optionalFieldOf("shape").forGetter(p -> Optional.empty()),
+            Codec.BOOL.optionalFieldOf("general", false).forGetter(Palette::general),
             ItemStackTemplate.CODEC.optionalFieldOf("next").forGetter(Palette::next),
             Codec.INT.optionalFieldOf("fingerprint", 0).forGetter(Palette::fingerprint)
-    ).apply(i, Palette::new));
+    ).apply(i, (on, mode, repaint, rows, selection, variant, oldShape, general, next, fingerprint) ->
+            new Palette(on, mode, repaint, rows, selection,
+                    variant.orElseGet(() -> oldShape.filter(s -> s != Shape.BLOCK).orElse(Shape.NONE)),
+                    general, next, fingerprint)));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, Palette> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.BOOL, Palette::on,
@@ -72,6 +90,7 @@ public record Palette(boolean on, Mode mode, boolean repaint, int rows, int sele
             ByteBufCodecs.VAR_INT.map(rows -> Math.clamp(rows, VANILLA_ROWS, MAX_ROWS), rows -> rows), Palette::rows,
             ByteBufCodecs.VAR_INT, Palette::selection,
             Shape.STREAM_CODEC, Palette::shape,
+            ByteBufCodecs.BOOL, Palette::general,
             ByteBufCodecs.optional(ItemStackTemplate.STREAM_CODEC), Palette::next,
             ByteBufCodecs.VAR_INT, Palette::fingerprint,
             Palette::new);
@@ -101,14 +120,18 @@ public record Palette(boolean on, Mode mode, boolean repaint, int rows, int sele
     }
 
     public Palette withNext(Optional<ItemStackTemplate> next, int fingerprint) {
-        return new Palette(on, mode, repaint, rows, selection, shape, next, fingerprint);
+        return new Palette(on, mode, repaint, rows, selection, shape, general, next, fingerprint);
     }
 
     public Palette withSelection(int selection) {
-        return new Palette(on, mode, repaint, rows, selection, shape, next, fingerprint);
+        return new Palette(on, mode, repaint, rows, selection, shape, general, next, fingerprint);
     }
 
     public Palette withShape(Shape shape) {
-        return new Palette(on, mode, repaint, rows, selection, shape, next, fingerprint);
+        return new Palette(on, mode, repaint, rows, selection, shape, general, next, fingerprint);
+    }
+
+    public Palette withGeneral(boolean general) {
+        return new Palette(on, mode, repaint, rows, selection, shape, general, next, fingerprint);
     }
 }
