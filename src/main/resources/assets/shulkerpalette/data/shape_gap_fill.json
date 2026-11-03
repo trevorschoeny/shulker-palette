@@ -1,0 +1,1076 @@
+{
+ "acacia_planks": {
+  "carpet": "red_carpet",
+  "cushion": "red_cushion",
+  "wall": "red_sandstone_wall"
+ },
+ "andesite": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor"
+ },
+ "bamboo_mosaic": {
+  "button": "bamboo_button",
+  "carpet": "yellow_carpet",
+  "cushion": "yellow_cushion",
+  "door": "bamboo_door",
+  "fence": "bamboo_fence",
+  "fence_gate": "bamboo_fence_gate",
+  "pressure_plate": "bamboo_pressure_plate",
+  "trapdoor": "bamboo_trapdoor",
+  "wall": "sulfur_brick_wall"
+ },
+ "bamboo_planks": {
+  "carpet": "yellow_carpet",
+  "cushion": "yellow_cushion",
+  "wall": "sulfur_brick_wall"
+ },
+ "birch_planks": {
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "wall": "sulfur_wall"
+ },
+ "black_concrete": {
+  "button": "dark_oak_button",
+  "carpet": "black_carpet",
+  "cushion": "black_cushion",
+  "door": "dark_oak_door",
+  "fence": "nether_brick_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "dark_oak_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor",
+  "wall": "nether_brick_wall"
+ },
+ "black_wool": {
+  "button": "dark_oak_button",
+  "door": "dark_oak_door",
+  "fence": "nether_brick_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "dark_oak_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor",
+  "wall": "nether_brick_wall"
+ },
+ "blackstone": {
+  "button": "polished_blackstone_button",
+  "carpet": "black_carpet",
+  "cushion": "black_cushion",
+  "door": "dark_oak_door",
+  "fence": "nether_brick_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor"
+ },
+ "blue_concrete": {
+  "button": "warped_button",
+  "carpet": "blue_carpet",
+  "cushion": "blue_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "warped_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "cobbled_deepslate_wall"
+ },
+ "blue_wool": {
+  "button": "warped_button",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "warped_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "polished_tuff_wall"
+ },
+ "bricks": {
+  "button": "jungle_button",
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor"
+ },
+ "brown_concrete": {
+  "button": "mangrove_button",
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "door": "mangrove_door",
+  "fence": "mangrove_fence",
+  "fence_gate": "mangrove_fence_gate",
+  "pressure_plate": "mangrove_pressure_plate",
+  "trapdoor": "mangrove_trapdoor",
+  "wall": "deepslate_tile_wall"
+ },
+ "brown_wool": {
+  "button": "spruce_button",
+  "door": "spruce_door",
+  "fence": "spruce_fence",
+  "fence_gate": "spruce_fence_gate",
+  "pressure_plate": "spruce_pressure_plate",
+  "trapdoor": "spruce_trapdoor",
+  "wall": "cinnabar_brick_wall"
+ },
+ "cherry_planks": {
+  "carpet": "pink_carpet",
+  "cushion": "pink_cushion",
+  "wall": "sandstone_wall"
+ },
+ "cinnabar": {
+  "button": "acacia_button",
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "trapdoor": "acacia_trapdoor"
+ },
+ "cinnabar_bricks": {
+  "button": "mangrove_button",
+  "carpet": "red_carpet",
+  "cushion": "red_cushion",
+  "door": "mangrove_door",
+  "fence": "mangrove_fence",
+  "fence_gate": "mangrove_fence_gate",
+  "pressure_plate": "mangrove_pressure_plate",
+  "trapdoor": "mangrove_trapdoor"
+ },
+ "cobbled_deepslate": {
+  "button": "crimson_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "crimson_pressure_plate",
+  "trapdoor": "crimson_trapdoor"
+ },
+ "cobblestone": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor"
+ },
+ "copper_block": {
+  "button": "jungle_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "slab": "waxed_cut_copper_slab",
+  "stairs": "waxed_cut_copper_stairs",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "granite_wall"
+ },
+ "crimson_planks": {
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "wall": "polished_deepslate_wall"
+ },
+ "cut_copper": {
+  "button": "jungle_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "brick_wall"
+ },
+ "cut_red_sandstone": {
+  "button": "acacia_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "stairs": "red_sandstone_stairs",
+  "trapdoor": "acacia_trapdoor",
+  "wall": "red_sandstone_wall"
+ },
+ "cut_sandstone": {
+  "button": "cherry_button",
+  "carpet": "pink_carpet",
+  "cushion": "pink_cushion",
+  "door": "cherry_door",
+  "fence": "cherry_fence",
+  "fence_gate": "cherry_fence_gate",
+  "pressure_plate": "cherry_pressure_plate",
+  "stairs": "sandstone_stairs",
+  "trapdoor": "cherry_trapdoor",
+  "wall": "sandstone_wall"
+ },
+ "cyan_concrete": {
+  "button": "warped_button",
+  "carpet": "cyan_carpet",
+  "cushion": "cyan_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "warped_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "polished_tuff_wall"
+ },
+ "cyan_wool": {
+  "button": "warped_button",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "warped_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "polished_tuff_wall"
+ },
+ "dark_oak_planks": {
+  "carpet": "black_carpet",
+  "cushion": "black_cushion",
+  "wall": "nether_brick_wall"
+ },
+ "dark_prismarine": {
+  "button": "warped_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "warped_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "polished_deepslate_wall"
+ },
+ "deepslate": {
+  "button": "crimson_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "crimson_pressure_plate",
+  "slab": "cobbled_deepslate_slab",
+  "stairs": "cobbled_deepslate_stairs",
+  "trapdoor": "crimson_trapdoor",
+  "wall": "cobbled_deepslate_wall"
+ },
+ "deepslate_bricks": {
+  "button": "polished_blackstone_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "crimson_trapdoor"
+ },
+ "deepslate_tiles": {
+  "button": "polished_blackstone_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "dark_oak_door",
+  "fence": "dark_oak_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor"
+ },
+ "diorite": {
+  "button": "pale_oak_button",
+  "carpet": "pink_carpet",
+  "cushion": "pink_cushion",
+  "door": "pale_oak_door",
+  "fence": "pale_oak_fence",
+  "fence_gate": "pale_oak_fence_gate",
+  "pressure_plate": "pale_oak_pressure_plate",
+  "trapdoor": "pale_oak_trapdoor"
+ },
+ "end_stone": {
+  "button": "cherry_button",
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "door": "cherry_door",
+  "fence": "cherry_fence",
+  "fence_gate": "cherry_fence_gate",
+  "pressure_plate": "cherry_pressure_plate",
+  "slab": "end_stone_brick_slab",
+  "stairs": "end_stone_brick_stairs",
+  "trapdoor": "cherry_trapdoor",
+  "wall": "end_stone_brick_wall"
+ },
+ "end_stone_bricks": {
+  "button": "cherry_button",
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "door": "cherry_door",
+  "fence": "cherry_fence",
+  "fence_gate": "cherry_fence_gate",
+  "pressure_plate": "cherry_pressure_plate",
+  "trapdoor": "cherry_trapdoor"
+ },
+ "exposed_copper": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "slab": "exposed_cut_copper_slab",
+  "stairs": "exposed_cut_copper_stairs",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "granite_wall"
+ },
+ "exposed_cut_copper": {
+  "button": "jungle_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "granite_wall"
+ },
+ "granite": {
+  "button": "jungle_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor"
+ },
+ "gray_concrete": {
+  "button": "polished_blackstone_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "dark_oak_door",
+  "fence": "dark_oak_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor",
+  "wall": "deepslate_tile_wall"
+ },
+ "gray_wool": {
+  "button": "polished_blackstone_button",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "crimson_trapdoor",
+  "wall": "deepslate_tile_wall"
+ },
+ "green_concrete": {
+  "button": "spruce_button",
+  "carpet": "green_carpet",
+  "cushion": "green_cushion",
+  "door": "spruce_door",
+  "fence": "spruce_fence",
+  "fence_gate": "spruce_fence_gate",
+  "pressure_plate": "spruce_pressure_plate",
+  "trapdoor": "spruce_trapdoor",
+  "wall": "deepslate_tile_wall"
+ },
+ "green_wool": {
+  "button": "spruce_button",
+  "door": "spruce_door",
+  "fence": "spruce_fence",
+  "fence_gate": "spruce_fence_gate",
+  "pressure_plate": "spruce_pressure_plate",
+  "trapdoor": "spruce_trapdoor",
+  "wall": "polished_deepslate_wall"
+ },
+ "jungle_planks": {
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "wall": "granite_wall"
+ },
+ "light_blue_concrete": {
+  "button": "stone_button",
+  "carpet": "cyan_carpet",
+  "cushion": "cyan_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "light_blue_wool": {
+  "button": "stone_button",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "light_gray_concrete": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "andesite_wall"
+ },
+ "light_gray_wool": {
+  "button": "poplar_button",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "andesite_wall"
+ },
+ "lime_concrete": {
+  "button": "spruce_button",
+  "carpet": "lime_carpet",
+  "cushion": "lime_cushion",
+  "door": "spruce_door",
+  "fence": "spruce_fence",
+  "fence_gate": "spruce_fence_gate",
+  "pressure_plate": "spruce_pressure_plate",
+  "trapdoor": "spruce_trapdoor",
+  "wall": "mud_brick_wall"
+ },
+ "lime_wool": {
+  "button": "oak_button",
+  "door": "oak_door",
+  "fence": "oak_fence",
+  "fence_gate": "oak_fence_gate",
+  "pressure_plate": "oak_pressure_plate",
+  "trapdoor": "oak_trapdoor",
+  "wall": "mud_brick_wall"
+ },
+ "magenta_concrete": {
+  "button": "stone_button",
+  "carpet": "magenta_carpet",
+  "cushion": "magenta_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "cinnabar_wall"
+ },
+ "magenta_wool": {
+  "button": "poplar_button",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "andesite_wall"
+ },
+ "mangrove_planks": {
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "wall": "cinnabar_brick_wall"
+ },
+ "mossy_cobblestone": {
+  "button": "jungle_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor"
+ },
+ "mossy_stone_bricks": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor"
+ },
+ "mud_bricks": {
+  "button": "jungle_button",
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor"
+ },
+ "nether_bricks": {
+  "button": "dark_oak_button",
+  "carpet": "black_carpet",
+  "cushion": "black_cushion",
+  "door": "dark_oak_door",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "dark_oak_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor"
+ },
+ "oak_planks": {
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "wall": "granite_wall"
+ },
+ "orange_concrete": {
+  "button": "acacia_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "trapdoor": "acacia_trapdoor",
+  "wall": "red_sandstone_wall"
+ },
+ "orange_wool": {
+  "button": "acacia_button",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "trapdoor": "acacia_trapdoor",
+  "wall": "resin_brick_wall"
+ },
+ "oxidized_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "slab": "oxidized_cut_copper_slab",
+  "stairs": "oxidized_cut_copper_stairs",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "oxidized_cut_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "pale_oak_planks": {
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "wall": "end_stone_brick_wall"
+ },
+ "pink_concrete": {
+  "button": "poplar_button",
+  "carpet": "magenta_carpet",
+  "cushion": "magenta_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "sulfur_wall"
+ },
+ "pink_wool": {
+  "button": "cherry_button",
+  "door": "cherry_door",
+  "fence": "cherry_fence",
+  "fence_gate": "cherry_fence_gate",
+  "pressure_plate": "cherry_pressure_plate",
+  "trapdoor": "cherry_trapdoor",
+  "wall": "sandstone_wall"
+ },
+ "polished_andesite": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "andesite_wall"
+ },
+ "polished_blackstone": {
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "dark_oak_door",
+  "fence": "dark_oak_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "trapdoor": "dark_oak_trapdoor"
+ },
+ "polished_blackstone_bricks": {
+  "button": "polished_blackstone_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "dark_oak_door",
+  "fence": "nether_brick_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor"
+ },
+ "polished_cinnabar": {
+  "button": "mangrove_button",
+  "carpet": "red_carpet",
+  "cushion": "red_cushion",
+  "door": "mangrove_door",
+  "fence": "mangrove_fence",
+  "fence_gate": "mangrove_fence_gate",
+  "pressure_plate": "mangrove_pressure_plate",
+  "trapdoor": "mangrove_trapdoor"
+ },
+ "polished_deepslate": {
+  "button": "polished_blackstone_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "polished_blackstone_pressure_plate",
+  "trapdoor": "crimson_trapdoor"
+ },
+ "polished_diorite": {
+  "button": "pale_oak_button",
+  "carpet": "pink_carpet",
+  "cushion": "pink_cushion",
+  "door": "pale_oak_door",
+  "fence": "pale_oak_fence",
+  "fence_gate": "pale_oak_fence_gate",
+  "pressure_plate": "pale_oak_pressure_plate",
+  "trapdoor": "pale_oak_trapdoor",
+  "wall": "diorite_wall"
+ },
+ "polished_granite": {
+  "button": "jungle_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "granite_wall"
+ },
+ "polished_sulfur": {
+  "button": "bamboo_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "bamboo_door",
+  "fence": "bamboo_fence",
+  "fence_gate": "bamboo_fence_gate",
+  "pressure_plate": "bamboo_pressure_plate",
+  "trapdoor": "bamboo_trapdoor"
+ },
+ "polished_tuff": {
+  "button": "stone_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "spruce_door",
+  "fence": "spruce_fence",
+  "fence_gate": "spruce_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "spruce_trapdoor"
+ },
+ "poplar_planks": {
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "wall": "andesite_wall"
+ },
+ "prismarine": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor"
+ },
+ "prismarine_bricks": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "purple_concrete": {
+  "button": "crimson_button",
+  "carpet": "purple_carpet",
+  "cushion": "purple_cushion",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "crimson_pressure_plate",
+  "trapdoor": "crimson_trapdoor",
+  "wall": "polished_tuff_wall"
+ },
+ "purple_wool": {
+  "button": "stone_button",
+  "door": "crimson_door",
+  "fence": "crimson_fence",
+  "fence_gate": "crimson_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "crimson_trapdoor",
+  "wall": "stone_brick_wall"
+ },
+ "purpur_block": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "andesite_wall"
+ },
+ "quartz_block": {
+  "button": "pale_oak_button",
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "door": "pale_oak_door",
+  "fence": "pale_oak_fence",
+  "fence_gate": "pale_oak_fence_gate",
+  "pressure_plate": "pale_oak_pressure_plate",
+  "trapdoor": "pale_oak_trapdoor",
+  "wall": "end_stone_brick_wall"
+ },
+ "red_concrete": {
+  "button": "mangrove_button",
+  "carpet": "red_carpet",
+  "cushion": "red_cushion",
+  "door": "mangrove_door",
+  "fence": "mangrove_fence",
+  "fence_gate": "mangrove_fence_gate",
+  "pressure_plate": "mangrove_pressure_plate",
+  "trapdoor": "mangrove_trapdoor",
+  "wall": "polished_cinnabar_wall"
+ },
+ "red_nether_bricks": {
+  "button": "dark_oak_button",
+  "carpet": "black_carpet",
+  "cushion": "black_cushion",
+  "door": "dark_oak_door",
+  "fence": "nether_brick_fence",
+  "fence_gate": "dark_oak_fence_gate",
+  "pressure_plate": "dark_oak_pressure_plate",
+  "trapdoor": "dark_oak_trapdoor"
+ },
+ "red_sandstone": {
+  "button": "acacia_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "trapdoor": "acacia_trapdoor"
+ },
+ "red_wool": {
+  "button": "mangrove_button",
+  "door": "mangrove_door",
+  "fence": "mangrove_fence",
+  "fence_gate": "mangrove_fence_gate",
+  "pressure_plate": "mangrove_pressure_plate",
+  "trapdoor": "mangrove_trapdoor",
+  "wall": "polished_cinnabar_wall"
+ },
+ "resin_bricks": {
+  "button": "acacia_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "trapdoor": "acacia_trapdoor"
+ },
+ "sandstone": {
+  "button": "cherry_button",
+  "carpet": "pink_carpet",
+  "cushion": "pink_cushion",
+  "door": "cherry_door",
+  "fence": "cherry_fence",
+  "fence_gate": "cherry_fence_gate",
+  "pressure_plate": "cherry_pressure_plate",
+  "trapdoor": "cherry_trapdoor"
+ },
+ "smooth_quartz": {
+  "button": "pale_oak_button",
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "door": "pale_oak_door",
+  "fence": "pale_oak_fence",
+  "fence_gate": "pale_oak_fence_gate",
+  "pressure_plate": "pale_oak_pressure_plate",
+  "trapdoor": "pale_oak_trapdoor",
+  "wall": "end_stone_brick_wall"
+ },
+ "smooth_red_sandstone": {
+  "button": "acacia_button",
+  "carpet": "red_carpet",
+  "cushion": "red_cushion",
+  "door": "acacia_door",
+  "fence": "acacia_fence",
+  "fence_gate": "acacia_fence_gate",
+  "pressure_plate": "acacia_pressure_plate",
+  "trapdoor": "acacia_trapdoor",
+  "wall": "red_sandstone_wall"
+ },
+ "smooth_sandstone": {
+  "button": "cherry_button",
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "door": "cherry_door",
+  "fence": "cherry_fence",
+  "fence_gate": "cherry_fence_gate",
+  "pressure_plate": "cherry_pressure_plate",
+  "trapdoor": "cherry_trapdoor",
+  "wall": "sandstone_wall"
+ },
+ "spruce_planks": {
+  "carpet": "brown_carpet",
+  "cushion": "brown_cushion",
+  "wall": "mud_brick_wall"
+ },
+ "stone": {
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "stone_brick_wall"
+ },
+ "stone_bricks": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor"
+ },
+ "sulfur": {
+  "button": "birch_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "birch_door",
+  "fence": "birch_fence",
+  "fence_gate": "birch_fence_gate",
+  "pressure_plate": "birch_pressure_plate",
+  "trapdoor": "birch_trapdoor"
+ },
+ "sulfur_bricks": {
+  "button": "bamboo_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "bamboo_door",
+  "fence": "bamboo_fence",
+  "fence_gate": "bamboo_fence_gate",
+  "pressure_plate": "bamboo_pressure_plate",
+  "trapdoor": "bamboo_trapdoor"
+ },
+ "tuff": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor"
+ },
+ "tuff_bricks": {
+  "button": "warped_button",
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "warped_pressure_plate",
+  "trapdoor": "warped_trapdoor"
+ },
+ "warped_planks": {
+  "carpet": "gray_carpet",
+  "cushion": "gray_cushion",
+  "wall": "cobbled_deepslate_wall"
+ },
+ "waxed_copper_block": {
+  "button": "jungle_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "slab": "waxed_cut_copper_slab",
+  "stairs": "waxed_cut_copper_stairs",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "granite_wall"
+ },
+ "waxed_cut_copper": {
+  "button": "jungle_button",
+  "carpet": "orange_carpet",
+  "cushion": "orange_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "brick_wall"
+ },
+ "waxed_exposed_copper": {
+  "button": "poplar_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "poplar_pressure_plate",
+  "slab": "exposed_cut_copper_slab",
+  "stairs": "exposed_cut_copper_stairs",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "granite_wall"
+ },
+ "waxed_exposed_cut_copper": {
+  "button": "jungle_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "jungle_door",
+  "fence": "jungle_fence",
+  "fence_gate": "jungle_fence_gate",
+  "pressure_plate": "jungle_pressure_plate",
+  "trapdoor": "jungle_trapdoor",
+  "wall": "granite_wall"
+ },
+ "waxed_oxidized_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "slab": "oxidized_cut_copper_slab",
+  "stairs": "oxidized_cut_copper_stairs",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "waxed_oxidized_cut_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "warped_door",
+  "fence": "warped_fence",
+  "fence_gate": "warped_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "warped_trapdoor",
+  "wall": "prismarine_wall"
+ },
+ "waxed_weathered_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "slab": "waxed_weathered_cut_copper_slab",
+  "stairs": "waxed_weathered_cut_copper_stairs",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "mossy_stone_brick_wall"
+ },
+ "waxed_weathered_cut_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "mossy_stone_brick_wall"
+ },
+ "weathered_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "slab": "waxed_weathered_cut_copper_slab",
+  "stairs": "waxed_weathered_cut_copper_stairs",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "mossy_stone_brick_wall"
+ },
+ "weathered_cut_copper": {
+  "button": "stone_button",
+  "carpet": "light_gray_carpet",
+  "cushion": "light_gray_cushion",
+  "door": "poplar_door",
+  "fence": "poplar_fence",
+  "fence_gate": "poplar_fence_gate",
+  "pressure_plate": "stone_pressure_plate",
+  "trapdoor": "poplar_trapdoor",
+  "wall": "mossy_stone_brick_wall"
+ },
+ "white_concrete": {
+  "button": "pale_oak_button",
+  "carpet": "white_carpet",
+  "cushion": "white_cushion",
+  "door": "pale_oak_door",
+  "fence": "pale_oak_fence",
+  "fence_gate": "pale_oak_fence_gate",
+  "pressure_plate": "pale_oak_pressure_plate",
+  "trapdoor": "pale_oak_trapdoor",
+  "wall": "end_stone_brick_wall"
+ },
+ "white_wool": {
+  "button": "pale_oak_button",
+  "door": "pale_oak_door",
+  "fence": "pale_oak_fence",
+  "fence_gate": "pale_oak_fence_gate",
+  "pressure_plate": "pale_oak_pressure_plate",
+  "trapdoor": "pale_oak_trapdoor",
+  "wall": "end_stone_brick_wall"
+ },
+ "yellow_concrete": {
+  "button": "bamboo_button",
+  "carpet": "yellow_carpet",
+  "cushion": "yellow_cushion",
+  "door": "bamboo_door",
+  "fence": "bamboo_fence",
+  "fence_gate": "bamboo_fence_gate",
+  "pressure_plate": "bamboo_pressure_plate",
+  "trapdoor": "bamboo_trapdoor",
+  "wall": "polished_sulfur_wall"
+ },
+ "yellow_wool": {
+  "button": "bamboo_button",
+  "door": "bamboo_door",
+  "fence": "bamboo_fence",
+  "fence_gate": "bamboo_fence_gate",
+  "pressure_plate": "bamboo_pressure_plate",
+  "trapdoor": "bamboo_trapdoor",
+  "wall": "polished_sulfur_wall"
+ }
+}

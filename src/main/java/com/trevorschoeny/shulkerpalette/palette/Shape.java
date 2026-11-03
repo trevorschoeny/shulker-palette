@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The shape a palette places its materials in (creative only): a full block, or one of the
@@ -35,6 +36,12 @@ public enum Shape implements StringRepresentable {
     @Override
     public String getSerializedName() {
         return name;
+    }
+
+    /** This shape by its serialized name ("fence_gate"), or null. */
+    public static @Nullable Shape byName(String name) {
+        for (Shape shape : values()) if (shape.getSerializedName().equals(name)) return shape;
+        return null;
     }
 
     public static final Codec<Shape> CODEC = StringRepresentable.fromEnum(Shape::values);
