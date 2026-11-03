@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.BlockFamily;
 import net.minecraft.data.BlockFamilies;
@@ -17,14 +18,28 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.EmptyBlockGetter;
+import net.minecraft.world.level.block.BasePressurePlateBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.CarpetBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.WallBlock;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Which shapes each material comes in, from vanilla's own table of block families (stone:
  * stairs, slab, wall, button, pressure plate; oak: stairs, slab, fence, gate, door, trapdoor...).
  * Cushions aren't in that table (26.3 crafts them from wool slabs), so each color's wool gets its
- * cushion here too.
+ * cushion here too. Every other solid full block or variant block is its own material with just
+ * that one variant (dirt: block), so general mode can match it too.
  *
  * <p>Two ways to read it, matching a palette's two variant modes:
  * <ul>
@@ -32,9 +47,9 @@ import org.jspecify.annotations.Nullable;
  *   <li><b>General</b> ({@link #closest}): every variant; a gap (stone has no wall of its own,
  *       concrete nothing past stairs and slab) is filled from {@value #GAP_FILL_PATH}, the
  *       closest-looking block that has the shape, picked once by
- *       {@code tools/gen-shape-gap-fill.py} from the vanilla textures (average color and a
- *       roughness score, so a flat texture isn't matched to a busy one just because their
- *       colors line up) and shipped baked in.</li>
+ *       {@code tools/gen-shape-gap-fill.py} from the vanilla textures (color first, then
+ *       texture among the near colors, so speckled stone gets an andesite wall, not lined
+ *       stone bricks) and shipped baked in.</li>
  * </ul>
  * {@link Shape#NONE} is every item as itself, in both.
  *
@@ -59,11 +74,11 @@ public final class Shapes {
             Map.entry(BlockFamily.Variant.TRAPDOOR, Shape.TRAPDOOR),
             Map.entry(BlockFamily.Variant.DOOR, Shape.DOOR));
 
-    /** Material (a family's base block) to its own shapes, BLOCK included. */
+    /** Material (a family's base block, or a block on its own) to its own shapes. */
     private static @Nullable Map<Item, Map<Shape, Item>> byMaterial;
     /** Material to the closest-looking stand-in for each shape it lacks. */
     private static @Nullable Map<Item, Map<Shape, Item>> nearest;
-    /** Any item of a family, its base included, to the family's base. */
+    /** Any item of a family, its base included, to the family's base; a block on its own to itself. */
     private static @Nullable Map<Item, Item> materialOf;
 
     /** The baked gap-fill table: {@code tools/gen-shape-gap-fill.py}'s output. */
@@ -110,7 +125,34 @@ public final class Shapes {
             material.putIfAbsent(wool, wool);
             material.putIfAbsent(cushion, wool);
         }
+        // Every other block that's a full cube or one of the variant shapes, on its own: its own
+        // material, having just that one shape (dirt: block; moss carpet: carpet). In the table so
+        // general mode can find it a closest match for every other variant, like any family.
+        for (Item item : BuiltInRegistries.ITEM) {
+            if (material.containsKey(item) || !(item instanceof BlockItem blockItem)) continue;
+            Shape shape = standaloneShape(blockItem.getBlock());
+            if (shape == null) continue;
+            shapes.computeIfAbsent(item, i -> new EnumMap<>(Shape.class)).put(shape, item);
+            material.put(item, item);
+        }
         return shapes;
+    }
+
+    /** The variant a block outside every family is, by its kind: a solid full cube is a block; null if neither. */
+    private static @Nullable Shape standaloneShape(Block block) {
+        if (block instanceof StairBlock) return Shape.STAIRS;
+        if (block instanceof SlabBlock) return Shape.SLAB;
+        if (block instanceof WallBlock) return Shape.WALL;
+        if (block instanceof FenceBlock) return Shape.FENCE;
+        if (block instanceof FenceGateBlock) return Shape.FENCE_GATE;
+        if (block instanceof CarpetBlock) return Shape.CARPET;
+        if (block instanceof BasePressurePlateBlock) return Shape.PRESSURE_PLATE;
+        if (block instanceof ButtonBlock) return Shape.BUTTON;
+        if (block instanceof TrapDoorBlock) return Shape.TRAPDOOR;
+        if (block instanceof DoorBlock) return Shape.DOOR;
+        // A full collision box, not a full outline: tall grass and vines outline a whole block
+        // but are walked through, so they aren't building blocks.
+        return block.defaultBlockState().isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO) ? Shape.BLOCK : null;
     }
 
     private static @Nullable Item item(String path) {
@@ -147,21 +189,21 @@ public final class Shapes {
 
     /**
      * This item's material in this variant, its own, or null when the material doesn't come in
-     * it. None is the item itself. An item outside every family (dirt, a lantern) has only its
+     * it. None is the item itself. An item outside the table (a torch, a lantern) has only its
      * full block: itself.
      */
     public static @Nullable Item own(Item item, Shape shape) {
         if (shape == Shape.NONE) return item;
         build();
         Item material = materialOf.get(item);
-        if (material == null) return shape == Shape.BLOCK ? item : null;
+        if (material == null) return shape == Shape.BLOCK ? item : null; // a torch, a flower: itself
         return byMaterial.get(material).get(shape);
     }
 
     /**
      * This item's material in this variant, or the closest-looking block that has it when the
-     * material doesn't: general mode. Null only for an item the table knows nothing about
-     * (dirt) and a variant it lacks.
+     * material doesn't: general mode. Null only for an item outside the table (a torch, a
+     * flower) and a variant it lacks.
      */
     public static @Nullable Item closest(Item item, Shape shape) {
         Item own = own(item, shape);

@@ -34,7 +34,7 @@ public class ShapeChecks implements FabricClientGameTest {
 
     /**
      * Station "shulkerpalette:shapes": the variants a material really has (cushions included);
-     * general mode's closest match for a gap (stone's wall is stone bricks, not granite); what
+     * general mode's closest match for a gap (stone's wall is andesite; dirt's gate is spruce); what
      * each mode offers, None first; None placing the box's items as they are; specific placing
      * only blocks that have the variant, at their own ratios; general giving every block its own
      * variant or closest match; survival ignoring variants; old saved palettes reading as None;
@@ -53,11 +53,18 @@ public class ShapeChecks implements FabricClientGameTest {
         if (Shapes.own(Items.DIRT, Shape.BLOCK) != Items.DIRT) return "dirt isn't its own block";
 
         // Gaps: specific has none of its own; general's closest match, pinned so a bad
-        // regeneration is caught (granite would be the wrong pick for stone's wall).
+        // regeneration is caught. Trev's calls: stone's wall is andesite (close in color,
+        // speckled like stone; stone bricks are lined), dirt's gate spruce (dark brown, not
+        // oak), stone's gate the gray wood. A block outside every family (dirt) and a variant
+        // of a family (a stone slab) get matches too.
         if (Shapes.own(Items.STONE, Shape.WALL) != null) return "stone has a wall of its own";
         Item stoneWall = Shapes.closest(Items.STONE, Shape.WALL);
-        if (stoneWall != Items.STONE_BRICK_WALL) return "stone's closest wall is " + stoneWall + ", not stone bricks";
-        if (Shapes.closest(Items.DIRT, Shape.WALL) != null) return "dirt has a closest wall";
+        if (stoneWall != Items.ANDESITE_WALL) return "stone's closest wall is " + stoneWall + ", not andesite";
+        if (Shapes.closest(Items.STONE_SLAB, Shape.WALL) != Items.ANDESITE_WALL) return "a stone slab's closest wall isn't stone's";
+        Item dirtGate = Shapes.closest(Items.DIRT, Shape.FENCE_GATE);
+        if (dirtGate != Items.SPRUCE_FENCE_GATE) return "dirt's closest fence gate is " + dirtGate + ", not spruce";
+        Item stoneGate = Shapes.closest(Items.STONE, Shape.FENCE_GATE);
+        if (stoneGate != Items.POPLAR_FENCE_GATE) return "stone's closest fence gate is " + stoneGate + ", not poplar";
 
         // What each mode offers for stone and dirt: specific, None and stone's own; general, all.
         List<ItemStack> stoneAndDirt = List.of(new ItemStack(Items.STONE, 32), new ItemStack(Items.DIRT, 32));
@@ -94,12 +101,17 @@ public class ShapeChecks implements FabricClientGameTest {
         Item specificWall = Draw.roll(none.withShape(Shape.WALL), contents, random, true).orElseThrow().item().value();
         if (specificWall != Items.STONE && specificWall != Items.DIRT) return "a specific wall nothing has gave " + specificWall;
 
-        // General wall: stone takes its closest match, dirt (no match at all) drops out.
+        // General wall: each block takes its closest match, so both stay in play.
         Palette generalWall = none.withShape(Shape.WALL).withGeneral(true);
-        for (int i = 0; i < 30; i++) {
+        Item dirtWall = Shapes.closest(Items.DIRT, Shape.WALL);
+        boolean sawStoneWall = false, sawDirtWall = false;
+        for (int i = 0; i < 60; i++) {
             Item rolled = Draw.roll(generalWall, contents, random, true).orElseThrow().item().value();
-            if (rolled != Items.STONE_BRICK_WALL) return "a general wall roll gave " + rolled;
+            sawStoneWall |= rolled == Items.ANDESITE_WALL;
+            sawDirtWall |= rolled == dirtWall;
+            if (rolled != Items.ANDESITE_WALL && rolled != dirtWall) return "a general wall roll gave " + rolled;
         }
+        if (dirtWall == null || !sawStoneWall || !sawDirtWall) return "general wall didn't place both blocks' walls (dirt's: " + dirtWall + ")";
 
         // A palette saved before None existed: "block" was the default, so it reads as None;
         // any other old shape carries over.
