@@ -60,9 +60,10 @@ public final class PaletteTransfer {
 
     /**
      * Load. In creative the box takes the saved rows, mode and items, replacing what it held
-     * (creative items are free). In survival it takes the mode and a cheat sheet: ghosts of
-     * the saved items in the empty slots, for the player to fill from real blocks. Survival
-     * keeps the box's own rows, so slots past them are left off the sheet.
+     * (creative items are free). In survival it takes the mode and a reservation per slot: a
+     * ghost of the saved item, capped at its saved count, for the player to fill from real
+     * blocks (SlotKit draws the ghost and refuses anything else). Survival keeps the box's own
+     * rows, so slots past them are left untouched.
      */
     private static void load(ServerPlayer player, Load payload) {
         if (!payload.palette().valid()) return;
@@ -71,9 +72,10 @@ public final class PaletteTransfer {
         PaletteHolder holder = menu.shulkerpalette$holder();
         SavedPalette saved = payload.palette();
         Palette current = holder.shulkerpalette$palette();
+        holder.shulkerpalette$setCheatSheet(List.of()); // any pre-Hiddenite leftover is stale once a fresh load lands
 
         // Creative takes the saved rows (extra rows are creative); survival keeps the box's own,
-        // and slots past them are left off the sheet.
+        // and slots past them are left untouched.
         int rows = player.isCreative() ? saved.rows() : current.rows();
         holder.shulkerpalette$setPalette(new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, current.shape(), current.general(), Optional.empty(), 0));
         int room = rows * Palette.ROW_WIDTH;
@@ -82,12 +84,10 @@ public final class PaletteTransfer {
             // Every slot of the room, not just the rows reported, so no old extra row hides items.
             for (int i = 0; i < Palette.MAX_ROWS * Palette.ROW_WIDTH; i++) box.setItem(i, ItemStack.EMPTY);
             for (SavedPalette.Entry entry : fitting) box.setItem(entry.slot(), entry.item().create());
-            holder.shulkerpalette$setCheatSheet(List.of());
         } else {
-            holder.shulkerpalette$setCheatSheet(fitting);
+            CheatSheet.applyAsReservations(box, room, fitting);
         }
         box.setChanged();
-        CheatSheet.send(player, payload.containerId(), holder);
         player.containerMenu.broadcastChanges();
     }
 }

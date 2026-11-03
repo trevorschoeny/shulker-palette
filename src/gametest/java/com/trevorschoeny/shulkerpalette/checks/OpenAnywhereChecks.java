@@ -1,12 +1,12 @@
 package com.trevorschoeny.shulkerpalette.checks;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.trevlar.slotkit.api.reserve.Reservation;
+import com.trevlar.slotkit.api.reserve.Reservations;
 import com.trevorschoeny.openanywhere.api.OpenItems;
 import com.trevorschoeny.openanywhere.api.ShownItem;
-import com.trevorschoeny.shulkerpalette.compat.OpenAnywhereClient;
 import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.mixin.ScreenPosAccessor;
-import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
@@ -44,8 +44,8 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
 
     /**
      * Station "shulkerpalette:open_anywhere": a palette box opened from the inventory through Open
-     * Anywhere is the one its controls change (named as the box in front); its cheat sheet's ghost
-     * shows in the right slot; a survival load sets ghosts on it; a creative load fills its slots;
+     * Anywhere is the one its controls change (named as the box in front); a survival load sets a
+     * reservation on it, which SlotKit draws as the ghost; a creative load fills its slots;
      * a 5-row box shows its rows past 3 and shift-clicks out of them.
      */
     private static void openAnywhere(ClientGameTestContext ctx, SceneWorld.Opened scene) {
@@ -56,16 +56,6 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
         open(ctx);
         ctx.takeScreenshot("shulkerpalette-open-anywhere");
 
-        // The ghost: the cheat sheet names slot 5, diorite.
-        String ghost = ctx.computeOnClient(mc -> {
-            var menu = ((AbstractContainerScreen<?>) mc.gui.screen()).getMenu();
-            for (Slot slot : menu.slots) {
-                if (OpenAnywhereClient.ghost(menu, slot).is(Items.DIORITE)) return null;
-            }
-            return "no diorite ghost in the open box";
-        });
-        if (ghost != null) throw new AssertionError(ghost);
-
         // Power, sent for the box in front: it goes off; the hand is empty.
         ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, Target.SHOWN)));
         ctx.waitTicks(5);
@@ -74,15 +64,15 @@ public class OpenAnywhereChecks implements FabricClientGameTest {
         boolean stillOpen = scene.world().getServer().computeOnServer(server -> OpenItems.shown(server.getPlayerList().getPlayers().getFirst()) != null);
         if (!stillOpen) throw new AssertionError("changing the open box's palette closed it");
 
-        // Survival load: a cheat sheet on the box, its items untouched.
+        // Survival load: a reservation on slot 4, its items untouched.
         SavedPalette wall = new SavedPalette(Mode.RANDOM, 3, List.of(
                 new SavedPalette.Entry(4, ItemStackTemplate.fromNonEmptyStack(new ItemStack(Items.ANDESITE, 7)))));
         ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.LoadHeld(wall, Target.SHOWN)));
         ctx.waitTicks(5);
         String survival = scene.world().getServer().computeOnServer(server -> {
             ItemStack box = box(server.getPlayerList().getPlayers().getFirst());
-            List<SavedPalette.Entry> sheet = box.get(CheatSheet.COMPONENT);
-            if (sheet == null || sheet.size() != 1 || sheet.getFirst().slot() != 4) return "survival load set the cheat sheet to " + sheet;
+            Reservation r = Reservations.get(box, 4);
+            if (!r.item().is(Items.ANDESITE) || r.limit(r.item()) != 7) return "survival load set slot 4's reservation to " + r;
             return null;
         });
         if (survival != null) throw new AssertionError(survival);

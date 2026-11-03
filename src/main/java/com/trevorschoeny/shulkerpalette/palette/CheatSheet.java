@@ -1,28 +1,28 @@
 package com.trevorschoeny.shulkerpalette.palette;
 
+import com.trevlar.slotkit.api.reserve.Reservation;
+import com.trevlar.slotkit.api.reserve.Reservations;
 import com.trevorschoeny.shulkerpalette.ShulkerPalette;
+import java.util.HashMap;
 import java.util.List;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import java.util.Map;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
 
 /**
- * A survival palette's cheat sheet: what belongs in each slot, loaded from a saved palette.
- * The shulker's empty slots show those items as ghosts until they are filled, so a palette
- * shared as text can be rebuilt from real blocks.
+ * The legacy survival cheat sheet: what belonged in each slot, before Hiddenite turned that
+ * into a SlotKit {@link Reservation} per slot (a ghost item, strict, capped at the ratio's
+ * count) instead of Shulker Palette's own ghost. SlotKit's own ghosts and vetoes take it from
+ * there, so nothing here draws or syncs anything any more.
  *
- * <p>It lives on the shulker as its own component next to the palette, so it travels the
- * same way: on the item, among a placed box's leftover components, and onto the drop when
- * the box is broken. A placed box's components never reach the client, so the server sends
- * the open box's cheat sheet when the screen opens and whenever it changes ({@link Sync}).
+ * <p>{@link #COMPONENT} and {@link #migrate} stay only to carry an old box across the upgrade:
+ * a box saved before Hiddenite still has this component, read once (on open, {@link
+ * com.trevorschoeny.shulkerpalette.mixin.ShulkerBoxMenuMixin}) and turned into reservations.
  */
 public final class CheatSheet {
     private CheatSheet() {}
@@ -33,23 +33,48 @@ public final class CheatSheet {
             .cacheEncoding()
             .build();
 
-    /** Server to client: the cheat sheet of the box open in menu {@code containerId} (empty: none). */
-    public record Sync(int containerId, List<SavedPalette.Entry> entries) implements CustomPacketPayload {
-        public static final Type<Sync> TYPE = new Type<>(Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "cheat_sheet"));
-        public static final StreamCodec<RegistryFriendlyByteBuf, Sync> STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.VAR_INT, Sync::containerId,
-                SavedPalette.Entry.STREAM_CODEC.apply(ByteBufCodecs.list(Palette.MAX_ROWS * Palette.ROW_WIDTH)), Sync::entries,
-                Sync::new);
-        @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
-    }
-
     public static void register() {
         Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
                 Identifier.fromNamespaceAndPath(ShulkerPalette.MOD_ID, "cheat_sheet"), COMPONENT);
-        PayloadTypeRegistry.clientboundPlay().register(Sync.TYPE, Sync.STREAM_CODEC);
     }
 
-    public static void send(ServerPlayer player, int containerId, PaletteHolder holder) {
-        ServerPlayNetworking.send(player, new Sync(containerId, holder.shulkerpalette$cheatSheet()));
+    /** A box still carrying a pre-Hiddenite cheat sheet: its entries become reservations on {@code container}, once. */
+    public static void migrate(Container container, PaletteHolder holder) {
+        List<SavedPalette.Entry> legacy = holder.shulkerpalette$cheatSheet();
+        if (legacy.isEmpty()) return;
+        for (SavedPalette.Entry entry : legacy) {
+            if (entry.slot() >= container.getContainerSize()) continue;
+            Reservations.set(container, entry.slot(), reservationFor(entry));
+        }
+        holder.shulkerpalette$setCheatSheet(List.of());
+    }
+
+    /**
+     * Reservations equivalent to {@code entries} over {@code box}'s slots {@code [0, room)}: each
+     * entry's item, capped at its saved count; every other slot in {@code room} cleared. What a
+     * survival Load applies instead of the old ghost cheat sheet.
+     */
+    public static void applyAsReservations(Container box, int room, List<SavedPalette.Entry> entries) {
+        Map<Integer, SavedPalette.Entry> bySlot = new HashMap<>();
+        for (SavedPalette.Entry entry : entries) bySlot.put(entry.slot(), entry);
+        for (int i = 0; i < room; i++) {
+            SavedPalette.Entry entry = bySlot.get(i);
+            Reservations.set(box, i, entry == null ? Reservation.NONE : reservationFor(entry));
+        }
+    }
+
+    /** {@link #applyAsReservations(Container, int, List)}, for a box held as an item. */
+    public static void applyAsReservations(ItemStack box, int room, List<SavedPalette.Entry> entries) {
+        Map<Integer, SavedPalette.Entry> bySlot = new HashMap<>();
+        for (SavedPalette.Entry entry : entries) bySlot.put(entry.slot(), entry);
+        for (int i = 0; i < room; i++) {
+            SavedPalette.Entry entry = bySlot.get(i);
+            Reservations.set(box, i, entry == null ? Reservation.NONE : reservationFor(entry));
+        }
+    }
+
+    private static Reservation reservationFor(SavedPalette.Entry entry) {
+        ItemStack stack = entry.item().create();
+        return Reservation.of(stack).withCap(stack.getCount());
     }
 }

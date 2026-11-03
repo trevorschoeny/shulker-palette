@@ -14,25 +14,19 @@ import com.trevorschoeny.shulkerpalette.ShulkerPalette;
 import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.library.LibraryClient;
 import com.trevorschoeny.shulkerpalette.menu.PaletteControls;
-import com.trevorschoeny.shulkerpalette.palette.CheatSheet;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
-import com.trevorschoeny.shulkerpalette.palette.SavedPalette;
 import com.trevorschoeny.shulkerpalette.palette.Target;
 import java.util.List;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ShulkerBoxMenu;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 /**
  * Shulker Palette on a box opened through Open Anywhere: the palette's icon column beside the
- * box's screen, its library dialogs on it, and the cheat sheet's ghosts in the box's empty
- * slots. Loaded only when Open Anywhere is installed.
+ * box's screen and its library dialogs on it. SlotKit draws the reservation ghosts in the box's
+ * empty slots itself, on any menu. Loaded only when Open Anywhere is installed.
  *
  * <p>The box is the one whose screen is in front ({@link ShownItem#get()}), on vanilla's shulker
  * box screen; the controls name it to the server as {@link Target#SHOWN}, and the server checks
@@ -68,21 +62,5 @@ public final class OpenAnywhereClient {
             if (screen != lastScreen && screen instanceof ShulkerBoxScreen) LibraryClient.reset();
             lastScreen = screen;
         });
-    }
-
-    /**
-     * The cheat sheet's ghost for this slot, if it is an empty slot of the box in front and the
-     * box's cheat sheet names something for it; else empty. Read from the box itself, which
-     * carries its cheat sheet while open; the box's slots are the menu's non-player slots, by
-     * box index.
-     */
-    public static ItemStack ghost(AbstractContainerMenu menu, Slot slot) {
-        if (!(menu instanceof ShulkerBoxMenu) || slot.container instanceof Inventory) return ItemStack.EMPTY;
-        OpenItems.OpenItem item = ShownItem.get();
-        if (item == null) return ItemStack.EMPTY;
-        List<SavedPalette.Entry> sheet = item.stack().get(CheatSheet.COMPONENT);
-        if (sheet == null) return ItemStack.EMPTY;
-        for (SavedPalette.Entry entry : sheet) if (entry.slot() == slot.getContainerSlot()) return entry.item().create();
-        return ItemStack.EMPTY;
     }
 }

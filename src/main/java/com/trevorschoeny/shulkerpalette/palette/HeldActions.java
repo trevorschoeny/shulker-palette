@@ -90,22 +90,26 @@ public final class HeldActions {
                 if (action == PanelActions.VARIANT_MODE) say(player, changed.general() ? "shulkerpalette.variant.general" : "shulkerpalette.variant.specific");
             }
             case PanelActions.SAVE -> ServerPlayNetworking.send(player, new PaletteTransfer.Saved(SavedPalette.of(palette, box(target, palette))));
-            case PanelActions.CLEAR -> shulker.remove(CheatSheet.COMPONENT);
+            case PanelActions.CLEAR -> {
+                shulker.remove(CheatSheet.COMPONENT);
+                CheatSheet.applyAsReservations(shulker, palette.rows() * Palette.ROW_WIDTH, List.of());
+            }
             default -> { } // anything else from the wire is ignored
         }
     }
 
     /**
      * Load into the box. Creative takes the saved rows, mode and items, replacing what the box
-     * held; survival takes the mode and a cheat sheet, keeping the box's own rows (slots past them
-     * are left off). An open box has only the slots its menu shows, so a slot past those is left
-     * off too.
+     * held; survival takes the mode and a reservation per slot (SlotKit's ghost, capped at the
+     * saved count), keeping the box's own rows (slots past them are left untouched). An open box
+     * has only the slots its menu shows, so a slot past those is left untouched too.
      */
     private static void load(ServerPlayer player, SavedPalette saved, int menuSlot) {
         Target target = Target.resolve(player, menuSlot);
         if (target == null || !saved.valid()) return;
         ItemStack shulker = target.stack();
         Palette current = shulker.getOrDefault(Palette.COMPONENT, Palette.OFF);
+        shulker.remove(CheatSheet.COMPONENT); // any pre-Hiddenite leftover is stale once a fresh load lands
         int rows = player.isCreative() ? saved.rows() : current.rows();
         shulker.set(Palette.COMPONENT, new Palette(current.on(), saved.mode(), current.repaint(), rows, 0, current.shape(), current.general(), Optional.empty(), 0));
         int room = target.slots() == null ? rows * Palette.ROW_WIDTH : Math.min(rows * Palette.ROW_WIDTH, target.slots().size());
@@ -121,11 +125,8 @@ public final class HeldActions {
                 for (int i = 0; i < slots.size(); i++) slots.get(i).set(i < items.size() ? items.get(i) : ItemStack.EMPTY);
                 player.containerMenu.broadcastChanges();
             }
-            shulker.remove(CheatSheet.COMPONENT);
-        } else if (fitting.isEmpty()) {
-            shulker.remove(CheatSheet.COMPONENT);
         } else {
-            shulker.set(CheatSheet.COMPONENT, fitting);
+            CheatSheet.applyAsReservations(shulker, room, fitting);
         }
     }
 

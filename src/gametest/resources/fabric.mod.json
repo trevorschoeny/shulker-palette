@@ -10,7 +10,7 @@
       "com.trevorschoeny.shulkerpalette.checks.ShapeChecks",
       "com.trevorschoeny.shulkerpalette.checks.MenuChecks",
       "com.trevorschoeny.shulkerpalette.checks.OpenAnywhereChecks",
-      "com.trevorschoeny.shulkerpalette.checks.CheatSheetChecks"
+      "com.trevorschoeny.shulkerpalette.checks.ReservationChecks"
     ]
   }
 }

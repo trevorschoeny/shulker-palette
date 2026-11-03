@@ -74,10 +74,10 @@ abstract class ShulkerBoxMenuMixin extends AbstractContainerMenu implements Pale
                 : SHULKERPALETTE$OPEN_ANYWHERE ? OpenAnywhereServer.holder(container) : null;
         if (holder != null) {
             shulkerpalette$holder = holder;
-            // The client can't read a placed box's components; send it the cheat sheet. (This
-            // arrives before the screen opens; the client keeps it by container id.)
-            if (inventory.player instanceof ServerPlayer server && !holder.shulkerpalette$cheatSheet().isEmpty()) {
-                CheatSheet.send(server, containerId, holder);
+            // A box still carrying a pre-Hiddenite cheat sheet becomes reservations the first
+            // time it's opened after the upgrade; SlotKit syncs and draws them from here on.
+            if (inventory.player instanceof ServerPlayer && !holder.shulkerpalette$cheatSheet().isEmpty()) {
+                CheatSheet.migrate(container, holder);
             }
             shulkerpalette$state = addDataSlot(new DataSlot() {
                 @Override public int get() { return PanelActions.pack(holder.shulkerpalette$palette()); }
