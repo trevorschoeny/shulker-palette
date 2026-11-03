@@ -1,6 +1,7 @@
 package com.trevorschoeny.shulkerpalette;
 
 import com.trevorschoeny.shulkerpalette.compat.OpenAnywhereClient;
+import com.trevorschoeny.shulkerpalette.menu.HoverOpen;
 import net.fabricmc.loader.api.FabricLoader;
 import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
@@ -17,6 +18,7 @@ public final class ShulkerPaletteClient implements ClientModInitializer {
     public void onInitializeClient() {
         Config.load();
         KeysClient.register();
+        HoverOpen.register();
         RowGrid.register();
         LibraryClient.register();
         CheatSheetClient.register();

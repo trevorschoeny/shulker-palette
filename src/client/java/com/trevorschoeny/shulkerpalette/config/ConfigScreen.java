@@ -31,11 +31,6 @@ public final class ConfigScreen {
         OptionGroup.Builder keys = OptionGroup.createBuilder()
                 .name(Component.translatable("shulkerpalette.config.keys"));
         chord(keys, KeysClient.MODIFIER, "key.shulkerpalette.palette", "shulkerpalette.config.modifier.description");
-        chord(keys, KeysClient.SHAPE, "key.shulkerpalette.shape_scroll", "shulkerpalette.config.shape.description");
-        chord(keys, KeysClient.PREVIOUS_SHAPE, "key.shulkerpalette.shape_previous", "shulkerpalette.config.shape_step.description");
-        chord(keys, KeysClient.NEXT_SHAPE, "key.shulkerpalette.shape_next", "shulkerpalette.config.shape_step.description");
-        chord(keys, KeysClient.POWER, "key.shulkerpalette.power", "shulkerpalette.config.power.description");
-        chord(keys, KeysClient.REPAINT, "key.shulkerpalette.repaint", "shulkerpalette.config.repaint.description");
 
         // The library is a MenuKit page (lists of palettes, later the item picker), which YACL
         // can't host, so it opens as a screen of its own.

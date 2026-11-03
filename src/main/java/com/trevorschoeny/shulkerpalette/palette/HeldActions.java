@@ -64,9 +64,14 @@ public final class HeldActions {
         PayloadTypeRegistry.serverboundPlay().register(Act.TYPE, Act.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay().register(LoadHeld.TYPE, LoadHeld.STREAM_CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Act.TYPE,
-                (payload, context) -> context.server().execute(() -> act(context.player(), payload.action(), payload.menuSlot())));
+                (payload, context) -> context.server().execute(() -> { act(context.player(), payload.action(), payload.menuSlot()); sync(context.player()); }));
         ServerPlayNetworking.registerGlobalReceiver(LoadHeld.TYPE,
-                (payload, context) -> context.server().execute(() -> load(context.player(), payload.palette(), payload.menuSlot())));
+                (payload, context) -> context.server().execute(() -> { load(context.player(), payload.palette(), payload.menuSlot()); sync(context.player()); }));
+    }
+
+    /** A box changed in a slot (not the hand) reaches the client through its menu's sync. */
+    private static void sync(ServerPlayer player) {
+        player.containerMenu.broadcastChanges();
     }
 
     private static void act(ServerPlayer player, int action, int menuSlot) {

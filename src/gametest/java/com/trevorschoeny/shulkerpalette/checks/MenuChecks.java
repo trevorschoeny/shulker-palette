@@ -2,11 +2,16 @@ package com.trevorschoeny.shulkerpalette.checks;
 
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.trevorschoeny.keybindery.api.Chord;
-import com.trevorschoeny.keybindery.api.KeybinderyAPI;
 import com.trevorschoeny.shulkerpalette.config.ConfigScreen;
 import com.trevorschoeny.shulkerpalette.config.KeysClient;
 import com.trevorschoeny.shulkerpalette.menu.PaletteScreen;
+import com.trevorschoeny.shulkerpalette.mixin.ScreenPosAccessor;
+import com.trevorschoeny.shulkerpalette.palette.Target;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import com.trevorschoeny.shulkerpalette.palette.HeldActions;
 import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
@@ -115,11 +120,7 @@ public class MenuChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(5);
 
-        // The shape key's default is the chord V + Shift (Keybindery), and it holds in the
-        // other press order too: V first, then Shift.
-        boolean chord = ctx.computeOnClient(mc -> KeybinderyAPI.getInstance().getChord(KeysClient.SHAPE)
-                .equals(Chord.ofKeys(InputConstants.KEY_V, InputConstants.KEY_LSHIFT)));
-        if (!chord) throw new AssertionError("the shape key's default isn't V + Shift");
+        // Shift is a fixed modifier now, so pressing V first and Shift second works too.
         ctx.getInput().holdKey(InputConstants.KEY_V);
         ctx.getInput().holdKey(InputConstants.KEY_LSHIFT);
         ctx.waitTicks(2);
@@ -135,6 +136,18 @@ public class MenuChecks implements FabricClientGameTest {
             hand.set(Palette.COMPONENT, hand.get(Palette.COMPONENT).withShape(Shape.BLOCK));
         });
         ctx.waitTicks(5);
+
+        // A hold with no scroll: past the tap time it counts as a hold (the HUD view is up), and
+        // letting go opens nothing.
+        ctx.getInput().holdKey(InputConstants.KEY_V);
+        ctx.waitTicks(12);
+        if (!ctx.computeOnClient(mc -> KeysClient.holding())) throw new AssertionError("holding V didn't count as a hold");
+        ctx.takeScreenshot("shulkerpalette-hold");
+        ctx.getInput().releaseKey(InputConstants.KEY_V);
+        ctx.waitTicks(5);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("letting go of a held V opened a screen");
+
+        hover(ctx, scene);
 
         // On: a right-click on the ground places a block from the box, not the box.
         BlockPos target = ctx.computeOnClient(mc -> mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit
@@ -208,5 +221,79 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.waitTicks(5);
         if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("a repaint click on " + state + " opened a screen");
         return scene.world().getServer().computeOnServer(server -> server.overworld().getBlockState(pos).getBlock().toString());
+    }
+
+    /**
+     * The palette key over a shulker box's slot opens that box's menu, from the inventory and
+     * from a chest; its controls change that box, not the one in hand; Escape goes back.
+     */
+    private static void hover(ClientGameTestContext ctx, SceneWorld.Opened scene) {
+        scene.world().getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst()
+                .getInventory().setItem(1, new ItemStack(Items.SHULKER_BOX)));
+        ctx.waitTicks(5);
+        ctx.setScreen(() -> new InventoryScreen(Minecraft.getInstance().player));
+        ctx.waitTicks(3);
+        pointAt(ctx, s -> s.container instanceof Inventory && s.getContainerSlot() == 1);
+        ctx.getInput().pressKey(InputConstants.KEY_V);
+        ctx.waitTicks(3);
+        if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof PaletteScreen)) throw new AssertionError("V over a shulker in the inventory didn't open its menu");
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, Target.inventorySlot(1))));
+        ctx.waitTicks(5);
+        boolean on = scene.world().getServer().computeOnServer(server -> server.getPlayerList().getPlayers().getFirst()
+                .getInventory().getItem(1).getOrDefault(Palette.COMPONENT, Palette.OFF).on());
+        if (!on) throw new AssertionError("power from the hovered menu didn't turn on the box in slot 1");
+        ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
+        ctx.waitTicks(3);
+        // In creative the inventory is the creative screen; either way, an inventory screen again.
+        if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof AbstractContainerScreen<?>)) throw new AssertionError("closing the hovered menu didn't go back to the inventory, but to " + ctx.computeOnClient(mc -> String.valueOf(mc.gui.screen())));
+        ctx.runOnClient(mc -> mc.player.closeContainer());
+        ctx.waitTicks(3);
+
+        // A shulker in a chest: named by its slot on the chest's menu.
+        BlockPos chest = scene.world().getServer().computeOnServer(server -> {
+            var player = server.getPlayerList().getPlayers().getFirst();
+            BlockPos pos = player.blockPosition().above(3);
+            server.overworld().setBlock(pos, Blocks.CHEST.defaultBlockState(), Block.UPDATE_ALL);
+            var entity = (net.minecraft.world.level.block.entity.ChestBlockEntity) server.overworld().getBlockEntity(pos);
+            entity.setItem(0, new ItemStack(Items.SHULKER_BOX));
+            player.openMenu(entity);
+            return pos;
+        });
+        ctx.waitTicks(5);
+        pointAt(ctx, s -> !(s.container instanceof Inventory) && s.getContainerSlot() == 0);
+        ctx.getInput().pressKey(InputConstants.KEY_V);
+        ctx.waitTicks(3);
+        if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof PaletteScreen)) throw new AssertionError("V over a shulker in a chest didn't open its menu");
+        ctx.runOnClient(mc -> ClientPlayNetworking.send(new HeldActions.Act(PanelActions.POWER, Target.menuSlot(0))));
+        ctx.waitTicks(5);
+        boolean chestOn = scene.world().getServer().computeOnServer(server -> ((Container) server.overworld().getBlockEntity(chest))
+                .getItem(0).getOrDefault(Palette.COMPONENT, Palette.OFF).on());
+        if (!chestOn) throw new AssertionError("power from the hovered menu didn't turn on the box in the chest");
+        ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
+        ctx.waitTicks(3);
+        if (!ctx.computeOnClient(mc -> mc.gui.screen() instanceof net.minecraft.client.gui.screens.inventory.ContainerScreen)) throw new AssertionError("closing the hovered menu didn't go back to the chest");
+        ctx.runOnClient(mc -> mc.player.closeContainer());
+        ctx.waitTicks(3);
+        scene.world().getServer().runOnServer(server -> {
+            server.overworld().removeBlock(chest, false);
+            server.getPlayerList().getPlayers().getFirst().getInventory().setItem(1, ItemStack.EMPTY);
+        });
+        ctx.waitTicks(3);
+    }
+
+    /** Moves the pointer over the first slot on the open container screen that {@code p} accepts. */
+    private static void pointAt(ClientGameTestContext ctx, java.util.function.Predicate<Slot> p) {
+        double[] at = ctx.computeOnClient(mc -> {
+            if (!(mc.gui.screen() instanceof AbstractContainerScreen<?> screen)) throw new AssertionError("no container screen");
+            Slot found = null;
+            for (Slot s : screen.getMenu().slots) if (p.test(s)) { found = s; break; }
+            if (found == null) throw new AssertionError("no such slot on " + screen);
+            var edge = (ScreenPosAccessor) screen;
+            var w = mc.getWindow();
+            double f = (double) w.getScreenWidth() / w.getGuiScaledWidth();
+            return new double[] {(edge.shulkerpalette$leftPos() + found.x + 8) * f, (edge.shulkerpalette$topPos() + found.y + 8) * f};
+        });
+        ctx.getInput().setCursorPos(at[0], at[1]);
+        ctx.waitTicks(2);
     }
 }

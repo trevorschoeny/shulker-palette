@@ -33,8 +33,8 @@ abstract class MouseHandlerMixin {
         if (minecraft.player == null) return;
         Palette palette = Palette.activeOn(minecraft.player.getMainHandItem());
         if (palette == null) return;
-        // The shape axis first: its chord holds the material modifier too. Creative only; in
-        // survival the same keys move the material.
+        // The shape axis first: the palette key with Shift. Creative only; in survival the
+        // same keys move the material.
         if (KeysClient.shapeDown() && minecraft.player.isCreative()) {
             ClientPlayNetworking.send(new Scroll.Payload(-wheel, true));
             PalettePopup.scrolledShape(-wheel);

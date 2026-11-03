@@ -28,11 +28,11 @@ import com.trevorschoeny.shulkerpalette.palette.Shape;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * The palette key + scroll with a palette in hand opens a small view of the box right above its hotbar
- * slot: rows drawn as three-quarter-size hotbars, one stack per block type with its total,
+ * Holding the palette key with a palette in hand (past a tap) opens a small view of the box
+ * right above its hotbar slot, before any scroll: rows drawn as three-quarter-size hotbars, one stack per block type with its total,
  * and a title saying what the box does. The hotbar's selection frame marks what a click can
  * place: the picked type, the gradient row, or in the random modes every type. Letting go
- * of the modifier closes it. The settings can turn it off.
+ * of the palette key closes it. The settings can turn it off.
  *
  * <p>A MenuKit HUD panel above the hotbar; the grid itself is drawn by hand, from vanilla's
  * hotbar sprites, because it has to sit over one particular hotbar slot.
@@ -62,13 +62,11 @@ public final class PalettePopup {
     private static int expected = -1;
     private static long expectedAt;
 
-    /** Opened by a modifier + scroll, closed by letting go of the modifier. */
-    private static boolean open;
-    /** Which axis the popup shows: the one last scrolled. Only one shows at a time. */
+    /**
+     * Which axis the popup shows: the shape with Shift held (creative), else the material. Only
+     * one shows at a time, and it follows Shift, so it's always the one a scroll would move.
+     */
     private static boolean shapeAxis;
-    /** A shape step from a key (no modifier held) keeps the popup up this long. */
-    private static final long STEP_MILLIS = 1500;
-    private static long openUntil;
     private static @Nullable Shape expectedShape;
 
     public static void register() {
@@ -84,44 +82,34 @@ public final class PalettePopup {
                 .build();
     }
 
-    /** Called right after a modifier + scroll is sent: open, guess the new selection. */
+    /** Called right after a palette key + scroll is sent: guess the new selection. */
     public static void scrolled(int steps) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         ItemStack held = mc.player.getMainHandItem();
         Palette palette = Palette.activeOn(held);
         if (palette == null) return;
-        open = true;
-        shapeAxis = false;
         if (!Scroll.scrolls(palette)) return; // random modes: the popup just shows the box
         expected = Scroll.moved(withSelection(palette, selection(palette)), contents(held), steps);
         expectedAt = System.currentTimeMillis();
     }
 
-    /** Called right after a shape scroll is sent: open on the shape axis, guess the new shape. */
+    /** Called right after a shape scroll is sent: guess the new shape. */
     public static void scrolledShape(int steps) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         ItemStack held = mc.player.getMainHandItem();
         Palette palette = Palette.activeOn(held);
         if (palette == null) return;
-        open = true;
-        shapeAxis = true;
         expectedShape = Scroll.movedShape(palette.withShape(shape(palette)), contents(held), steps);
         expectedAt = System.currentTimeMillis();
     }
 
-    /** A shape key: the same as a shape scroll, and the popup stays up a moment on its own. */
-    public static void steppedShape(int steps) {
-        scrolledShape(steps);
-        openUntil = System.currentTimeMillis() + STEP_MILLIS;
-    }
-
     private static boolean shown() {
         Minecraft mc = Minecraft.getInstance();
-        boolean held = shapeAxis ? KeysClient.shapeDown() || System.currentTimeMillis() < openUntil : KeysClient.modifierDown();
-        if (!held) open = false;
-        if (!open || !Config.popup() || mc.player == null || mc.gui.screen() != null) return false;
+        // Up while the palette key is held (past a tap, or used to scroll), before any scroll.
+        if (!KeysClient.holding() || !Config.popup() || mc.player == null || mc.gui.screen() != null) return false;
+        shapeAxis = KeysClient.shapeDown() && mc.player.isCreative();
         return Palette.activeOn(mc.player.getMainHandItem()) != null;
     }
 
