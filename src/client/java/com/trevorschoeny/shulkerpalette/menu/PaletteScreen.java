@@ -114,7 +114,7 @@ public final class PaletteScreen extends MKScreen {
         // Off screen, so nothing in the parent reads as hovered: it's a backdrop, not live.
         // extractBlurredBackground draws a snapshot from before this screen opened, not a live
         // blur of what's just been drawn, so it would cover the parent rather than blur it; a
-        // flat dim over the parent's real content reads better here (Trev, 2026-11-03).
+        // flat dim over the parent's real content reads better here.
         parent.extractRenderState(graphics, -1, -1, partialTick);
         graphics.fill(0, 0, width, height, 0x80000000);
     }
