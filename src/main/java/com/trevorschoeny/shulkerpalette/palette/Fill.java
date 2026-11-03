@@ -48,7 +48,10 @@ public final class Fill {
     /** A box in hand: its contents live in the item's container component, not a live {@link Container}. */
     private static void fillHeld(ItemStack box, List<Container> sources) {
         List<ItemStack> items = new ArrayList<>(box.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).itemCopies().toList());
-        SimpleContainer snapshot = new SimpleContainer(items.size());
+        // The component stores only up to the last filled slot (an empty box has none), so the
+        // snapshot spans the box's rows, not just what's stored.
+        int rows = box.getOrDefault(Palette.COMPONENT, Palette.OFF).rows();
+        SimpleContainer snapshot = new SimpleContainer(Math.max(items.size(), rows * Palette.ROW_WIDTH));
         for (int i = 0; i < items.size(); i++) snapshot.setItem(i, items.get(i));
         boolean changed = false;
         for (int i = 0; i < snapshot.getContainerSize(); i++) {
