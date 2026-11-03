@@ -24,7 +24,7 @@ import net.minecraft.resources.Identifier;
  *   <li><b>tap</b> (released quickly, no scroll): opens the palette menu;</li>
  *   <li><b>hold</b>: shows the box in the HUD ({@code PalettePopup}), the instant it goes down;</li>
  *   <li><b>hold and scroll</b>: moves the material; with Shift also held, the variant (creative);</li>
- *   <li><b>hold, and tap Shift</b> (no scroll): switches the variant row between general and
+ *   <li><b>hold, and double-tap Shift</b> (no scroll): switches the variant row between general and
  *       specific (creative).</li>
  * </ul>
  * In an inventory screen, pressing it over a slot holding a shulker box opens the palette menu
@@ -62,6 +62,8 @@ public final class KeysClient {
     // Shift during that press: when it went down (0 while up), and whether a variant scroll used it.
     private static long shiftSince;
     private static boolean shiftScrolled;
+    // When the last Shift tap of this press ended (0: none waiting for a second tap).
+    private static long lastShiftTap;
 
     public static void register() {
         KeyMappingHelper.registerKeyMapping(MODIFIER);
@@ -119,23 +121,32 @@ public final class KeysClient {
     }
 
     /**
-     * A tap of Shift while the palette key is held in the world (down and up within
-     * {@link #TAP_MILLIS}, no variant scroll): switches general and specific. The server checks
-     * creative and an on palette. Any Shift during the press spends it, so letting go of the
-     * palette key afterwards opens nothing.
+     * A double tap of Shift while the palette key is held in the world (two taps, each down and
+     * up within {@link #TAP_MILLIS} with no variant scroll, the second starting within
+     * {@link #TAP_MILLIS} of the first ending): switches general and specific. Double, not
+     * single, so a Shift that's just on its way to a variant scroll never switches by itself.
+     * The server checks creative and an on palette. Any Shift during the press spends it, so
+     * letting go of the palette key afterwards opens nothing.
      */
     private static void shiftTap(Minecraft mc, boolean keyDown) {
         boolean shift = keyDown && (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT));
         long now = System.currentTimeMillis();
+        if (!keyDown) lastShiftTap = 0; // a double tap lives inside one press of the palette key
         if (shift && shiftSince == 0) {
+            if (now - lastShiftTap >= TAP_MILLIS) lastShiftTap = 0; // too slow: not the second tap
             shiftSince = now;
             scrolled = true;
         }
         if (!shift && shiftSince != 0) {
-            if (keyDown && !shiftScrolled && now - shiftSince < TAP_MILLIS && mc.player != null
-                    && mc.player.isCreative() && Palette.activeOn(mc.player.getMainHandItem()) != null
-                    && ClientPlayNetworking.canSend(HeldActions.Act.TYPE)) {
-                ClientPlayNetworking.send(new HeldActions.Act(PanelActions.VARIANT_MODE, Target.HELD));
+            boolean tapped = keyDown && !shiftScrolled && now - shiftSince < TAP_MILLIS;
+            if (tapped && lastShiftTap != 0) {
+                lastShiftTap = 0;
+                if (mc.player != null && mc.player.isCreative() && Palette.activeOn(mc.player.getMainHandItem()) != null
+                        && ClientPlayNetworking.canSend(HeldActions.Act.TYPE)) {
+                    ClientPlayNetworking.send(new HeldActions.Act(PanelActions.VARIANT_MODE, Target.HELD));
+                }
+            } else {
+                lastShiftTap = tapped ? now : 0;
             }
             shiftSince = 0;
             shiftScrolled = false;

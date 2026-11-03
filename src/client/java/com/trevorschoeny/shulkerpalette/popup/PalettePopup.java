@@ -277,8 +277,13 @@ public final class PalettePopup {
             int rowWidth = cells.size() * SLOT_PITCH + 2;
             int x0 = (width - rowWidth) / 2;
             int y = top + TITLE_H + ROW_PITCH * r;
-            // The hotbar sprite cut to this many slots: its left end and slots, then its right edge.
-            g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, 0, 0, x0, y, rowWidth - 1, ROW_H);
+            // The hotbar sprite rebuilt to this many slots: its left edge, its first slot's strip
+            // once per cell, then its right edge. Per slot, not one cut, so a row longer than
+            // the hotbar's nine (the variant row has up to 13) still gets a frame all the way.
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, 0, 0, x0, y, 1, ROW_H);
+            for (int c = 0; c < cells.size(); c++) {
+                g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, 1, 0, x0 + 1 + SLOT_PITCH * c, y, SLOT_PITCH, ROW_H);
+            }
             g.blitSprite(RenderPipelines.GUI_TEXTURED, ROW, ROW_W, ROW_H, ROW_W - 1, 0, x0 + rowWidth - 1, y, 1, ROW_H);
             for (int c = 0; c < cells.size(); c++) {
                 int x = x0 + SLOT_PITCH * c;

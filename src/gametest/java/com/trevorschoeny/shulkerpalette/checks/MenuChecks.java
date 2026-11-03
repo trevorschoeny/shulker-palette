@@ -135,6 +135,30 @@ public class MenuChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(5);
 
+        // With V held, one Shift tap leaves the mode alone; a double tap switches it to general.
+        ctx.getInput().holdKey(InputConstants.KEY_V);
+        ctx.waitTicks(2);
+        tapShift(ctx);
+        ctx.waitTicks(10); // past the double-tap window
+        if (ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF).general())) throw new AssertionError("a single Shift tap with V held switched the variant mode");
+        tapShift(ctx);
+        tapShift(ctx);
+        ctx.waitTicks(5);
+        if (!ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF).general())) throw new AssertionError("a double Shift tap with V held didn't switch to general");
+        // General's full row (13 variants, longer than the hotbar) is framed end to end.
+        ctx.getInput().holdKey(InputConstants.KEY_LSHIFT);
+        ctx.waitTicks(3);
+        ctx.takeScreenshot("shulkerpalette-variant-row-general");
+        ctx.getInput().releaseKey(InputConstants.KEY_LSHIFT);
+        ctx.getInput().releaseKey(InputConstants.KEY_V);
+        ctx.waitTicks(5);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) throw new AssertionError("letting go of V after Shift taps opened a screen");
+        scene.world().getServer().runOnServer(server -> {
+            ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
+            hand.set(Palette.COMPONENT, hand.get(Palette.COMPONENT).withGeneral(false));
+        });
+        ctx.waitTicks(5);
+
         // The HUD view shows the instant V goes down, no delay: one tick in, it's already up.
         ctx.getInput().holdKey(InputConstants.KEY_V);
         ctx.waitTicks(1);
@@ -292,6 +316,14 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.waitTick();
         ctx.getInput().releaseKey(InputConstants.KEY_V);
         ctx.waitTicks(3);
+    }
+
+    /** A quick Shift tap: down one tick, up one tick (well inside the 300 ms tap window). */
+    private static void tapShift(ClientGameTestContext ctx) {
+        ctx.getInput().holdKey(InputConstants.KEY_LSHIFT);
+        ctx.waitTick();
+        ctx.getInput().releaseKey(InputConstants.KEY_LSHIFT);
+        ctx.waitTick();
     }
 
     /** Moves the pointer over the first slot on the open container screen that {@code p} accepts. */
