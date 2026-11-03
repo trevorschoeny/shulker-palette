@@ -28,7 +28,7 @@ import com.trevorschoeny.shulkerpalette.palette.Shape;
 import net.minecraft.world.item.component.ItemContainerContents;
 
 /**
- * Palette modifier + scroll with a palette in hand opens a small view of the box right above its hotbar
+ * The palette key + scroll with a palette in hand opens a small view of the box right above its hotbar
  * slot: rows drawn as three-quarter-size hotbars, one stack per block type with its total,
  * and a title saying what the box does. The hotbar's selection frame marks what a click can
  * place: the picked type, the gradient row, or in the random modes every type. Letting go

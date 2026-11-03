@@ -30,7 +30,7 @@
   "shulkerpalette.config.rainbow": "Rainbow outline",
   "shulkerpalette.config.rainbow.description": "The cycling outline around the next block, in the modes that pick at random.",
   "shulkerpalette.config.popup": "Box view while scrolling",
-  "shulkerpalette.config.popup.description": "Shows the box above your hotbar while you hold the palette modifier and scroll. Off, scrolling still picks, and the action bar names what you picked.",
+  "shulkerpalette.config.popup.description": "Shows the box above your hotbar while you hold the palette key and scroll. Off, scrolling still picks, and the action bar names what you picked.",
   "shulkerpalette.config.open_box": "Open box in hand",
   "shulkerpalette.config.open_box.description": "In your hand, the open box with the next block inside. Off, your hand shows only the next block.",
   "key.shulkerpalette.power": "Toggle palette",
@@ -117,5 +117,5 @@
   "shulkerpalette.menu.mode.gradient": "Gradient",
   "shulkerpalette.config.open_anywhere": "Open Anywhere",
   "shulkerpalette.config.open_anywhere_panel": "Palette panel on opened boxes",
-  "shulkerpalette.config.open_anywhere_panel.description": "Shows the palette buttons beside a shulker box you open from the inventory with Open Anywhere. Off: change the palette in hand, with the palette key."
+  "shulkerpalette.config.open_anywhere_panel.description": "Shows the palette buttons beside a shulker box you open from the inventory with Open Anywhere. When it's off, you change the palette in hand with the palette key."
 }
