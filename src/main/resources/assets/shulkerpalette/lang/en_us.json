@@ -26,7 +26,7 @@
   "shulkerpalette.config.modifier.description": "The one key for everything. With a shulker in hand: tap it for the palette menu, hold it to see the box, hold it and scroll to pick a block or a gradient row, and add Shift to change the shape (creative). In an inventory, press it over any shulker box for that box's menu.",
   "shulkerpalette.config.look": "Look",
   "shulkerpalette.config.rainbow": "Rainbow outline",
-  "shulkerpalette.config.rainbow.description": "The cycling outline around the next block, in the modes that pick at random.",
+  "shulkerpalette.config.rainbow.description": "The cycling outline around the next block, in every mode.",
   "shulkerpalette.config.popup": "Box view while scrolling",
   "shulkerpalette.config.popup.description": "Shows the box above your hotbar while you hold the palette key and scroll. Off, scrolling still picks, and the action bar names what you picked.",
   "shulkerpalette.config.open_box": "Open box in hand",

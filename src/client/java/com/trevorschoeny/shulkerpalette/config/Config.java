@@ -21,7 +21,7 @@ public final class Config {
     private static final int CURRENT_VERSION = 1;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    // The cycling rainbow outline on the next block, in the random modes.
+    // The cycling rainbow outline on the next block, in every mode.
     private static boolean rainbow = true;
     // The box view above the hotbar while the modifier is held and the wheel turns.
     private static boolean popup = true;

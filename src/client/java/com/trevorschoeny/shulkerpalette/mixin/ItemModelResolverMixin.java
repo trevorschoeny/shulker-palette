@@ -3,7 +3,6 @@ package com.trevorschoeny.shulkerpalette.mixin;
 import com.trevorschoeny.shulkerpalette.config.Config;
 import com.trevorschoeny.shulkerpalette.held.HeldLook;
 import com.trevorschoeny.shulkerpalette.held.OpenIcon;
-import com.trevorschoeny.shulkerpalette.palette.Mode;
 import com.trevorschoeny.shulkerpalette.palette.Palette;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -23,8 +22,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * In a hand and in the inventory, a palette shulker draws as an open box with its lid gone
  * and the next block small inside ({@link OpenIcon}); an empty palette is the open, empty
- * box. The modes that draw at random (random, equal random, gradient) also get the rainbow
- * outline ({@link HeldLook}); pick, which places one chosen block, does not.
+ * box. The next block wears the rainbow outline ({@link HeldLook}) in every mode, marking a
+ * box that places blocks rather than itself.
  */
 @Mixin(ItemModelResolver.class)
 abstract class ItemModelResolverMixin {
@@ -69,10 +68,10 @@ abstract class ItemModelResolverMixin {
         shulkerpalette$rainbow(output, palette);
     }
 
-    /** The outline marks randomness (not pick), unless the settings turned it off. */
+    /** The outline marks a palette that's on, in every mode, unless the settings turned it off. */
     @Unique
     private static void shulkerpalette$rainbow(ItemStackRenderState output, Palette palette) {
-        if (palette.mode() == Mode.PICK || !Config.rainbow()) return;
+        if (!Config.rainbow()) return;
         output.setData(HeldLook.RAINBOW, true);
         output.setAnimated(); // the rainbow cycles, so the icon is redrawn every frame
     }
