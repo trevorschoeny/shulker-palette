@@ -59,11 +59,8 @@ public final class KeysClient {
     // The current press: when it went down (0 while up), and whether a scroll used it.
     private static long downSince;
     private static boolean scrolled;
-    // Shift during that press: when it went down (0 while up), and whether a variant scroll used it.
-    private static long shiftSince;
-    private static boolean shiftScrolled;
-    // When the last Shift tap of this press ended (0: none waiting for a second tap).
-    private static long lastShiftTap;
+    // When Shift was last pressed during this press (0: none waiting for a second press).
+    private static long lastShiftPress;
 
     public static void register() {
         KeyMappingHelper.registerKeyMapping(MODIFIER);
@@ -75,10 +72,10 @@ public final class KeysClient {
         scrolled = true;
     }
 
-    /** A variant scroll: neither the palette key's release nor Shift's is a tap now. */
+    /** A variant scroll: the palette key's release isn't a tap, and no Shift press before it pairs with one after. */
     public static void markShapeScrolled() {
         scrolled = true;
-        shiftScrolled = true;
+        lastShiftPress = 0;
     }
 
     /**
@@ -121,35 +118,37 @@ public final class KeysClient {
     }
 
     /**
-     * A double tap of Shift while the palette key is held in the world (two taps, each down and
-     * up within {@link #TAP_MILLIS} with no variant scroll, the second starting within
-     * {@link #TAP_MILLIS} of the first ending): switches general and specific. Double, not
-     * single, so a Shift that's just on its way to a variant scroll never switches by itself.
-     * The server checks creative and an on palette. Any Shift during the press spends it, so
-     * letting go of the palette key afterwards opens nothing.
+     * A double tap of Shift while the palette key is held in the world (two presses within
+     * {@link #TAP_MILLIS}, no variant scroll between): switches general and specific. The server
+     * checks creative and an on palette. Any Shift during the press spends it, so letting go of
+     * the palette key afterwards opens nothing.
+     *
+     * <p>Counted from presses as they happen (the sneak key's click count), not from polling
+     * whether Shift is down each tick: a quick double tap fits between two ticks, and polling
+     * would see one long press. Shift is the sneak key's default, so a player who rebinds sneak
+     * double-taps that instead.
      */
     private static void shiftTap(Minecraft mc, boolean keyDown) {
-        boolean shift = keyDown && (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT));
-        long now = System.currentTimeMillis();
-        if (!keyDown) lastShiftTap = 0; // a double tap lives inside one press of the palette key
-        if (shift && shiftSince == 0) {
-            if (now - lastShiftTap >= TAP_MILLIS) lastShiftTap = 0; // too slow: not the second tap
-            shiftSince = now;
-            scrolled = true;
+        int presses = 0;
+        while (mc.options.keyShift.consumeClick()) presses++; // drained every tick, so old presses never count
+        if (!keyDown) {
+            lastShiftPress = 0; // a double tap lives inside one press of the palette key
+            return;
         }
-        if (!shift && shiftSince != 0) {
-            boolean tapped = keyDown && !shiftScrolled && now - shiftSince < TAP_MILLIS;
-            if (tapped && lastShiftTap != 0) {
-                lastShiftTap = 0;
+        // Shift held from before the palette key went down spends the press too (V + Shift for a variant).
+        if (InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT)) scrolled = true;
+        long now = System.currentTimeMillis();
+        for (int i = 0; i < presses; i++) {
+            scrolled = true;
+            if (lastShiftPress != 0 && now - lastShiftPress < TAP_MILLIS) {
+                lastShiftPress = 0;
                 if (mc.player != null && mc.player.isCreative() && Palette.activeOn(mc.player.getMainHandItem()) != null
                         && ClientPlayNetworking.canSend(HeldActions.Act.TYPE)) {
                     ClientPlayNetworking.send(new HeldActions.Act(PanelActions.VARIANT_MODE, Target.HELD));
                 }
             } else {
-                lastShiftTap = tapped ? now : 0;
+                lastShiftPress = now;
             }
-            shiftSince = 0;
-            shiftScrolled = false;
         }
     }
 

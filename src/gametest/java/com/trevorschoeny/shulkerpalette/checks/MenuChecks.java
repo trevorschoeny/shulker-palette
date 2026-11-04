@@ -135,7 +135,9 @@ public class MenuChecks implements FabricClientGameTest {
         });
         ctx.waitTicks(5);
 
-        // With V held, one Shift tap leaves the mode alone; a double tap switches it to general.
+        // With V held, one Shift tap leaves the mode alone; a double tap switches it to general,
+        // both a slow one (a tick down, a tick up, twice) and a fast one inside a single tick,
+        // which a once-a-tick look at whether Shift is down would read as one press.
         ctx.getInput().holdKey(InputConstants.KEY_V);
         ctx.waitTicks(2);
         tapShift(ctx);
@@ -145,6 +147,14 @@ public class MenuChecks implements FabricClientGameTest {
         tapShift(ctx);
         ctx.waitTicks(5);
         if (!ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF).general())) throw new AssertionError("a double Shift tap with V held didn't switch to general");
+        ctx.waitTicks(10);
+        ctx.getInput().pressKey(InputConstants.KEY_LSHIFT);
+        ctx.getInput().pressKey(InputConstants.KEY_LSHIFT);
+        ctx.waitTicks(5);
+        if (ctx.computeOnClient(mc -> mc.player.getMainHandItem().getOrDefault(Palette.COMPONENT, Palette.OFF).general())) throw new AssertionError("a fast double Shift tap (inside one tick) didn't switch back to specific");
+        tapShift(ctx);
+        tapShift(ctx);
+        ctx.waitTicks(5);
         // General's full row (13 variants, longer than the hotbar) is framed end to end.
         ctx.getInput().holdKey(InputConstants.KEY_LSHIFT);
         ctx.waitTicks(3);
@@ -157,6 +167,19 @@ public class MenuChecks implements FabricClientGameTest {
             ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
             hand.set(Palette.COMPONENT, hand.get(Palette.COMPONENT).withGeneral(false));
         });
+        ctx.waitTicks(5);
+
+        // A flat item in hand (a door) is outlined around its picture, not as a lit square;
+        // a look for Trev, so just the screenshot. Back to the stone and granite box after.
+        ItemStack before = scene.world().getServer().computeOnServer(server -> server.getPlayerList().getPlayers().getFirst().getMainHandItem().copy());
+        scene.world().getServer().runOnServer(server -> {
+            ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
+            hand.set(Palette.COMPONENT, new Palette(true, Mode.RANDOM, false, 3, 0, Shape.NONE, Optional.empty(), 0));
+            hand.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(new ItemStack(Items.OAK_DOOR, 16))));
+        });
+        ctx.waitTicks(10);
+        ctx.takeScreenshot("shulkerpalette-held-door");
+        scene.world().getServer().runOnServer(server -> server.getPlayerList().getPlayers().getFirst().getInventory().setItem(0, before.copy()));
         ctx.waitTicks(5);
 
         // The HUD view shows the instant V goes down, no delay: one tick in, it's already up.
