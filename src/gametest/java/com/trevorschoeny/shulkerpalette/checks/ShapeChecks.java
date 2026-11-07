@@ -53,7 +53,7 @@ public class ShapeChecks implements FabricClientGameTest {
         if (Shapes.own(Items.DIRT, Shape.BLOCK) != Items.DIRT) return "dirt isn't its own block";
 
         // Gaps: specific has none of its own; general's closest match, pinned so a bad
-        // regeneration is caught. Trev's calls: stone's wall is andesite (close in color,
+        // regeneration is caught. The pinned choices: stone's wall is andesite (close in color,
         // speckled like stone; stone bricks are lined), dirt's gate spruce (dark brown, not
         // oak), stone's gate the gray wood. A block outside every family (dirt) and a variant
         // of a family (a stone slab) get matches too.

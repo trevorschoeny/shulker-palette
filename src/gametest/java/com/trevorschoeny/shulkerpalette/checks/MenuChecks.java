@@ -170,7 +170,7 @@ public class MenuChecks implements FabricClientGameTest {
         ctx.waitTicks(5);
 
         // A flat item in hand (a door) is outlined around its picture, not as a lit square;
-        // a look for Trev, so just the screenshot. Back to the stone and granite box after.
+        // a visual check, so just the screenshot. Back to the stone and granite box after.
         ItemStack before = scene.world().getServer().computeOnServer(server -> server.getPlayerList().getPlayers().getFirst().getMainHandItem().copy());
         scene.world().getServer().runOnServer(server -> {
             ItemStack hand = server.getPlayerList().getPlayers().getFirst().getMainHandItem();
